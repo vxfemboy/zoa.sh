@@ -1,0 +1,30 @@
+<div class="ascii-nav">
+    <pre>{{ navigation_box | safe }}</pre>
+</div>
+
+<div class="main-content-wrapper">
+    <div class="ascii-content">
+        <div class="ascii-box">
+            <pre>{{ welcome_box | safe }}</pre>
+        </div>
+        <div class="ascii-box">
+            <pre>{{ latest_post_box | safe }}</pre>
+        </div>
+    </div>
+
+    <div class="ascii-sidebar hide-mobile">
+        <div class="ascii-box">
+            <pre>{{ about_box | safe }}</pre>
+        </div>
+        <div class="ascii-box">
+            <pre>{{ categories_box | safe }}</pre>
+        </div>
+        <div class="ascii-box">
+            <pre>{{ comments_box | safe }}</pre>
+        </div>
+    </div>
+</div>
+
+<div class="ascii-footer">
+    <pre>{{ footer_box | safe }}</pre>
+</div> 

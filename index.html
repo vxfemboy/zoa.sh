@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>sad</title>
+        <style>
+            @font-face {
+                font-family: "Departure Mono";
+                src: url("assets/fonts/DepartureMono-Regular.woff2") format("woff2"),
+                     url("assets/fonts/DepartureMono-Regular.woff") format("woff"),
+                     url("assets/fonts/DepartureMono-Regular.otf") format("opentype");
+                font-weight: normal;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            * {
+                font-family: "Departure Mono", monospace;
+                overflow: auto;
+            }
+
+            body {
+                background-color: #000000;
+                color: #fff;
+                margin: 0;
+                padding: 20px;
+                line-height: 1;
+            }
+            pre {
+                white-space: pre;
+                overflow-x: auto;
+            }
+            .pfp {
+                white-space: pre;
+            }
+            .ascii-container {
+                max-width: auto;
+                margin: 0 auto;
+            }
+            .pfp {
+                flex: auto;
+                justify-content: center;
+                align-items: center;
+                font-size: calc(
+                    0.1vw
+                ); /* Dynamically scales font size based on viewport width */
+                white-space: pre; /* Allows wrapping of preformatted text */
+                line-height: 1; /* Adjusts line spacing to keep the ASCII art compact */
+                margin: 0 auto; /* Centers the ASCII art container */
+                overflow: auto;
+            }
+            .title {
+                font-size: calc(
+                    1vw
+                ); /* Dynamically scales font size based on viewport width */
+                white-space: pre; /* Allows wrapping of preformatted text */
+                line-height: 1; /* Adjusts line spacing to keep the ASCII art compact */
+                margin: 0 auto; /* Centers the ASCII art container */
+                max-width: 100%; /* Ensures the ASCII art doesn't exceed the screen width */
+                max-height: 100%;
+            }
+            .ascii-header,
+            .ascii-nav,
+            .ascii-content,
+            .ascii-sidebar,
+            .ascii-footer {
+                margin-bottom: 20px;
+            }
+            .ascii-nav a,
+            .ascii-content a,
+            .ascii-sidebar a {
+                color: #33aaff;
+                text-decoration: none;
+            }
+            .ascii-nav a:hover,
+            .ascii-content a:hover,
+            .ascii-sidebar a:hover {
+                text-decoration: underline;
+            }
+
+            @media (max-width: 1000px) {
+                .hide-mobile {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="ascii-container">
+            <!-- ASCII Header -->
+            <div class="ascii-header">
+                <pre class="title">
+                                                                      _
+       .xWK:                  ,ko.             .x0c                   \`*-.
+       .OWNXd,.      ..       ;XNc             .xW0'        ....'..    )  _`-.
+       ,KXdokkd:.  .cOd.      ,KW0,         .,,'oNNd;:clodxkkkk0XXo   .  : `. .
+       :NO.      'o0NO,.      ;KNNx.        :OK0KNWXOxdlc:,'...oNXc   : _   '  \
+       cN0,  .'cdONXo.        :0dkNl         ...,OWK:         ,0Wx.   ; *` _.   `*-._
+       .xX0ddddod0O;          l0;;KK;    ...     oNNl        'ONx.    `-.-'          `-.
+ cOxc.   .''...c0x.           o0,.xN0dooool;     ;XWx.      ;0Nd.       ;       `       `.
+ .lkXKd,     .dKo.       ..';l0XkxxONKl..        .OW0'    .lKKl.        :.       .        \
+    'o0Xx,  .dXo        xOOkxOXd'. .kNd.         .dWX:   ,kXk'          . \  .   :   .-'   .
+      .oXXl.lNx.        ...  lO,    'ONd.         cXWd.,xKO;            '  `+.;  ;  '      :
+        :KXOX0,             .Ox.     'ONx.        ,0WKO0x;.             :  '  |    ;       ;-.
+         :KWXl              lK:       .kN0: ;xkdllxXWNx.                ; '   : :`-:     _.`* ;
+         .xXd.             '0k.        .lx; ,xO0Oxoll;.              .*' /  .*' ; .*`- +'  `*'
+          .'               .;.                ..                     `*-*   `*-*  `*-*'
+            </pre
+                >
+            </div>
+
+            <!-- ASCII Navigation -->
+            <div class="ascii-nav">
+                <pre>
+╔════════════════════════════════════════════════════════════════════════════════╗
+║ <a href="#">HOME</a> | <a href="#">ABOUT</a> | <a href="#">PROJECTS</a> | <a href="#">BLOG</a> | <a href="#">CONTACT</a>                                       ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+            </pre>
+            </div>
+
+            <!-- Main Content Area with Sidebar -->
+            <div style="display: flex; flex-wrap: wrap">
+                <!-- ASCII Content -->
+                <div class="ascii-content" style="flex: 4">
+                    <pre>
+    ╔════════════════════════════════════════════════════════════════╗
+    ║                        WELCOME                                 ║
+    ╠════════════════════════════════════════════════════════════════╣
+    ║                                                                ║<div class="content-area">    ║   Hello and welcome to my website!                             ║
+    ║                                                                ║
+    ║   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ║
+    ║   vitae purus nec nisi condimentum facilisis.                  ║
+    ║                                                                ║
+    ║   Aenean sagittis tincidunt enim, et tempor risus:             ║
+    ║                                                                ║
+    ║   • Vestibulum ante ipsum primis                               ║
+    ║   • Faucibus orci luctus et                                    ║
+    ║   • Ultrices posuere cubilia                                   ║
+    ║   • Phasellus fringilla elementum                              ║</div>    ║                                                                ║
+    ╚════════════════════════════════════════════════════════════════╝
+                    </pre>
+
+                    <pre>
+            ╔════════════════════════════════════════════════════════════════╗
+            ║                      LATEST POST                               ║
+            ╠════════════════════════════════════════════════════════════════╣
+            ║                                                                ║<div class="content-area">            ║   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓     ║
+            ║                                                                ║
+            ║   Anti-Forensics in the Kernel                                 ║
+            ║   May 4, 2025                                                  ║
+            ║                                                                ║
+            ║   Lorem ipsum dolor sit amet, consectetur adipiscing elit.     ║
+            ║   Donec auctor, nisl eget ultricies tincidunt, nisl nisl       ║
+            ║   aliquam magna, eget aliquam nisl nisl sit amet nisl.         ║
+            ║                                                                ║
+            ║   Read more: <a href="#">Anti-Forensics in the Kernel</a>                      ║
+            ║                                                                ║
+            ║   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓     ║</div>            ║                                                                ║
+            ╚════════════════════════════════════════════════════════════════╝
+                                </pre>
+                </div>
+
+                <!-- ASCII Sidebar -->
+                <div class="ascii-sidebar hide-mobile" style="flex: 1">
+                    <pre>
+╔═══════════════════════════════╗
+║         ABOUT ME              ║
+╠═══════════════════════════════╣
+║                               ║
+<div style="display: flex; width: 100%;">
+<div style="width: 1ch; text-align: center;">║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║</div><pre class="pfp" style="flex: 1; margin: 0; padding: 0;">
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▒░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒░░░░░░░░░▒░░▒▒▒▒▒▒▒▒░▒▒▒░▒▒▒▒▒▒▒▒▒▒▒
+    
+</pre><div style="width: 1ch; text-align: center;">║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+║
+</div></div>║  I literally just press       ║
+║  buttons...                   ║
+║                               ║
+║                               ║
+╚═══════════════════════════════╝
+                </pre>
+
+                    <pre>
+╔═══════════════════════════════╗
+║         CATEGORIES            ║
+╠═══════════════════════════════╣
+║                               ║
+║  • <a href="#">Lorem ipsum</a>                ║
+║  • <a href="#">Dolor sit amet</a>             ║
+║  • <a href="#">Consectetur adipiscing</a>     ║
+║  • <a href="#">Elit sed do eiusmod</a>        ║
+║  • <a href="#">Tempor incididunt</a>          ║
+║                               ║
+╚═══════════════════════════════╝
+                </pre>
+
+                    <pre>
+╔═══════════════════════════════╗
+║         LATEST COMMENTS       ║
+╠═══════════════════════════════╣
+║                               ║
+║  @user123:                    ║
+║  "Love the ASCII aesthetic!"  ║
+║                               ║
+╚═══════════════════════════════╝
+                </pre
+                    >
+                </div>
+            </div>
+
+            <!-- ASCII Footer -->
+            <div class="ascii-footer">
+                <pre>
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║  &#127279; 222.121.87.in-addr.arpa &#124; Created with &#60;3 and lots of keyboard characters   ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+                </pre>
+            </div>
+        </div>
+
+        <script>
+            // Simple JavaScript to handle responsive behavior
+            window.addEventListener("resize", function () {
+                const sidebar = document.querySelector(".ascii-sidebar");
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add("hide-mobile");
+                } else {
+                    sidebar.classList.remove("hide-mobile");
+                }
+            });
+        </script>
+    </body>
+</html>

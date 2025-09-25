@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Web</title>
+    <style>
+        @font-face {
+            font-family: "Departure Mono";
+            src: url("/static/fonts/DepartureMono-Regular.woff2") format("woff2"),
+                 url("/static/fonts/DepartureMono-Regular.woff") format("woff"),
+                 url("/static/fonts/DepartureMono-Regular.otf") format("opentype");
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            font-family: "Departure Mono", monospace;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+
+        body {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            overflow-x: hidden;
+            background: transparent;
+            position: relative;
+        }
+
+        #stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background-color: #000000;
+        }
+
+        .star {
+            position: absolute;
+            color: #fff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
+                         0 0 12px rgba(255, 255, 255, 0.6),
+                         0 0 16px rgba(255, 255, 255, 0.4);
+            animation: twinkle 3s ease-in-out infinite;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .ascii-container {
+            min-height: 100vh;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(2px);
+        }
+
+        pre {
+            white-space: pre;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.2;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .ascii-title {
+            font-size: 0.8vw;
+            white-space: pre;
+            line-height: 1;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .ascii-box {
+            display: flex;
+            flex-direction: column;
+            min-height: fit-content;
+        }
+
+        .box-tiny, .box-small, .box-medium, .box-large {
+            display: none;
+        }
+
+        @media (min-width: 901px) {
+            .box-large { display: block; }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+            .box-medium { display: block; }
+        }
+
+        @media (min-width: 301px) and (max-width: 600px) {
+            .box-small { display: block; }
+        }
+
+        @media (max-width: 300px) {
+            .box-tiny { display: block; }
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ascii-content {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ascii-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+            .ascii-sidebar {
+                display: none;
+            }
+        }
+
+        .ascii-nav a,
+        .ascii-content a,
+        .ascii-sidebar a {
+            color: #33aaff;
+            text-decoration: none;
+        }
+
+        .ascii-nav a:hover,
+        .ascii-content a:hover,
+        .ascii-sidebar a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="stars-container">
+        {% for star in stars %}
+            <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
+        {% endfor %}
+    </div>
+    <div class="ascii-container">
+        <div class="ascii-title">
+            <pre>{{ title_art | safe }}</pre>
+        </div>
+
+        <div class="ascii-nav">
+            <div class="box-tiny"><pre>{{ navigation_box.tiny | safe }}</pre></div>
+            <div class="box-small"><pre>{{ navigation_box.small | safe }}</pre></div>
+            <div class="box-medium"><pre>{{ navigation_box.medium | safe }}</pre></div>
+            <div class="box-large"><pre>{{ navigation_box.large | safe }}</pre></div>
+        </div>
+
+        <div class="main-content-wrapper">
+            <div class="ascii-content">
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ welcome_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ welcome_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ welcome_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ welcome_box.large | safe }}</pre></div>
+                </div>
+
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ latest_post_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ latest_post_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ latest_post_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ latest_post_box.large | safe }}</pre></div>
+                </div>
+            </div>
+
+            <div class="ascii-sidebar">
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ about_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ about_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ about_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ about_box.large | safe }}</pre></div>
+                </div>
+
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ categories_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ categories_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ categories_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ categories_box.large | safe }}</pre></div>
+                </div>
+
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ comments_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ comments_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ comments_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ comments_box.large | safe }}</pre></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ascii-footer">
+            <div class="box-tiny"><pre>{{ footer_box.tiny | safe }}</pre></div>
+            <div class="box-small"><pre>{{ footer_box.small | safe }}</pre></div>
+            <div class="box-medium"><pre>{{ footer_box.medium | safe }}</pre></div>
+            <div class="box-large"><pre>{{ footer_box.large | safe }}</pre></div>
+        </div>
+    </div>
+</body>
+</html> 
