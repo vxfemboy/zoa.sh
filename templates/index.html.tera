@@ -16,8 +16,23 @@
         }
 
         * {
-            font-family: "Departure Mono", monospace;
+            font-family: "Departure Mono", "Courier New", monospace;
             box-sizing: border-box;
+        }
+
+        /* Font stack optimized for emoji support per https://nolanlawson.com/2022/04/08/the-struggle-of-using-native-emoji-on-the-web/ */
+        pre, .ascii-container {
+            font-family: "Departure Mono",
+                         "Twemoji Mozilla",
+                         "Apple Color Emoji",
+                         "Segoe UI Emoji",
+                         "Segoe UI Symbol",
+                         "Noto Color Emoji",
+                         "EmojiOne Color",
+                         "Android Emoji",
+                         "Courier New",
+                         monospace;
+            text-rendering: optimizeLegibility;
         }
 
         html {
@@ -91,6 +106,21 @@
             line-height: 1.2;
             overflow-x: auto;
             max-width: 100%;
+            font-variant-ligatures: none;
+            font-feature-settings: "kern" 0, "liga" 0, "calt" 0;
+            letter-spacing: 0;
+            word-spacing: 0;
+            /* Ensure consistent character widths - critical for ASCII alignment */
+            font-variant-numeric: tabular-nums;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Ensure emoji and unicode characters render at predictable widths */
+        pre::after {
+            content: "";
+            display: inline-block;
+            width: 0;
         }
 
         .ascii-title {
@@ -166,6 +196,20 @@
         .ascii-content a:hover,
         .ascii-sidebar a:hover {
             text-decoration: underline;
+        }
+
+        /* Emoji images - force to exactly 1 monospace character width */
+        .emoji-img {
+            display: inline-block;
+            height: 1em;
+            width: 1ch !important;
+            min-width: 1ch;
+            max-width: 1ch;
+            vertical-align: baseline;
+            object-fit: contain;
+            margin: 0;
+            padding: 0;
+            border: 0;
         }
     </style>
 </head>
