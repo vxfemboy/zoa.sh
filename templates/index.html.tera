@@ -279,5 +279,87 @@
             <div class="box-large"><pre>{{ footer_box.large | safe }}</pre></div>
         </div>
     </div>
+
+    <script type="module">
+        // Load WASM module and initialize ASCII cat
+        import init, { AsciiCat } from '/static/wasm/ascii_web.js';
+
+            async function run() {
+                try {
+                    console.log('Starting ASCII cat initialization...');
+
+                    // Initialize WASM
+                    await init();
+                    console.log('WASM initialized');
+                
+                    // Preload all cat animations
+                    console.log('Preloading cat animations...');
+                    const animations = {};
+                    const animationNames = [
+                        'still', 'alert', 'yawn', 'sleep1', 'sleep2',
+                        'nrun1', 'nrun2', 'nerun1', 'nerun2',
+                        'erun1', 'erun2', 'serun1', 'serun2',
+                        'srun1', 'srun2', 'swrun1', 'swrun2',
+                        'wrun1', 'wrun2', 'nwrun1', 'nwrun2',
+                        'nscratch1', 'nscratch2', 'escratch1', 'escratch2',
+                        'sscratch1', 'sscratch2', 'wscratch1', 'wscratch2',
+                        'wash', 'itch1', 'itch2'
+                    ];
+                    
+                    for (const name of animationNames) {
+                        try {
+                            console.log(`Fetching animation: /cat/${name}`);
+                            const response = await fetch(`/cat/${name}`);
+                            console.log(`Response status for ${name}:`, response.status);
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            
+                            const content = await response.text();
+                            animations[name] = content;
+                            console.log(`Loaded animation: ${name} (${content.length} chars)`);
+                        } catch (error) {
+                            console.error(`Failed to load animation ${name}:`, error);
+                        }
+                    }
+                    
+                    console.log('All animations preloaded');
+                    console.log('Animation keys:', Object.keys(animations));
+                    console.log('Sample animation (still):', animations.still ? 'loaded' : 'missing');
+                
+                    // Create ASCII cat instance with animations
+                    const cat = new AsciiCat(animations);
+                    console.log('ASCII cat instance created');
+                
+                // Track mouse movement (oneko.js style)
+                document.addEventListener('mousemove', (e) => {
+                    cat.update_mouse(e.clientX, e.clientY);
+                });
+                console.log('Mouse listener added');
+                
+                // Animation loop (ultra smooth - 30ms intervals for very fluid motion ~33fps)
+                let lastFrameTimestamp;
+                function onAnimationFrame(timestamp) {
+                    if (!lastFrameTimestamp) {
+                        lastFrameTimestamp = timestamp;
+                    }
+                    if (timestamp - lastFrameTimestamp > 30) {  // 30ms = ~33fps for ultra smooth animation
+                        lastFrameTimestamp = timestamp;
+                        cat.update();
+                    }
+                    requestAnimationFrame(onAnimationFrame);
+                }
+                requestAnimationFrame(onAnimationFrame);
+                console.log('Animation loop started (ultra smooth ~33fps)');
+                
+                console.log('ASCII cat is now following your cursor!');
+            } catch (error) {
+                console.error('Error initializing ASCII cat:', error);
+            }
+        }
+
+        run();
+    </script>
 </body>
 </html> 
