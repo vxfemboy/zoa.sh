@@ -1,8 +1,6 @@
-#[macro_use]
-extern crate rocket;
-
-use rocket::fs::{relative, FileServer};
-use rocket_dyn_templates::Template;
+use actix_web::{web, App, HttpServer, HttpResponse, Result};
+use actix_files::Files;
+use tera::Tera;
 use std::fs;
 
 mod mods;
@@ -14,14 +12,14 @@ use ascii_art::*;
 use stars::*;
 
 // Serve individual cat animation files
-#[get("/cat/<action>")]
-fn cat_action(action: String) -> String {
-    fs::read_to_string(format!("templates/ascii/cat/{}.txt", action))
-        .unwrap_or_else(|_| "Cat animation not found".to_string())
+async fn cat_action(path: web::Path<String>) -> HttpResponse {
+    let action = path.into_inner();
+    let content = fs::read_to_string(format!("templates/ascii/cat/{}.txt", action))
+        .unwrap_or_else(|_| "Cat animation not found".to_string());
+    HttpResponse::Ok().body(content)
 }
 
-#[get("/")]
-fn index() -> Template {
+async fn index(tera: web::Data<Tera>) -> Result<HttpResponse> {
     let nav_items = vec![
         NavItem {
             text: "HOME".to_string(),
@@ -253,15 +251,40 @@ fn index() -> Template {
         stars,
     };
 
-    Template::render("index", context)
+    let mut tera_context = tera::Context::new();
+    tera_context.insert("title_art", &context.title_art);
+    tera_context.insert("navigation_box", &context.navigation_box);
+    tera_context.insert("welcome_box", &context.welcome_box);
+    tera_context.insert("latest_post_box", &context.latest_post_box);
+    tera_context.insert("about_box", &context.about_box);
+    tera_context.insert("categories_box", &context.categories_box);
+    tera_context.insert("comments_box", &context.comments_box);
+    tera_context.insert("footer_box", &context.footer_box);
+    tera_context.insert("stars", &context.stars);
+
+    let rendered = tera.render("index.html.tera", &tera_context)
+        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+    
+    Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
-#[launch]
-fn rocket() -> _ {
-    rocket::build()
-        .mount("/", routes![index, cat_action])
-        .mount("/static", FileServer::from(relative!("static")))
-        .attach(Template::fairing())
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // Initialize Tera templates
+    let tera = Tera::new("templates/**/*").expect("Failed to initialize Tera templates");
+    
+    println!("Starting server on http://127.0.0.1:8080");
+    
+    HttpServer::new(move || {
+        App::new()
+            .app_data(web::Data::new(tera.clone()))
+            .route("/", web::get().to(index))
+            .route("/cat/{action}", web::get().to(cat_action))
+            .service(Files::new("/static", "static"))
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 
