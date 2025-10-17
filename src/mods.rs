@@ -1,5 +1,34 @@
 use serde::Serialize;
 
+// Re-export all modules
+pub mod ascii_art;
+pub mod stars;
+pub mod wasm;
+pub mod constants;
+pub mod data;
+pub mod responsive;
+pub mod content;
+pub mod errors;
+pub mod config;
+pub mod template_builder;
+pub mod cache;
+pub mod api;
+
+#[cfg(test)]
+mod tests;
+
+// Re-export commonly used items
+pub use ascii_art::*;
+pub use stars::*;
+pub use data::*;
+pub use responsive::*;
+pub use content::*;
+pub use errors::*;
+pub use config::*;
+pub use template_builder::*;
+pub use cache::*;
+pub use api::*;
+
 #[derive(Serialize)]
 pub struct BoxSizes {
     pub tiny: String,   // For very small screens (<300px)
@@ -18,7 +47,9 @@ pub struct PageContext {
     pub categories_box: BoxSizes,
     pub comments_box: BoxSizes,
     pub footer_box: BoxSizes,
-    pub stars: Vec<crate::stars::Star>,
+    pub stars: Vec<Star>,
+    pub posts: Vec<Post>,
+    pub additional_posts: Vec<Post>,
 }
 
 #[derive(Serialize)]
@@ -27,7 +58,7 @@ pub struct NavItem {
     pub href: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Post {
     pub title: String,
     pub date: String,

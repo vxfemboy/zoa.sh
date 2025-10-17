@@ -149,12 +149,60 @@
             .box-medium { display: block; }
         }
 
-        @media (min-width: 301px) and (max-width: 600px) {
+        @media (min-width: 401px) and (max-width: 600px) {
             .box-small { display: block; }
         }
 
-        @media (max-width: 300px) {
+        @media (max-width: 400px) {
             .box-tiny { display: block; }
+        }
+
+        /* Mobile-specific box sizing for different elements */
+        @media (max-width: 600px) {
+            /* Reset all boxes first */
+            .box-tiny, .box-small, .box-medium, .box-large {
+                display: none !important;
+            }
+            
+            /* Welcome box - use medium boxes */
+            .ascii-content .welcome-box .box-medium {
+                display: block !important;
+            }
+            
+            /* Latest posts box - use small boxes for mobile-specific content */
+            .ascii-content .latest-posts-box .box-small {
+                display: block !important;
+            }
+            
+            /* Sidebar content (about, categories, comments) - use large boxes for maximum screen utilization */
+            .ascii-sidebar .box-large {
+                display: block !important;
+            }
+            
+            /* Additional posts for mobile dropdown - use small boxes */
+            #additional-posts-mobile .box-small {
+                display: block !important;
+            }
+            
+            /* Navigation - use medium boxes */
+            .ascii-nav .box-medium {
+                display: block !important;
+            }
+            
+            /* Footer - use medium boxes */
+            .ascii-footer .box-medium {
+                display: block !important;
+            }
+            
+            /* Center navbar text on mobile */
+            .ascii-nav pre {
+                text-align: center !important;
+            }
+            
+            /* Make ASCII cat 2x smaller on mobile */
+            #ascii-cat {
+                font-size: 1.5px !important;  /* 3px / 2 = 1.5px */
+            }
         }
 
         .main-content-wrapper {
@@ -180,8 +228,47 @@
             .main-content-wrapper {
                 flex-direction: column;
             }
+            
+            /* Let sidebar stack naturally instead of hiding it */
             .ascii-sidebar {
-                display: none;
+                flex: 1;
+                width: 100%;
+            }
+            
+            .ascii-content {
+                flex: 1;
+                width: 100%;
+            }
+            
+            /* Mobile font adjustments for better readability */
+            pre {
+                font-size: 10px;  /* Smaller on mobile */
+                overflow-x: auto;  /* Allow horizontal scroll if needed */
+                max-width: 100%;   /* Prevent overflow */
+            }
+            
+            .ascii-title {
+                font-size: 2vw;  /* Larger relative size */
+            }
+            
+            /* Ensure ASCII boxes don't overflow on mobile and center them */
+            .ascii-box {
+                max-width: 100%;
+                overflow-x: auto;
+                margin: 0 auto;  /* Center the boxes */
+            }
+            
+            /* Center all content containers on mobile */
+            .ascii-container {
+                padding: 5px;  /* Reduce padding on mobile */
+                text-align: center;  /* Center-align content */
+            }
+            
+            /* Ensure pre elements are centered */
+            pre {
+                text-align: left;  /* Keep text left-aligned within boxes */
+                margin: 0 auto;    /* Center the pre blocks */
+                display: block;
             }
         }
 
@@ -233,19 +320,40 @@
 
         <div class="main-content-wrapper">
             <div class="ascii-content">
-                <div class="ascii-box">
+                <div class="ascii-box welcome-box">
                     <div class="box-tiny"><pre>{{ welcome_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ welcome_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ welcome_box.medium | safe }}</pre></div>
                     <div class="box-large"><pre>{{ welcome_box.large | safe }}</pre></div>
                 </div>
 
-                <div class="ascii-box">
+                <div class="ascii-box latest-posts-box">
                     <div class="box-tiny"><pre>{{ latest_post_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ latest_post_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ latest_post_box.medium | safe }}</pre></div>
                     <div class="box-large"><pre>{{ latest_post_box.large | safe }}</pre></div>
                 </div>
+
+                <!-- Additional posts for mobile dropdown -->
+                <div id="additional-posts-mobile" style="display:none;">
+                    {% for post in additional_posts %}
+                    <div class="ascii-box">
+                        <div class="box-small">
+                            <pre>░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+{{ post.title }}
+{{ post.date }}
+
+{{ post.content }}
+
+Read more: <a href="{{ post.href }}">{{ post.title }}</a>
+
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</pre>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
             </div>
 
             <div class="ascii-sidebar">
@@ -360,6 +468,36 @@
         }
 
         run();
+    </script>
+
+    <script>
+        // Handle show/hide more posts functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all pre elements containing the show more boxes
+            const allPreElements = document.querySelectorAll('pre');
+            
+            allPreElements.forEach(pre => {
+                const text = pre.textContent;
+                
+                if (text.includes('▼ SHOW MORE POSTS ▼')) {
+                    pre.style.cursor = 'pointer';
+                    pre.addEventListener('click', function(e) {
+                        const additionalPosts = document.getElementById('additional-posts-mobile');
+                        if (additionalPosts) {
+                            const isHidden = additionalPosts.style.display === 'none' || additionalPosts.style.display === '';
+                            additionalPosts.style.display = isHidden ? 'block' : 'none';
+                            
+                            // Update button text without breaking ASCII structure
+                            if (isHidden) {
+                                pre.innerHTML = pre.innerHTML.replace('▼ SHOW MORE POSTS ▼', '▲ HIDE POSTS ▲');
+                            } else {
+                                pre.innerHTML = pre.innerHTML.replace('▲ HIDE POSTS ▲', '▼ SHOW MORE POSTS ▼');
+                            }
+                        }
+                    });
+                }
+            });
+        });
     </script>
 </body>
 </html> 
