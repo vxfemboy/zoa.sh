@@ -9,6 +9,12 @@ pub struct ContentManager {
     data: SiteData,
 }
 
+impl Default for ContentManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ContentManager {
     pub fn new() -> Self {
         Self {

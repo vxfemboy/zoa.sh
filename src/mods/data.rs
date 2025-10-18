@@ -32,6 +32,12 @@ pub struct SiteData {
     pub welcome_content: String,
 }
 
+impl Default for SiteData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SiteData {
     pub fn new() -> Self {
         // Convert profile image to ASCII art
