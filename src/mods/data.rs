@@ -1,4 +1,25 @@
-use crate::mods::{NavItem, Post, Comment};
+use crate::mods::image_converter::ImageConverter;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub struct NavItem {
+    pub text: String,
+    pub href: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct Post {
+    pub title: String,
+    pub date: String,
+    pub content: String,
+    pub href: String,
+}
+
+#[derive(Serialize)]
+pub struct Comment {
+    pub username: String,
+    pub content: String,
+}
 
 pub struct SiteData {
     pub nav_items: Vec<NavItem>,
@@ -7,11 +28,18 @@ pub struct SiteData {
     pub comments: Vec<Comment>,
     pub footer_text: String,
     pub about_content: String,
+    pub about_ascii_art: String,
     pub welcome_content: String,
 }
 
 impl SiteData {
     pub fn new() -> Self {
+        // Convert profile image to ASCII art
+        let image_converter = ImageConverter::new();
+        let profile_ascii = image_converter
+            .convert_profile_image("static/profile.png")
+            .unwrap_or_else(|_| "ASCII profile image not available".to_string());
+
         Self {
             nav_items: vec![
                 NavItem {
@@ -37,45 +65,39 @@ impl SiteData {
             ],
             posts: vec![
                 Post {
-                    title: "Testing Emoji Support 🚀🔥".to_string(),
-                    href: "#".to_string(),
-                    date: "October 12, 2025".to_string(),
-                    content: "Testing various emojis: 🌈 rainbow, ⭐ star, 💻 laptop, 🎉 party, ❤️ heart, and 🄯 copyleft!".to_string(),
+                    title: "RIP KAYOS".to_string(),
+                    date: "2024-08-25".to_string(),
+                    content: "see you in the packet flow old friend...".to_string(),
+                    href: "https://soundcloud.com/queed-inc".to_string(),
                 },
                 Post {
-                    title: "Building ASCII Art Websites 🎨".to_string(),
-                    href: "#".to_string(),
-                    date: "October 10, 2025".to_string(),
-                    content: "Exploring the retro aesthetic of ASCII art in modern web development. From terminal interfaces to nostalgic design patterns.".to_string(),
+                    title: "Welcome to My Website".to_string(),
+                    date: "2024-08-15".to_string(),
+                    content: "This is my first post on this Rust-powered ASCII art website. I'm excited to share my thoughts and projects here.".to_string(),
+                    href: "/post/1".to_string(),
                 },
-                Post {
-                    title: "Rust Web Development 🦀".to_string(),
-                    href: "#".to_string(),
-                    date: "October 8, 2025".to_string(),
-                    content: "Why Rust is becoming a popular choice for web backends. Performance, safety, and the joy of systems programming.".to_string(),
-                },
-                Post {
-                    title: "The Art of Minimal Design ✨".to_string(),
-                    href: "#".to_string(),
-                    date: "October 5, 2025".to_string(),
-                    content: "Less is more. How minimal design principles can create powerful user experiences and clean codebases.".to_string(),
-                },
+
             ],
             categories: vec![
-                "Kernel".to_string(),
-                "Security".to_string(),
-                "Networking".to_string(),
-                "Systems".to_string(),
-                "Research".to_string(),
+                "Rust".to_string(),
+                "Web Development".to_string(),
+                "ASCII Art".to_string(),
+                "Terminal".to_string(),
+                "WASM".to_string(),
             ],
             comments: vec![
                 Comment {
-                    username: "user123".to_string(),
+                    username: "rustacean".to_string(),
                     content: "Love the ASCII aesthetic!".to_string(),
+                },
+                Comment {
+                    username: "terminal_lover".to_string(),
+                    content: "This brings back memories of the old terminal days. Beautiful implementation!".to_string(),
                 },
             ],
             footer_text: "🄯 vxfemboy | meow <3".to_string(),
             about_content: "I press buttons.".to_string(),
+            about_ascii_art: profile_ascii,
             welcome_content: "Hello and welcome to my website!\n\nThis is a Rust-powered ASCII art website.".to_string(),
         }
     }

@@ -1,5 +1,8 @@
-use crate::mods::{create_header_box, create_footer_box, create_nav_box, NavItem};
 use crate::mods::constants::*;
+use crate::mods::data::NavItem;
+use crate::mods::{
+    create_about_box_with_ascii, create_footer_box, create_header_box, create_nav_box,
+};
 
 pub struct ResponsiveBoxes {
     pub tiny: String,
@@ -36,12 +39,32 @@ impl ResponsiveBoxes {
         }
     }
 
-    pub fn new_about(content: &str) -> Self {
+    pub fn new_about_with_ascii(text_content: &str, ascii_art: &str) -> Self {
         Self {
-            tiny: create_header_box("ABOUT ME", content, ABOUT_WIDTH_TINY),
-            small: create_header_box("ABOUT ME", content, ABOUT_WIDTH_SMALL),
-            medium: create_header_box("ABOUT ME", content, ABOUT_WIDTH_MEDIUM),
-            large: create_header_box("ABOUT ME", content, ABOUT_WIDTH_LARGE),
+            tiny: create_about_box_with_ascii(
+                "ABOUT ME",
+                text_content,
+                ascii_art,
+                ABOUT_WIDTH_TINY,
+            ),
+            small: create_about_box_with_ascii(
+                "ABOUT ME",
+                text_content,
+                ascii_art,
+                ABOUT_WIDTH_SMALL,
+            ),
+            medium: create_about_box_with_ascii(
+                "ABOUT ME",
+                text_content,
+                ascii_art,
+                ABOUT_WIDTH_MEDIUM,
+            ),
+            large: create_about_box_with_ascii(
+                "ABOUT ME",
+                text_content,
+                ascii_art,
+                ABOUT_WIDTH_LARGE,
+            ),
         }
     }
 
@@ -62,7 +85,7 @@ impl ResponsiveBoxes {
 
     pub fn new_comments(username: &str, content: &str) -> Self {
         let comment_content = format!("@{}:\n\"{}\"", username, content);
-        
+
         Self {
             tiny: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_TINY),
             small: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_SMALL),

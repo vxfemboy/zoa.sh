@@ -99,15 +99,15 @@ impl Config {
         let settings = config::Config::builder()
             .add_source(config::File::with_name("config").required(false))
             .add_source(config::Environment::with_prefix("ASCII_WEB"));
-        
+
         // Set defaults manually since set_defaults doesn't exist
         let default_config = Config::default();
-        
+
         // Try to build and deserialize
         match settings.build() {
-            Ok(config) => {
-                config.try_deserialize().map_err(crate::mods::AppError::Config)
-            }
+            Ok(config) => config
+                .try_deserialize()
+                .map_err(crate::mods::AppError::Config),
             Err(_) => {
                 // If config file doesn't exist, return defaults
                 Ok(default_config)

@@ -123,6 +123,22 @@
             width: 0;
         }
 
+        .profile-ascii {
+            font-size: 0.1vw;
+            line-height: 0.5;
+            margin: 0;
+            padding: 0;
+            white-space: pre;
+            display: block;
+            position: relative;
+            z-index: 1;
+            max-width: 100%;
+            overflow: hidden;
+            text-align: center;
+            transform: scale(0.1);
+            transform-origin: top center;
+        }
+
         .ascii-title {
             font-size: 0.8vw;
             white-space: pre;
@@ -298,9 +314,7 @@
             padding: 0;
             border: 0;
         }
-    </style>
-</head>
-<body>
+    </style>text.r
     <div id="stars-container">
         {% for star in stars %}
             <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
@@ -501,3 +515,4 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
     </script>
 </body>
 </html> 
+

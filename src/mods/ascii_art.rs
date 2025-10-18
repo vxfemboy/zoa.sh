@@ -1,4 +1,4 @@
-use crate::mods::NavItem;
+use crate::mods::data::NavItem;
 use unicode_width::UnicodeWidthChar;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -82,12 +82,13 @@ pub fn replace_problematic_chars(text: &str) -> String {
             // Handle specific symbols
             match c {
                 // Zero-width characters - remove completely
-                '\u{fe0f}' | '\u{200d}' | '\u{200b}' | '\u{200c}' | '\u{200f}' | '\u{feff}' => {
-                }
+                '\u{fe0f}' | '\u{200d}' | '\u{200b}' | '\u{200c}' | '\u{200f}' | '\u{feff}' => {}
 
                 // Special: Use custom copyleft SVG
                 '🄯' => {
-                    result.push_str("<img src=\"/static/copyleft.svg\" alt=\"copyleft\" class=\"emoji-img\">");
+                    result.push_str(
+                        "<img src=\"/static/copyleft.svg\" alt=\"copyleft\" class=\"emoji-img\">",
+                    );
                 }
 
                 // All other emojis/special chars: convert to SVG using Twemoji
@@ -235,8 +236,7 @@ pub fn create_footer_box(content: &str, width: usize) -> String {
     // This ensures the horizontal line and content have the same width
     let content_width = actual_width - 2;
 
-    let (top_left, horizontal, top_right, left_border, right_border) =
-        get_box_chars(actual_width);
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
     let bottom_left = if actual_width < 20 {
         "+"
     } else if actual_width < 40 {
@@ -275,8 +275,7 @@ pub fn create_header_box(title: &str, content: &str, width: usize) -> String {
     let actual_width = width.max(10); // Minimum width of 10 characters
     let content_width = actual_width.saturating_sub(2);
 
-    let (top_left, horizontal, top_right, left_border, right_border) =
-        get_box_chars(actual_width);
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
     let bottom_left = if actual_width < 20 {
         "+"
     } else if actual_width < 40 {
@@ -347,12 +346,98 @@ pub fn create_header_box(title: &str, content: &str, width: usize) -> String {
     )
 }
 
+pub fn create_about_box_with_ascii(
+    title: &str,
+    text_content: &str,
+    ascii_art: &str,
+    width: usize,
+) -> String {
+    let actual_width = width.max(10); // Minimum width of 10 characters
+    let content_width = actual_width.saturating_sub(2);
+
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
+    let bottom_left = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "└"
+    } else {
+        "╚"
+    };
+    let bottom_right = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "┘"
+    } else {
+        "╝"
+    };
+    let header_sep_left = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "├"
+    } else {
+        "╠"
+    };
+    let header_sep_right = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "┤"
+    } else {
+        "╣"
+    };
+
+    let horizontal_line = horizontal.repeat(content_width);
+    let top = format!("{}{}{}\n", top_left, horizontal_line, top_right);
+    let header_sep = format!(
+        "{}{}{}\n",
+        header_sep_left, horizontal_line, header_sep_right
+    );
+    let bottom = format!("{}{}{}\n", bottom_left, horizontal_line, bottom_right);
+
+    // Calculate visual width of horizontal line
+    let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
+
+    // Center the title
+    let title_line = create_content_line(
+        left_border,
+        title,
+        right_border,
+        horizontal_visual_width,
+        true,
+    );
+
+    // Create ASCII art content with proper box borders
+    let ascii_art_lines: Vec<&str> = ascii_art.lines().collect();
+    let ascii_art_content = ascii_art_lines
+        .iter()
+        .map(|line| format!("{}{}{}\n", left_border, line, right_border))
+        .collect::<String>();
+
+    // Create text content lines with margins
+    let text_content_lines = text_content
+        .lines()
+        .map(|line| {
+            let line_with_margin = format!(" {} ", line);
+            create_content_line(
+                left_border,
+                &line_with_margin,
+                right_border,
+                horizontal_visual_width,
+                false,
+            )
+        })
+        .collect::<String>();
+
+    format!(
+        "{}{}{}{}{}{}",
+        top, title_line, header_sep, ascii_art_content, text_content_lines, bottom
+    )
+}
+
 pub fn create_nav_box(items: &[NavItem], width: usize) -> String {
     let actual_width = width.max(10); // Minimum width of 10 characters
     let content_width = actual_width.saturating_sub(2);
 
-    let (top_left, horizontal, top_right, left_border, right_border) =
-        get_box_chars(actual_width);
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
     let bottom_left = if actual_width < 20 {
         "+"
     } else if actual_width < 40 {

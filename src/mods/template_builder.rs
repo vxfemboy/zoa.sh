@@ -1,4 +1,4 @@
-use crate::mods::{PageContext, BoxSizes, Star, Post};
+use crate::mods::{PageContext, Star};
 use tera::Context;
 
 pub struct TemplateContextBuilder {
@@ -23,62 +23,20 @@ impl TemplateContextBuilder {
         self.context.insert("footer_box", &ctx.footer_box);
         self.context.insert("stars", &ctx.stars);
         self.context.insert("posts", &ctx.posts);
-        self.context.insert("additional_posts", &ctx.additional_posts);
+        self.context
+            .insert("additional_posts", &ctx.additional_posts);
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_title_art(mut self, art: &str) -> Self {
         self.context.insert("title_art", art);
         self
     }
 
-    pub fn with_navigation(mut self, nav: &BoxSizes) -> Self {
-        self.context.insert("navigation_box", nav);
-        self
-    }
-
-    pub fn with_welcome(mut self, welcome: &BoxSizes) -> Self {
-        self.context.insert("welcome_box", welcome);
-        self
-    }
-
-    pub fn with_posts(mut self, posts: &BoxSizes) -> Self {
-        self.context.insert("latest_post_box", posts);
-        self
-    }
-
-    pub fn with_about(mut self, about: &BoxSizes) -> Self {
-        self.context.insert("about_box", about);
-        self
-    }
-
-    pub fn with_categories(mut self, categories: &BoxSizes) -> Self {
-        self.context.insert("categories_box", categories);
-        self
-    }
-
-    pub fn with_comments(mut self, comments: &BoxSizes) -> Self {
-        self.context.insert("comments_box", comments);
-        self
-    }
-
-    pub fn with_footer(mut self, footer: &BoxSizes) -> Self {
-        self.context.insert("footer_box", footer);
-        self
-    }
-
+    #[allow(dead_code)]
     pub fn with_stars(mut self, stars: &[Star]) -> Self {
         self.context.insert("stars", stars);
-        self
-    }
-
-    pub fn with_posts_data(mut self, posts: &[Post]) -> Self {
-        self.context.insert("posts", posts);
-        self
-    }
-
-    pub fn with_additional_posts(mut self, posts: &[Post]) -> Self {
-        self.context.insert("additional_posts", posts);
         self
     }
 
