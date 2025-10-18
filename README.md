@@ -61,36 +61,10 @@ The server will start at `http://localhost:8080`
 ```
 This builds the WebAssembly cat module for the frontend.
 
-### Generate Static Site
-```bash
-cargo run --bin generate_static
-```
-This generates a static version of the site in the `dist/` directory for deployment.
-
 ### Production Build
 ```bash
 cargo build --release
 ```
-
-## 🚀 GitHub Pages Deployment
-
-This project is configured to automatically deploy to GitHub Pages when you push to the main/master branch.
-
-### Setup GitHub Pages
-
-1. Go to your repository **Settings** > **Pages**
-2. Under **Source**, select **GitHub Actions**
-3. Push your changes to the main/master branch
-4. The CI workflow will automatically build and deploy your site
-
-### Manual Testing
-
-Test the deployment locally:
-```bash
-./test-deployment.sh
-```
-
-Your site will be available at: `https://yourusername.github.io/sadsite`
 
 ## 🎨 ASCII Box Generation
 

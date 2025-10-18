@@ -50,9 +50,5 @@ web-sys = { version = "0.3", features = [
 ] }
 js-sys = "0.3"
 
-[[bin]]
-name = "generate_static"
-path = "src/bin/generate_static.rs"
-
 [dev-dependencies]
 cargo-watch = "8.5"
