@@ -58,7 +58,7 @@ impl SiteData {
                 },
                 NavItem {
                     text: "PROJECTS".to_string(),
-                    href: "#".to_string(),
+                    href: "https://github.com/vxfemboy".to_string(),
                 },
                 NavItem {
                     text: "BLOG".to_string(),
@@ -72,24 +72,29 @@ impl SiteData {
             posts: vec![
                 Post {
                     title: "RIP KAYOS".to_string(),
-                    date: "2024-08-25".to_string(),
+                    date: "2024-08-18".to_string(),
                     content: "see you in the packet flow old friend...".to_string(),
                     href: "https://soundcloud.com/queed-inc".to_string(),
+                },
+                Post {
+                    title: "a story about a cat".to_string(),
+                    date: "2024-08-15".to_string(),
+                    content: "meowmeow meow meow meow meow meow meow meow meow meow.".to_string(),
+                    href: "https://poptart.cat".to_string(),
                 },
                 Post {
                     title: "Welcome to My Website".to_string(),
                     date: "2024-08-15".to_string(),
                     content: "This is my first post on this Rust-powered ASCII art website. I'm excited to share my thoughts and projects here.".to_string(),
-                    href: "/post/1".to_string(),
+                    href: "#".to_string(),
                 },
 
             ],
             categories: vec![
-                "Rust".to_string(),
-                "Web Development".to_string(),
-                "ASCII Art".to_string(),
-                "Terminal".to_string(),
-                "WASM".to_string(),
+                "Software".to_string(),
+                "Network".to_string(),
+                "Security".to_string(),
+                "Hardware".to_string(),
             ],
             comments: vec![
                 Comment {
@@ -104,7 +109,7 @@ impl SiteData {
             footer_text: "🄯 vxfemboy | meow <3".to_string(),
             about_content: "I press buttons.".to_string(),
             about_ascii_art: profile_ascii,
-            welcome_content: "Hello and welcome to my website!\n\nThis is a Rust-powered ASCII art website.".to_string(),
+            welcome_content: "Hello and welcome to my website!\n\nlol i wanna die.".to_string(),
         }
     }
 }

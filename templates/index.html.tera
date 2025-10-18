@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASCII Web</title>
+    <title>vxfemboy</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
     <style>
         @font-face {
             font-family: "Departure Mono";
@@ -301,6 +302,45 @@
             text-decoration: underline;
         }
 
+        /* Shoutbox styling */
+        #shoutbox-container {
+            /* Removed hover effects since we now have input fields */
+        }
+
+        #shoutbox-container pre {
+            white-space: pre;
+            font-family: "Departure Mono", "Courier New", monospace;
+            overflow: hidden;
+            word-wrap: normal;
+            word-break: normal;
+        }
+
+        .shoutbox-input-container {
+            margin-top: 5px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .shoutbox-input-container input {
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #333;
+            font-family: "Departure Mono", "Courier New", monospace;
+            font-size: 12px;
+            padding: 4px 8px;
+            width: 200px;
+            outline: none;
+        }
+
+        .shoutbox-input-container input:focus {
+            border-color: #33aaff;
+            box-shadow: 0 0 5px rgba(51, 170, 255, 0.3);
+        }
+
+        .shoutbox-input-container input::placeholder {
+            color: #666;
+        }
+
         /* Emoji images - force to exactly 1 monospace character width */
         .emoji-img {
             display: inline-block;
@@ -314,7 +354,7 @@
             padding: 0;
             border: 0;
         }
-    </style>text.r
+    </style>
     <div id="stars-container">
         {% for star in stars %}
             <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
@@ -385,11 +425,31 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     <div class="box-large"><pre>{{ categories_box.large | safe }}</pre></div>
                 </div>
 
-                <div class="ascii-box">
-                    <div class="box-tiny"><pre>{{ comments_box.tiny | safe }}</pre></div>
-                    <div class="box-small"><pre>{{ comments_box.small | safe }}</pre></div>
-                    <div class="box-medium"><pre>{{ comments_box.medium | safe }}</pre></div>
-                    <div class="box-large"><pre>{{ comments_box.large | safe }}</pre></div>
+                <div class="ascii-box" id="shoutbox-container">
+                    <div class="box-tiny">
+                        <pre id="shoutbox-tiny">{{ comments_box.tiny | safe }}</pre>
+                        <div class="shoutbox-input-container">
+                            <input type="text" id="shoutbox-input-tiny" placeholder="username: message" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="box-small">
+                        <pre id="shoutbox-small">{{ comments_box.small | safe }}</pre>
+                        <div class="shoutbox-input-container">
+                            <input type="text" id="shoutbox-input-small" placeholder="username: message" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="box-medium">
+                        <pre id="shoutbox-medium">{{ comments_box.medium | safe }}</pre>
+                        <div class="shoutbox-input-container">
+                            <input type="text" id="shoutbox-input-medium" placeholder="username: message" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="box-large">
+                        <pre id="shoutbox-large">{{ comments_box.large | safe }}</pre>
+                        <div class="shoutbox-input-container">
+                            <input type="text" id="shoutbox-input-large" placeholder="username: message" maxlength="50">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -485,6 +545,293 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
     </script>
 
     <script>
+        // Realtime Shoutbox WebSocket functionality
+        class ShoutboxManager {
+            constructor() {
+                this.ws = null;
+                this.isConnected = false;
+                this.messages = [];
+                this.maxMessages = 5;
+                this.connectedUsers = 0;
+                this.init();
+            }
+
+            init() {
+                this.connectWebSocket();
+                this.setupInputHandling();
+                this.loadInitialMessages();
+            }
+
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/shoutbox`;
+                
+                try {
+                    this.ws = new WebSocket(wsUrl);
+                    
+                    this.ws.onopen = () => {
+                        console.log('Shoutbox WebSocket connected');
+                        this.isConnected = true;
+                        this.updateConnectionStatus('Connected');
+                        this.requestMessages();
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.handleMessage(data);
+                        } catch (error) {
+                            console.error('Error parsing WebSocket message:', error);
+                        }
+                    };
+
+                    this.ws.onclose = () => {
+                        console.log('Shoutbox WebSocket disconnected');
+                        this.isConnected = false;
+                        this.updateConnectionStatus('Disconnected');
+                        // Attempt to reconnect after 3 seconds
+                        setTimeout(() => this.connectWebSocket(), 3000);
+                    };
+
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.updateConnectionStatus('Error');
+                    };
+                } catch (error) {
+                    console.error('Failed to create WebSocket connection:', error);
+                }
+            }
+
+            handleMessage(data) {
+                console.log('Received WebSocket message:', data);
+                switch (data.action) {
+                    case 'new_message':
+                        if (data.message) {
+                            console.log('Adding new message:', data.message);
+                            this.addMessage(data.message);
+                        }
+                        break;
+                    case 'messages':
+                        if (data.messages) {
+                            console.log('Received messages:', data.messages);
+                            this.messages = data.messages.slice(-this.maxMessages);
+                            this.renderMessages();
+                        }
+                        break;
+                    case 'user_count':
+                        if (data.user_count !== undefined) {
+                            this.connectedUsers = data.user_count;
+                            this.renderMessages();
+                        }
+                        break;
+                    case 'error':
+                        console.error('Shoutbox error:', data.error);
+                        break;
+                    default:
+                        console.log('Unknown message action:', data.action);
+                        break;
+                }
+            }
+
+            requestMessages() {
+                if (this.isConnected) {
+                    this.ws.send(JSON.stringify({ action: 'get_messages' }));
+                }
+            }
+
+            sendMessage(username, content) {
+                if (this.isConnected && username.trim() && content.trim()) {
+                    this.ws.send(JSON.stringify({
+                        action: 'send_message',
+                        username: username.trim(),
+                        content: content.trim()
+                    }));
+                }
+            }
+
+            addMessage(message) {
+                console.log('Adding message to local array:', message);
+                this.messages.push(message);
+                if (this.messages.length > this.maxMessages) {
+                    this.messages.shift();
+                }
+                console.log('Current messages:', this.messages);
+                this.renderMessages();
+            }
+
+            renderMessages() {
+                console.log('Rendering messages, current count:', this.messages.length);
+                // Sort messages by timestamp to show newest at bottom (oldest first)
+                const sortedMessages = this.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                const messages = sortedMessages.slice(-this.maxMessages);
+                console.log('Messages to render:', messages);
+                
+                // Get the appropriate width based on screen size
+                const getMaxWidth = () => {
+                    if (window.innerWidth <= 400) return 21; // COMMENTS_WIDTH_TINY - 2 for borders
+                    if (window.innerWidth <= 600) return 26; // COMMENTS_WIDTH_SMALL - 2 for borders  
+                    if (window.innerWidth <= 900) return 41; // COMMENTS_WIDTH_MEDIUM - 2 for borders
+                    return 53; // COMMENTS_WIDTH_LARGE - 2 for borders
+                };
+                
+                const maxWidth = Math.max(20, getMaxWidth()); // Ensure minimum width
+                
+                // Helper function to wrap text to fit within box width
+                function wrapText(text, maxWidth) {
+                    if (text.length <= maxWidth) {
+                        return [text];
+                    }
+                    const words = text.split(' ');
+                    const lines = [];
+                    let currentLine = '';
+                    
+                    for (const word of words) {
+                        if ((currentLine + word).length <= maxWidth) {
+                            currentLine += (currentLine ? ' ' : '') + word;
+                        } else {
+                            if (currentLine) {
+                                lines.push(currentLine);
+                                currentLine = word;
+                            } else {
+                                // Single word is too long, truncate it
+                                lines.push(word.substring(0, maxWidth - 3) + '...');
+                            }
+                        }
+                    }
+                    if (currentLine) {
+                        lines.push(currentLine);
+                    }
+                    return lines;
+                }
+
+                // Format messages to fit in the box
+                let messageLines = [];
+                if (messages.length > 0) {
+                    messages.forEach(msg => {
+                        const username = msg.username.length > 10 ? msg.username.substring(0, 10) : msg.username;
+                        const messageText = `@${username}: "${msg.content}"`;
+                        const wrapped = wrapText(messageText, maxWidth);
+                        messageLines.push(...wrapped);
+                    });
+                } else {
+                    messageLines = ['No messages yet. Be the first to shout!'];
+                }
+
+                // Limit to 5 message lines to prevent overflow
+                messageLines = messageLines.slice(0, 5);
+
+                // Pad lines to exact width
+                const paddedLines = messageLines.map(line => {
+                    if (line.length > maxWidth) {
+                        return line.substring(0, maxWidth - 3) + '...';
+                    }
+                    return line.padEnd(maxWidth);
+                });
+
+                const statusText = `${this.isConnected ? 'Connected' : 'Disconnected'} - ${this.connectedUsers} users`;
+                const paddedStatus = statusText.length > maxWidth ? 
+                    statusText.substring(0, maxWidth - 3) + '...' : 
+                    statusText.padEnd(maxWidth);
+
+                // Create responsive shoutbox content for each screen size
+                const createShoutboxContent = (width) => {
+                    // Ensure width is positive and reasonable
+                    const safeWidth = Math.max(20, width);
+                    
+                    const borderTop = '╔' + '═'.repeat(safeWidth) + '╗';
+                    const borderBottom = '╚' + '═'.repeat(safeWidth) + '╝';
+                    const borderLine = '╠' + '═'.repeat(safeWidth) + '╣';
+                    const emptyLine = '║' + ' '.repeat(safeWidth) + '║';
+                    
+                    const title = 'SHOUTBOX';
+                    const titlePadding = Math.max(0, Math.floor((safeWidth - title.length) / 2));
+                    const titleLine = '║' + ' '.repeat(titlePadding) + title + ' '.repeat(Math.max(0, safeWidth - title.length - titlePadding)) + '║';
+                    
+                    const statusLine = '║ ' + paddedStatus.substring(0, Math.max(0, safeWidth - 3)).padEnd(Math.max(0, safeWidth - 3)) + '  ║';
+                    
+                    let content = borderTop + '\n' + titleLine + '\n' + borderLine + '\n' + emptyLine + '\n' + statusLine + '\n' + emptyLine + '\n';
+                    
+                    // Add message lines
+                    paddedLines.forEach(line => {
+                        const paddedLine = line.substring(0, Math.max(0, safeWidth - 3)).padEnd(Math.max(0, safeWidth - 3));
+                        content += '║ ' + paddedLine + '  ║\n';
+                    });
+                    
+                    // Add remaining empty lines (total lines should be 5 for messages)
+                    const remainingLines = 5 - paddedLines.length;
+                    for (let i = 0; i < remainingLines; i++) {
+                        content += emptyLine + '\n';
+                    }
+                    
+                    content += emptyLine + '\n';
+                    content += borderBottom;
+                    
+                    return content;
+                };
+
+                // Update all responsive versions with correct widths
+                document.getElementById('shoutbox-tiny').textContent = createShoutboxContent(25);
+                document.getElementById('shoutbox-small').textContent = createShoutboxContent(30);
+                document.getElementById('shoutbox-medium').textContent = createShoutboxContent(45);
+                document.getElementById('shoutbox-large').textContent = createShoutboxContent(55);
+            }
+
+            updateConnectionStatus(status) {
+                // This will be reflected in the next renderMessages call
+                console.log(`Shoutbox status: ${status}`);
+            }
+
+            setupInputHandling() {
+                // Setup input field handlers
+                const inputIds = ['shoutbox-input-tiny', 'shoutbox-input-small', 'shoutbox-input-medium', 'shoutbox-input-large'];
+                
+                inputIds.forEach(inputId => {
+                    const input = document.getElementById(inputId);
+                    if (input) {
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                const value = input.value.trim();
+                                if (value) {
+                                    // Parse username and message from "username: message" format
+                                    const colonIndex = value.indexOf(':');
+                                    if (colonIndex > 0) {
+                                        const username = value.substring(0, colonIndex).trim();
+                                        const message = value.substring(colonIndex + 1).trim();
+                                        if (username && message) {
+                                            this.sendMessage(username, message);
+                                            input.value = ''; // Clear input
+                                        }
+                                    } else {
+                                        // If no colon, treat as message with default username
+                                        this.sendMessage('anon', value);
+                                        input.value = ''; // Clear input
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            loadInitialMessages() {
+                // Load initial messages via HTTP API
+                fetch('/api/shoutbox/messages')
+                    .then(response => response.json())
+                    .then(messages => {
+                        this.messages = messages.slice(-this.maxMessages);
+                        this.renderMessages();
+                    })
+                    .catch(error => {
+                        console.error('Failed to load initial messages:', error);
+                    });
+            }
+        }
+
+        // Initialize shoutbox when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.shoutbox = new ShoutboxManager();
+        });
+
         // Handle show/hide more posts functionality
         document.addEventListener('DOMContentLoaded', function() {
             // Find all pre elements containing the show more boxes

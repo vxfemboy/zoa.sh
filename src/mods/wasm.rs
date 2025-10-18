@@ -292,16 +292,16 @@ mod wasm {
                 "style",
                 &format!(
                     "position: fixed; \
-                 pointer-events: none; \
-                 z-index: 99999; \
-                 font-size: 3px; \
-                 line-height: 1; \
-                 white-space: pre; \
-                 color: #fff; \
-                 text-shadow: 0 0 2px rgba(255,255,255,0.8); \
-                 filter: drop-shadow(0 0 1px rgba(255,255,255,0.5)); \
-                 left: {}px; \
-                 top: {}px;",
+                    pointer-events: none; \
+                    z-index: 99999; \
+                    font-size: 3px; \
+                    line-height: 1; \
+                    white-space: pre; \
+                    color: #fff; \
+                    text-shadow: 0 0 2px rgba(255,255,255,0.8); \
+                    filter: drop-shadow(0 0 1px rgba(255,255,255,0.5)); \
+                    left: {}px; \
+                    top: {}px;",
                     self.neko_pos_x - 5.0, // Smaller offset for smaller cat
                     self.neko_pos_y - 5.0
                 ),

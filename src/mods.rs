@@ -11,6 +11,7 @@ pub mod data;
 pub mod errors;
 pub mod image_converter;
 pub mod responsive;
+pub mod shoutbox;
 pub mod stars;
 pub mod template_builder;
 pub mod wasm;
@@ -27,6 +28,7 @@ pub use content::*;
 pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
+pub use shoutbox::*;
 pub use stars::*;
 pub use template_builder::*;
 

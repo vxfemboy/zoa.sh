@@ -25,7 +25,7 @@ impl ContentManager {
     pub fn create_page_context(&self) -> Result<PageContext, Box<dyn std::error::Error>> {
         // Load the ASCII title art from file
         let title_art = fs::read_to_string("templates/ascii/title.txt")
-            .unwrap_or_else(|_| "ASCII Web".to_string());
+            .unwrap_or_else(|_| "vxfemboy".to_string());
 
         // Process posts with emoji replacement
         let processed_posts: Vec<Post> = self
@@ -49,9 +49,7 @@ impl ContentManager {
         );
         let categories_box = ResponsiveBoxes::new_categories(&self.data.categories);
 
-        let latest_comment = &self.data.comments[0];
-        let comments_box =
-            ResponsiveBoxes::new_comments(&latest_comment.username, &latest_comment.content);
+        let comments_box = ResponsiveBoxes::new_shoutbox();
 
         let footer_text = replace_problematic_chars(&self.data.footer_text);
         let footer_box = ResponsiveBoxes::new_footer(&footer_text);
@@ -155,22 +153,22 @@ impl ContentManager {
 
         ResponsiveBoxes {
             tiny: crate::mods::create_header_box(
-                "LATEST POSTS",
+                "POSTS",
                 &mobile_content_tiny,
                 BOX_WIDTH_TINY,
             ),
             small: crate::mods::create_header_box(
-                "LATEST POSTS",
+                "POSTS",
                 &mobile_content_small,
                 BOX_WIDTH_SMALL,
             ),
             medium: crate::mods::create_header_box(
-                "LATEST POSTS",
+                "POSTS",
                 &all_posts_content_medium,
                 BOX_WIDTH_MEDIUM,
             ),
             large: crate::mods::create_header_box(
-                "LATEST POSTS",
+                "POSTS",
                 &all_posts_content_large,
                 BOX_WIDTH_LARGE,
             ),

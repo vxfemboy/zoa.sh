@@ -42,25 +42,25 @@ impl ResponsiveBoxes {
     pub fn new_about_with_ascii(text_content: &str, ascii_art: &str) -> Self {
         Self {
             tiny: create_about_box_with_ascii(
-                "ABOUT ME",
+                "WHOAMI",
                 text_content,
                 ascii_art,
                 ABOUT_WIDTH_TINY,
             ),
             small: create_about_box_with_ascii(
-                "ABOUT ME",
+                "WHOAMI",
                 text_content,
                 ascii_art,
                 ABOUT_WIDTH_SMALL,
             ),
             medium: create_about_box_with_ascii(
-                "ABOUT ME",
+                "WHOAMI",
                 text_content,
                 ascii_art,
                 ABOUT_WIDTH_MEDIUM,
             ),
             large: create_about_box_with_ascii(
-                "ABOUT ME",
+                "WHOAMI",
                 text_content,
                 ascii_art,
                 ABOUT_WIDTH_LARGE,
@@ -91,6 +91,32 @@ impl ResponsiveBoxes {
             small: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_SMALL),
             medium: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_MEDIUM),
             large: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_LARGE),
+        }
+    }
+
+    pub fn new_shoutbox() -> Self {
+        let shoutbox_content = "╔══════════════════════════════════════╗
+║           SHOUTBOX                   ║
+╠══════════════════════════════════════╣
+║                                      ║
+║  Connect to join the conversation!   ║
+║                                      ║
+║  Type your message below:            ║
+║  [username] [message]                ║
+║                                      ║
+║  Example:                            ║
+║  rustacean Hello world!              ║
+║                                      ║
+║  Messages will appear here in        ║
+║  real-time as they're posted...      ║
+║                                      ║
+╚══════════════════════════════════════╝";
+
+        Self {
+            tiny: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_TINY),
+            small: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_SMALL),
+            medium: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_MEDIUM),
+            large: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_LARGE),
         }
     }
 }
