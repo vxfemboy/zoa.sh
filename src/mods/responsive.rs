@@ -1,8 +1,6 @@
 use crate::mods::constants::*;
 use crate::mods::data::NavItem;
-use crate::mods::{
-    create_about_box_with_ascii, create_footer_box, create_header_box, create_nav_box,
-};
+use crate::mods::{create_nav_box, BoxBuilder, BoxStyle};
 
 pub struct ResponsiveBoxes {
     pub tiny: String,
@@ -14,19 +12,55 @@ pub struct ResponsiveBoxes {
 impl ResponsiveBoxes {
     pub fn new_header(title: &str, content: &str) -> Self {
         Self {
-            tiny: create_header_box(title, content, BOX_WIDTH_TINY),
-            small: create_header_box(title, content, BOX_WIDTH_SMALL),
-            medium: create_header_box(title, content, BOX_WIDTH_MEDIUM),
-            large: create_header_box(title, content, BOX_WIDTH_LARGE),
+            tiny: BoxBuilder::new()
+                .with_title(title)
+                .with_content(content)
+                .with_width(BOX_WIDTH_TINY)
+                .with_style(BoxStyle::Header)
+                .build(),
+            small: BoxBuilder::new()
+                .with_title(title)
+                .with_content(content)
+                .with_width(BOX_WIDTH_SMALL)
+                .with_style(BoxStyle::Header)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_title(title)
+                .with_content(content)
+                .with_width(BOX_WIDTH_MEDIUM)
+                .with_style(BoxStyle::Header)
+                .build(),
+            large: BoxBuilder::new()
+                .with_title(title)
+                .with_content(content)
+                .with_width(BOX_WIDTH_LARGE)
+                .with_style(BoxStyle::Header)
+                .build(),
         }
     }
 
     pub fn new_footer(content: &str) -> Self {
         Self {
-            tiny: create_footer_box(content, BOX_WIDTH_TINY),
-            small: create_footer_box(content, BOX_WIDTH_SMALL),
-            medium: create_footer_box(content, BOX_WIDTH_MEDIUM),
-            large: create_footer_box(content, BOX_WIDTH_LARGE),
+            tiny: BoxBuilder::new()
+                .with_content(content)
+                .with_width(BOX_WIDTH_TINY)
+                .with_style(BoxStyle::Footer)
+                .build(),
+            small: BoxBuilder::new()
+                .with_content(content)
+                .with_width(BOX_WIDTH_SMALL)
+                .with_style(BoxStyle::Footer)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_content(content)
+                .with_width(BOX_WIDTH_MEDIUM)
+                .with_style(BoxStyle::Footer)
+                .build(),
+            large: BoxBuilder::new()
+                .with_content(content)
+                .with_width(BOX_WIDTH_LARGE)
+                .with_style(BoxStyle::Footer)
+                .build(),
         }
     }
 
@@ -41,30 +75,34 @@ impl ResponsiveBoxes {
 
     pub fn new_about_with_ascii(text_content: &str, ascii_art: &str) -> Self {
         Self {
-            tiny: create_about_box_with_ascii(
-                "WHOAMI",
-                text_content,
-                ascii_art,
-                ABOUT_WIDTH_TINY,
-            ),
-            small: create_about_box_with_ascii(
-                "WHOAMI",
-                text_content,
-                ascii_art,
-                ABOUT_WIDTH_SMALL,
-            ),
-            medium: create_about_box_with_ascii(
-                "WHOAMI",
-                text_content,
-                ascii_art,
-                ABOUT_WIDTH_MEDIUM,
-            ),
-            large: create_about_box_with_ascii(
-                "WHOAMI",
-                text_content,
-                ascii_art,
-                ABOUT_WIDTH_LARGE,
-            ),
+            tiny: BoxBuilder::new()
+                .with_title("WHOAMI")
+                .with_content(text_content)
+                .with_ascii_art(ascii_art)
+                .with_width(ABOUT_WIDTH_TINY)
+                .with_style(BoxStyle::AboutWithAscii)
+                .build(),
+            small: BoxBuilder::new()
+                .with_title("WHOAMI")
+                .with_content(text_content)
+                .with_ascii_art(ascii_art)
+                .with_width(ABOUT_WIDTH_SMALL)
+                .with_style(BoxStyle::AboutWithAscii)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_title("WHOAMI")
+                .with_content(text_content)
+                .with_ascii_art(ascii_art)
+                .with_width(ABOUT_WIDTH_MEDIUM)
+                .with_style(BoxStyle::AboutWithAscii)
+                .build(),
+            large: BoxBuilder::new()
+                .with_title("WHOAMI")
+                .with_content(text_content)
+                .with_ascii_art(ascii_art)
+                .with_width(ABOUT_WIDTH_LARGE)
+                .with_style(BoxStyle::AboutWithAscii)
+                .build(),
         }
     }
 
@@ -76,10 +114,30 @@ impl ResponsiveBoxes {
             .join("\n");
 
         Self {
-            tiny: create_header_box("CATEGORIES", &content, CATEGORIES_WIDTH_TINY),
-            small: create_header_box("CATEGORIES", &content, CATEGORIES_WIDTH_SMALL),
-            medium: create_header_box("CATEGORIES", &content, CATEGORIES_WIDTH_MEDIUM),
-            large: create_header_box("CATEGORIES", &content, CATEGORIES_WIDTH_LARGE),
+            tiny: BoxBuilder::new()
+                .with_title("CATEGORIES")
+                .with_content(&content)
+                .with_width(CATEGORIES_WIDTH_TINY)
+                .with_style(BoxStyle::Header)
+                .build(),
+            small: BoxBuilder::new()
+                .with_title("CATEGORIES")
+                .with_content(&content)
+                .with_width(CATEGORIES_WIDTH_SMALL)
+                .with_style(BoxStyle::Header)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_title("CATEGORIES")
+                .with_content(&content)
+                .with_width(CATEGORIES_WIDTH_MEDIUM)
+                .with_style(BoxStyle::Header)
+                .build(),
+            large: BoxBuilder::new()
+                .with_title("CATEGORIES")
+                .with_content(&content)
+                .with_width(CATEGORIES_WIDTH_LARGE)
+                .with_style(BoxStyle::Header)
+                .build(),
         }
     }
 
@@ -87,10 +145,30 @@ impl ResponsiveBoxes {
         let comment_content = format!("@{}:\n\"{}\"", username, content);
 
         Self {
-            tiny: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_TINY),
-            small: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_SMALL),
-            medium: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_MEDIUM),
-            large: create_header_box("LATEST COMMENTS", &comment_content, COMMENTS_WIDTH_LARGE),
+            tiny: BoxBuilder::new()
+                .with_title("LATEST COMMENTS")
+                .with_content(&comment_content)
+                .with_width(COMMENTS_WIDTH_TINY)
+                .with_style(BoxStyle::Header)
+                .build(),
+            small: BoxBuilder::new()
+                .with_title("LATEST COMMENTS")
+                .with_content(&comment_content)
+                .with_width(COMMENTS_WIDTH_SMALL)
+                .with_style(BoxStyle::Header)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_title("LATEST COMMENTS")
+                .with_content(&comment_content)
+                .with_width(COMMENTS_WIDTH_MEDIUM)
+                .with_style(BoxStyle::Header)
+                .build(),
+            large: BoxBuilder::new()
+                .with_title("LATEST COMMENTS")
+                .with_content(&comment_content)
+                .with_width(COMMENTS_WIDTH_LARGE)
+                .with_style(BoxStyle::Header)
+                .build(),
         }
     }
 
@@ -113,10 +191,30 @@ impl ResponsiveBoxes {
 ╚══════════════════════════════════════╝";
 
         Self {
-            tiny: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_TINY),
-            small: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_SMALL),
-            medium: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_MEDIUM),
-            large: create_header_box("SHOUTBOX", shoutbox_content, COMMENTS_WIDTH_LARGE),
+            tiny: BoxBuilder::new()
+                .with_title("SHOUTBOX")
+                .with_content(shoutbox_content)
+                .with_width(COMMENTS_WIDTH_TINY)
+                .with_style(BoxStyle::Header)
+                .build(),
+            small: BoxBuilder::new()
+                .with_title("SHOUTBOX")
+                .with_content(shoutbox_content)
+                .with_width(COMMENTS_WIDTH_SMALL)
+                .with_style(BoxStyle::Header)
+                .build(),
+            medium: BoxBuilder::new()
+                .with_title("SHOUTBOX")
+                .with_content(shoutbox_content)
+                .with_width(COMMENTS_WIDTH_MEDIUM)
+                .with_style(BoxStyle::Header)
+                .build(),
+            large: BoxBuilder::new()
+                .with_title("SHOUTBOX")
+                .with_content(shoutbox_content)
+                .with_width(COMMENTS_WIDTH_LARGE)
+                .with_style(BoxStyle::Header)
+                .build(),
         }
     }
 }

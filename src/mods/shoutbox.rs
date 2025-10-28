@@ -2,6 +2,7 @@ use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use serde::{Deserialize, Serialize};
+use crate::mods::shoutbox_protocol::{ChatMessage, ShoutboxCommand as ProtoCommand, ShoutboxMessage as ProtoMessage};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -62,12 +63,11 @@ impl Handler<ShoutboxMessage> for ShoutboxSession {
     type Result = ();
 
     fn handle(&mut self, msg: ShoutboxMessage, ctx: &mut Self::Context) {
-        // Check if this is a user count message (has empty username/content)
+        // Support legacy action-based messages for current frontend
         if msg.username.is_empty() && msg.content.starts_with('{') {
-            // This is a JSON message, send it directly
+            // Forward JSON (e.g., user_count)
             ctx.text(msg.content);
         } else {
-            // This is a regular message
             let response = ShoutboxResponse {
                 action: "new_message".to_string(),
                 messages: None,
@@ -84,7 +84,44 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
         match msg {
             Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
             Ok(ws::Message::Text(text)) => {
-                if let Ok(command) = serde_json::from_str::<ShoutboxCommand>(&text) {
+                // Try unified protocol first, then fallback to legacy action-based
+                if let Ok(command) = serde_json::from_str::<ProtoCommand>(&text) {
+                    match command {
+                        ProtoCommand::GetMessages => {
+                            let addr = self.addr.clone();
+                            let session_addr = ctx.address();
+                            actix::spawn(async move {
+                                if let Ok(messages) = addr.send(GetMessages).await {
+                                    let response = ShoutboxResponse {
+                                        action: "messages".to_string(),
+                                        messages: Some(messages),
+                                        message: None,
+                                        error: None,
+                                    };
+                                    let json = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
+                                    session_addr.do_send(ShoutboxMessage { id: String::new(), username: String::new(), content: json, timestamp: chrono::Utc::now() });
+                                }
+                            });
+                        }
+                        ProtoCommand::SendMessage { username, content } => {
+                            if !username.trim().is_empty() && !content.trim().is_empty() {
+                                if !username.trim().is_empty() && !content.trim().is_empty() {
+                                    let message = ShoutboxMessage {
+                                        id: Uuid::new_v4().to_string(),
+                                        username: username.trim().to_string(),
+                                        content: content.trim().to_string(),
+                                        timestamp: chrono::Utc::now(),
+                                    };
+                                    
+                                    let addr = self.addr.clone();
+                                    actix::spawn(async move {
+                                        let _ = addr.send(message).await;
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } else if let Ok(command) = serde_json::from_str::<ShoutboxCommand>(&text) {
                     match command.action.as_str() {
                         "get_messages" => {
                             let addr = self.addr.clone();
@@ -97,12 +134,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
                                         message: None,
                                         error: None,
                                     };
-                                    session_addr.do_send(ShoutboxMessage {
-                                        id: "".to_string(),
-                                        username: "".to_string(),
-                                        content: serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string()),
-                                        timestamp: chrono::Utc::now(),
-                                    });
+                                    let json = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
+                                    session_addr.do_send(ShoutboxMessage { id: String::new(), username: String::new(), content: json, timestamp: chrono::Utc::now() });
                                 }
                             });
                         }
@@ -115,7 +148,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
                                         content: content.trim().to_string(),
                                         timestamp: chrono::Utc::now(),
                                     };
-                                    
                                     let addr = self.addr.clone();
                                     actix::spawn(async move {
                                         let _ = addr.send(message).await;

@@ -1,6 +1,79 @@
 use crate::mods::data::NavItem;
 use unicode_width::UnicodeWidthChar;
 
+// Unified builder for ASCII boxes
+#[derive(Clone, Copy)]
+pub enum BoxStyle {
+    Header,
+    Footer,
+    AboutWithAscii,
+}
+
+pub struct BoxBuilder<'a> {
+    title: Option<&'a str>,
+    content: Option<&'a str>,
+    ascii_art: Option<&'a str>,
+    width: usize,
+    style: BoxStyle,
+}
+
+impl<'a> BoxBuilder<'a> {
+    pub fn new() -> Self {
+        Self {
+            title: None,
+            content: None,
+            ascii_art: None,
+            width: 40,
+            style: BoxStyle::Header,
+        }
+    }
+
+    pub fn with_title(mut self, title: &'a str) -> Self {
+        self.title = Some(title);
+        self
+    }
+
+    pub fn with_content(mut self, content: &'a str) -> Self {
+        self.content = Some(content);
+        self
+    }
+
+    pub fn with_ascii_art(mut self, ascii_art: &'a str) -> Self {
+        self.ascii_art = Some(ascii_art);
+        self
+    }
+
+    pub fn with_width(mut self, width: usize) -> Self {
+        self.width = width;
+        self
+    }
+
+    pub fn with_style(mut self, style: BoxStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    pub fn build(self) -> String {
+        match self.style {
+            BoxStyle::Header => {
+                let title = self.title.unwrap_or("");
+                let content = self.content.unwrap_or("");
+                create_header_box(title, content, self.width)
+            }
+            BoxStyle::Footer => {
+                let content = self.content.unwrap_or("");
+                create_footer_box(content, self.width)
+            }
+            BoxStyle::AboutWithAscii => {
+                let title = self.title.unwrap_or("");
+                let content = self.content.unwrap_or("");
+                let ascii = self.ascii_art.unwrap_or("");
+                create_about_box_with_ascii(title, content, ascii, self.width)
+            }
+        }
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Unicode & Emoji Handling Strategy for ASCII Art
 // ═══════════════════════════════════════════════════════════════════════════
@@ -56,6 +129,12 @@ pub fn wrap_text(text: &str, max_width: usize) -> Vec<String> {
     lines
 }
 
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+static EMOJI_MEMO: Lazy<Mutex<HashMap<char, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
 pub fn replace_problematic_chars(text: &str) -> String {
     // Automatically replace emojis and special Unicode chars that don't render
     // consistently in monospace fonts
@@ -79,6 +158,13 @@ pub fn replace_problematic_chars(text: &str) -> String {
         );
 
         if is_problematic {
+            // Memoize conversion per char
+            if let Ok(memo) = EMOJI_MEMO.lock() {
+                if let Some(cached) = memo.get(&c) {
+                    result.push_str(cached);
+                    continue;
+                }
+            }
             // Handle specific symbols
             match c {
                 // Zero-width characters - remove completely
@@ -96,10 +182,14 @@ pub fn replace_problematic_chars(text: &str) -> String {
                 _ => {
                     // Convert codepoint to hex string for Twemoji CDN
                     let hex_code = format!("{:x}", codepoint);
-                    result.push_str(&format!(
+                    let img = format!(
                         "<img src=\"https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/{}.svg\" alt=\"emoji\" class=\"emoji-img\">",
                         hex_code
-                    ));
+                    );
+                    if let Ok(mut memo) = EMOJI_MEMO.lock() {
+                        memo.insert(c, img.clone());
+                    }
+                    result.push_str(&img);
                 }
             }
         } else {

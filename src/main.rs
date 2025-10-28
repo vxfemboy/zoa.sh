@@ -21,7 +21,7 @@ async fn cat_action(path: web::Path<String>) -> Result<HttpResponse, AppError> {
 
 async fn index(
     tera: web::Data<Tera>,
-    _cache: web::Data<BoxCache>,
+    cache: web::Data<BoxCache>,
 ) -> Result<HttpResponse, AppError> {
     let content_manager = ContentManager::new();
     let context = content_manager.create_page_context()?;
@@ -31,6 +31,10 @@ async fn index(
         .build();
 
     let rendered = tera.render("index.html.tera", &template_context)?;
+
+    // Cache warm: store rendered boxes by keys (basic demonstration)
+    let _ = cache.insert("navigation_box_large".to_string(), context.navigation_box.large.clone());
+    let _ = cache.insert("welcome_box_large".to_string(), context.welcome_box.large.clone());
 
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }

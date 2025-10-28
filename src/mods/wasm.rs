@@ -4,7 +4,8 @@ mod wasm {
     use js_sys::Math;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
-    use web_sys::{window, HtmlPreElement};
+    use web_sys::{window, HtmlPreElement, MessageEvent, WebSocket};
+    use crate::mods::shoutbox_protocol::{ShoutboxMessage as ProtoMessage, ShoutboxCommand as ProtoCommand};
 
     #[wasm_bindgen]
     extern "C" {
@@ -36,6 +37,10 @@ mod wasm {
 
         // Animation frames cache
         frames_cache: std::collections::HashMap<String, String>,
+
+        // Shoutbox client state
+        ws: Option<WebSocket>,
+        last_status: String,
     }
 
     #[wasm_bindgen]
@@ -108,12 +113,58 @@ mod wasm {
                 idle_animation: None,
                 idle_animation_frame: 0,
                 frames_cache,
+                ws: None,
+                last_status: String::new(),
             };
 
             // Set initial sprite
             cat.set_sprite("still")?;
 
             Ok(cat)
+        }
+
+        pub fn init_shoutbox(&mut self) -> Result<(), JsValue> {
+            let location = window().ok_or("No window")?.location();
+            let protocol = if location.protocol()?.as_str() == "https:" { "wss:" } else { "ws:" };
+            let host = location.host()?;
+            let url = format!("{}//{}/ws/shoutbox", protocol, host);
+
+            let ws = WebSocket::new(&url)?;
+
+            // Basic reconnect onclose
+            let onclose = {
+                let mut_self = self as *mut AsciiCat;
+                Closure::<dyn FnMut(web_sys::Event)>::new(move |_e: web_sys::Event| {
+                    unsafe {
+                        if let Some(inner) = mut_self.as_mut() {
+                            inner.ws = None;
+                            inner.last_status = "disconnected".into();
+                        }
+                    }
+                })
+            };
+            ws.set_onclose(Some(onclose.as_ref().unchecked_ref()));
+            onclose.forget();
+
+            let onmessage_callback = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {
+                if let Ok(txt) = e.data().dyn_into::<js_sys::JsString>() {
+                    let s: String = txt.into();
+                    let _parsed: Result<ProtoMessage, _> = serde_json::from_str(&s);
+                    // No DOM updates here; the page JS handles rendering
+                }
+            });
+
+            ws.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
+            onmessage_callback.forget();
+
+            // Request initial messages
+            let cmd = ProtoCommand::GetMessages;
+            let json = serde_json::to_string(&cmd).unwrap_or_else(|_| "{}".to_string());
+            let _ = ws.send_with_str(&json);
+
+            self.ws = Some(ws);
+            self.last_status = "connected".into();
+            Ok(())
         }
 
         fn set_sprite(&mut self, name: &str) -> Result<(), JsValue> {

@@ -5,356 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>vxfemboy</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <style>
-        @font-face {
-            font-family: "Departure Mono";
-            src: url("/static/fonts/DepartureMono-Regular.woff2") format("woff2"),
-                 url("/static/fonts/DepartureMono-Regular.woff") format("woff"),
-                 url("/static/fonts/DepartureMono-Regular.otf") format("opentype");
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        * {
-            font-family: "Departure Mono", "Courier New", monospace;
-            box-sizing: border-box;
-        }
-
-        /* Font stack optimized for emoji support per https://nolanlawson.com/2022/04/08/the-struggle-of-using-native-emoji-on-the-web/ */
-        pre, .ascii-container {
-            font-family: "Departure Mono",
-                         "Twemoji Mozilla",
-                         "Apple Color Emoji",
-                         "Segoe UI Emoji",
-                         "Segoe UI Symbol",
-                         "Noto Color Emoji",
-                         "EmojiOne Color",
-                         "Android Emoji",
-                         "Courier New",
-                         monospace;
-            text-rendering: optimizeLegibility;
-        }
-
-        html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #000000;
-        }
-
-        body {
-            min-height: 100%;
-            margin: 0;
-            padding: 0;
-            color: #fff;
-            overflow-x: hidden;
-            background: transparent;
-            position: relative;
-        }
-
-        #stars-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            background-color: #000000;
-        }
-
-        .star {
-            position: absolute;
-            color: #fff;
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
-                         0 0 12px rgba(255, 255, 255, 0.6),
-                         0 0 16px rgba(255, 255, 255, 0.4);
-            animation: twinkle 3s ease-in-out infinite;
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { 
-                opacity: 0.2;
-                transform: scale(1);
-            }
-            50% { 
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        .ascii-container {
-            min-height: 100vh;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(2px);
-        }
-
-        pre {
-            white-space: pre;
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.2;
-            overflow-x: auto;
-            max-width: 100%;
-            font-variant-ligatures: none;
-            font-feature-settings: "kern" 0, "liga" 0, "calt" 0;
-            letter-spacing: 0;
-            word-spacing: 0;
-            /* Ensure consistent character widths - critical for ASCII alignment */
-            font-variant-numeric: tabular-nums;
-            -webkit-font-smoothing: none;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Ensure emoji and unicode characters render at predictable widths */
-        pre::after {
-            content: "";
-            display: inline-block;
-            width: 0;
-        }
-
-        .profile-ascii {
-            font-size: 0.1vw;
-            line-height: 0.5;
-            margin: 0;
-            padding: 0;
-            white-space: pre;
-            display: block;
-            position: relative;
-            z-index: 1;
-            max-width: 100%;
-            overflow: hidden;
-            text-align: center;
-            transform: scale(0.1);
-            transform-origin: top center;
-        }
-
-        .ascii-title {
-            font-size: 0.8vw;
-            white-space: pre;
-            line-height: 1;
-            margin: 0 auto;
-            max-width: 100%;
-        }
-
-        .ascii-box {
-            display: flex;
-            flex-direction: column;
-            min-height: fit-content;
-        }
-
-        .box-tiny, .box-small, .box-medium, .box-large {
-            display: none;
-        }
-
-        @media (min-width: 901px) {
-            .box-large { display: block; }
-        }
-
-        @media (min-width: 601px) and (max-width: 900px) {
-            .box-medium { display: block; }
-        }
-
-        @media (min-width: 401px) and (max-width: 600px) {
-            .box-small { display: block; }
-        }
-
-        @media (max-width: 400px) {
-            .box-tiny { display: block; }
-        }
-
-        /* Mobile-specific box sizing for different elements */
-        @media (max-width: 600px) {
-            /* Reset all boxes first */
-            .box-tiny, .box-small, .box-medium, .box-large {
-                display: none !important;
-            }
-            
-            /* Welcome box - use medium boxes */
-            .ascii-content .welcome-box .box-medium {
-                display: block !important;
-            }
-            
-            /* Latest posts box - use small boxes for mobile-specific content */
-            .ascii-content .latest-posts-box .box-small {
-                display: block !important;
-            }
-            
-            /* Sidebar content (about, categories, comments) - use large boxes for maximum screen utilization */
-            .ascii-sidebar .box-large {
-                display: block !important;
-            }
-            
-            /* Additional posts for mobile dropdown - use small boxes */
-            #additional-posts-mobile .box-small {
-                display: block !important;
-            }
-            
-            /* Navigation - use medium boxes */
-            .ascii-nav .box-medium {
-                display: block !important;
-            }
-            
-            /* Footer - use medium boxes */
-            .ascii-footer .box-medium {
-                display: block !important;
-            }
-            
-            /* Center navbar text on mobile */
-            .ascii-nav pre {
-                text-align: center !important;
-            }
-            
-            /* Make ASCII cat 2x smaller on mobile */
-            #ascii-cat {
-                font-size: 1.5px !important;  /* 3px / 2 = 1.5px */
-            }
-        }
-
-        .main-content-wrapper {
-            display: flex;
-            gap: 10px;
-        }
-
-        .ascii-content {
-            flex: 4;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .ascii-sidebar {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        @media (max-width: 600px) {
-            .main-content-wrapper {
-                flex-direction: column;
-            }
-            
-            /* Let sidebar stack naturally instead of hiding it */
-            .ascii-sidebar {
-                flex: 1;
-                width: 100%;
-            }
-            
-            .ascii-content {
-                flex: 1;
-                width: 100%;
-            }
-            
-            /* Mobile font adjustments for better readability */
-            pre {
-                font-size: 10px;  /* Smaller on mobile */
-                overflow-x: auto;  /* Allow horizontal scroll if needed */
-                max-width: 100%;   /* Prevent overflow */
-            }
-            
-            .ascii-title {
-                font-size: 2vw;  /* Larger relative size */
-            }
-            
-            /* Ensure ASCII boxes don't overflow on mobile and center them */
-            .ascii-box {
-                max-width: 100%;
-                overflow-x: auto;
-                margin: 0 auto;  /* Center the boxes */
-            }
-            
-            /* Center all content containers on mobile */
-            .ascii-container {
-                padding: 5px;  /* Reduce padding on mobile */
-                text-align: center;  /* Center-align content */
-            }
-            
-            /* Ensure pre elements are centered */
-            pre {
-                text-align: left;  /* Keep text left-aligned within boxes */
-                margin: 0 auto;    /* Center the pre blocks */
-                display: block;
-            }
-        }
-
-        .ascii-nav a,
-        .ascii-content a,
-        .ascii-sidebar a {
-            color: #33aaff;
-            text-decoration: none;
-        }
-
-        .ascii-nav a:hover,
-        .ascii-content a:hover,
-        .ascii-sidebar a:hover {
-            text-decoration: underline;
-        }
-
-        /* Shoutbox styling */
-        #shoutbox-container {
-            /* Removed hover effects since we now have input fields */
-        }
-
-        #shoutbox-container pre {
-            white-space: pre;
-            font-family: "Departure Mono", "Courier New", monospace;
-            overflow: hidden;
-            word-wrap: normal;
-            word-break: normal;
-        }
-
-        .shoutbox-input-container {
-            margin-top: 5px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .shoutbox-input-container input {
-            background-color: #000;
-            color: #fff;
-            border: 1px solid #333;
-            font-family: "Departure Mono", "Courier New", monospace;
-            font-size: 12px;
-            padding: 4px 8px;
-            width: 200px;
-            outline: none;
-        }
-
-        .shoutbox-input-container input:focus {
-            border-color: #33aaff;
-            box-shadow: 0 0 5px rgba(51, 170, 255, 0.3);
-        }
-
-        .shoutbox-input-container input::placeholder {
-            color: #666;
-        }
-
-        /* Emoji images - force to exactly 1 monospace character width */
-        .emoji-img {
-            display: inline-block;
-            height: 1em;
-            width: 1ch !important;
-            min-width: 1ch;
-            max-width: 1ch;
-            vertical-align: baseline;
-            object-fit: contain;
-            margin: 0;
-            padding: 0;
-            border: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/main.css">
     <div id="stars-container">
         {% for star in stars %}
             <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
@@ -513,6 +164,7 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     // Create ASCII cat instance with animations
                     const cat = new AsciiCat(animations);
                     console.log('ASCII cat instance created');
+                    try { cat.init_shoutbox(); } catch (e) { console.warn('WASM shoutbox init failed', e); }
                 
                 // Track mouse movement (oneko.js style)
                 document.addEventListener('mousemove', (e) => {
@@ -544,6 +196,18 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
         run();
     </script>
 
+    <!-- Floating (draggable) Shoutbox -->
+    <div id="shoutbox-float">
+        <div class="shoutbox-float-content" style="position: relative;">
+            <pre id="shoutbox-modal-pre"></pre>
+            <div class="shoutbox-input-container">
+                <input type="text" id="shoutbox-input-modal" placeholder="username: message" maxlength="120">
+            </div>
+            <!-- Click overlay for [x] icon inside expanded title bar -->
+            <button id="sb-collapse-btn" class="sb-icon-hit" type="button" title="Collapse shoutbox" style="right: 6px; top: 18px; width: 40px; height: 18px; background: transparent; border: 0; padding: 0; z-index: 1;"></button>
+        </div>
+    </div>
+
     <script>
         // Realtime Shoutbox WebSocket functionality
         class ShoutboxManager {
@@ -551,8 +215,10 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                 this.ws = null;
                 this.isConnected = false;
                 this.messages = [];
-                this.maxMessages = 5;
+                this.maxMessagesCount = 50;
+                this.maxLines = 5;
                 this.connectedUsers = 0;
+                this.isExpanded = false;
                 this.init();
             }
 
@@ -614,7 +280,7 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     case 'messages':
                         if (data.messages) {
                             console.log('Received messages:', data.messages);
-                            this.messages = data.messages.slice(-this.maxMessages);
+                            this.messages = data.messages.slice(-this.maxMessagesCount);
                             this.renderMessages();
                         }
                         break;
@@ -677,7 +343,7 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                 const maxWidth = Math.max(20, getMaxWidth()); // Ensure minimum width
                 
                 // Helper function to wrap text to fit within box width
-                function wrapText(text, maxWidth) {
+                function wrapText(text, maxWidth, allowHardWrap) {
                     if (text.length <= maxWidth) {
                         return [text];
                     }
@@ -686,15 +352,25 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     let currentLine = '';
                     
                     for (const word of words) {
-                        if ((currentLine + word).length <= maxWidth) {
+                        if ((currentLine + (currentLine ? ' ' : '') + word).length <= maxWidth) {
                             currentLine += (currentLine ? ' ' : '') + word;
                         } else {
                             if (currentLine) {
                                 lines.push(currentLine);
-                                currentLine = word;
+                                currentLine = '';
+                            }
+                            // If the word itself is longer than maxWidth
+                            if (word.length > maxWidth) {
+                                if (allowHardWrap) {
+                                    // Break the long word into chunks with no truncation
+                                    for (let i = 0; i < word.length; i += maxWidth) {
+                                        lines.push(word.substring(i, i + maxWidth));
+                                    }
+                                } else {
+                                    lines.push(word.substring(0, maxWidth - 3) + '...');
+                                }
                             } else {
-                                // Single word is too long, truncate it
-                                lines.push(word.substring(0, maxWidth - 3) + '...');
+                                currentLine = word;
                             }
                         }
                     }
@@ -710,15 +386,15 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     messages.forEach(msg => {
                         const username = msg.username.length > 10 ? msg.username.substring(0, 10) : msg.username;
                         const messageText = `@${username}: "${msg.content}"`;
-                        const wrapped = wrapText(messageText, maxWidth);
+                        const wrapped = wrapText(messageText, maxWidth, this.isExpanded);
                         messageLines.push(...wrapped);
                     });
                 } else {
                     messageLines = ['No messages yet. Be the first to shout!'];
                 }
 
-                // Limit to 5 message lines to prevent overflow
-                messageLines = messageLines.slice(0, 5);
+                // Keep the most recent lines visible
+                messageLines = messageLines.slice(-this.maxLines);
 
                 // Pad lines to exact width
                 const paddedLines = messageLines.map(line => {
@@ -734,7 +410,7 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     statusText.padEnd(maxWidth);
 
                 // Create responsive shoutbox content for each screen size
-                const createShoutboxContent = (width) => {
+                const createShoutboxContent = (width, visibleLines) => {
                     // Ensure width is positive and reasonable
                     const safeWidth = Math.max(20, width);
                     
@@ -744,8 +420,12 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     const emptyLine = '║' + ' '.repeat(safeWidth) + '║';
                     
                     const title = 'SHOUTBOX';
-                    const titlePadding = Math.max(0, Math.floor((safeWidth - title.length) / 2));
-                    const titleLine = '║' + ' '.repeat(titlePadding) + title + ' '.repeat(Math.max(0, safeWidth - title.length - titlePadding)) + '║';
+                    const iconStr = this.isExpanded ? '[x]' : '[+]'; // ASCII-safe icons
+                    const reserved = iconStr.length + 1; // space + icon at far right
+                    const paddingSpace = Math.max(0, Math.floor((safeWidth - title.length - reserved) / 2));
+                    const rightSpace = Math.max(0, safeWidth - title.length - reserved - paddingSpace);
+                    const titleContent = ' '.repeat(paddingSpace) + title + ' '.repeat(rightSpace) + ' ' + iconStr;
+                    const titleLine = '║' + titleContent + '║';
                     
                     const statusLine = '║ ' + paddedStatus.substring(0, Math.max(0, safeWidth - 3)).padEnd(Math.max(0, safeWidth - 3)) + '  ║';
                     
@@ -757,8 +437,8 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                         content += '║ ' + paddedLine + '  ║\n';
                     });
                     
-                    // Add remaining empty lines (total lines should be 5 for messages)
-                    const remainingLines = 5 - paddedLines.length;
+                    // Add remaining empty lines to reach target visible lines
+                    const remainingLines = Math.max(0, visibleLines - paddedLines.length);
                     for (let i = 0; i < remainingLines; i++) {
                         content += emptyLine + '\n';
                     }
@@ -770,10 +450,62 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                 };
 
                 // Update all responsive versions with correct widths
-                document.getElementById('shoutbox-tiny').textContent = createShoutboxContent(25);
-                document.getElementById('shoutbox-small').textContent = createShoutboxContent(30);
-                document.getElementById('shoutbox-medium').textContent = createShoutboxContent(45);
-                document.getElementById('shoutbox-large').textContent = createShoutboxContent(55);
+                const tinyPre = document.getElementById('shoutbox-tiny');
+                const smallPre = document.getElementById('shoutbox-small');
+                const medPre = document.getElementById('shoutbox-medium');
+                const largePre = document.getElementById('shoutbox-large');
+                const fill = (pre, width) => {
+                    if (!pre) return;
+                    pre.textContent = createShoutboxContent(width, this.maxLines);
+                    pre.dataset.sbWidth = String(width);
+                    // Insert an absolutely-positioned transparent button over the icon region for reliable clicks
+                    pre.style.position = 'relative';
+                    // Remove existing overlay if any
+                    const old = pre.querySelector('.sb-icon-hit');
+                    if (old) old.remove();
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'sb-icon-hit';
+                    btn.style.background = 'transparent';
+                    btn.style.border = '0';
+                    btn.style.padding = '0';
+                    btn.style.width = '40px';
+                    btn.style.height = '18px';
+                    btn.style.right = '6px';
+                    btn.style.top = '18px'; // title row (accounting for top border)
+                    btn.style.position = 'absolute';
+                    btn.title = 'Expand shoutbox';
+                    btn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleExpand(true); });
+                    pre.appendChild(btn);
+                };
+                fill(tinyPre, 25);
+                fill(smallPre, 30);
+                fill(medPre, 45);
+                fill(largePre, 55);
+
+                // Update expanded modal if open
+                const modal = document.getElementById('shoutbox-float');
+                if (modal && modal.style.display === 'block') {
+                    const modalPre = document.getElementById('shoutbox-modal-pre');
+                    // Measure actual monospace char width to size exactly to viewport
+                    const measure = document.createElement('span');
+                    measure.style.visibility = 'hidden';
+                    measure.style.position = 'absolute';
+                    measure.style.whiteSpace = 'pre';
+                    measure.style.fontFamily = 'Departure Mono, Courier New, monospace';
+                    measure.textContent = 'X';
+                    document.body.appendChild(measure);
+                    const ch = Math.max(1, measure.getBoundingClientRect().width);
+                    measure.remove();
+
+                    const sidePadding = 20; // container padding and border approx
+                    const viewportPx = Math.floor(window.innerWidth * 0.94) - sidePadding;
+                    let estimatedChars = Math.floor(viewportPx / ch);
+                    const isMobile = window.innerWidth <= 600;
+                    // Clamp based on device to avoid oversizing
+                    estimatedChars = Math.max(24, Math.min(isMobile ? 60 : 120, estimatedChars));
+                    modalPre.textContent = createShoutboxContent(estimatedChars, this.maxLines);
+                }
             }
 
             updateConnectionStatus(status) {
@@ -783,7 +515,7 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
 
             setupInputHandling() {
                 // Setup input field handlers
-                const inputIds = ['shoutbox-input-tiny', 'shoutbox-input-small', 'shoutbox-input-medium', 'shoutbox-input-large'];
+                const inputIds = ['shoutbox-input-tiny', 'shoutbox-input-small', 'shoutbox-input-medium', 'shoutbox-input-large', 'shoutbox-input-modal'];
                 
                 inputIds.forEach(inputId => {
                     const input = document.getElementById(inputId);
@@ -811,6 +543,99 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                         });
                     }
                 });
+
+                const expandBtn = document.getElementById('shoutbox-expand-btn');
+                const closeBtn = document.getElementById('shoutbox-close-btn');
+                const collapseBtn = document.getElementById('sb-collapse-btn');
+                if (collapseBtn) {
+                    collapseBtn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleExpand(false); });
+                }
+                // Drag handling
+                const float = document.getElementById('shoutbox-float');
+                const handle = document.querySelector('#shoutbox-float .shoutbox-float-content');
+                let dragging = false, offsetX = 0, offsetY = 0;
+                const enableDrag = () => window.innerWidth > 600; // disable on mobile
+                if (handle && float && enableDrag()) {
+                    handle.addEventListener('mousedown', (e) => {
+                        dragging = true;
+                        const rect = float.getBoundingClientRect();
+                        offsetX = e.clientX - rect.left;
+                        offsetY = e.clientY - rect.top;
+                    });
+                    window.addEventListener('mousemove', (e) => {
+                        if (!dragging) return;
+                        float.style.left = `${e.clientX - offsetX}px`;
+                        float.style.top = `${e.clientY - offsetY}px`;
+                        float.style.transform = 'none';
+                    });
+                    window.addEventListener('mouseup', () => dragging = false);
+                    // Touch support (only non-mobile tablets)
+                    handle.addEventListener('touchstart', (e) => {
+                        if (!enableDrag()) return;
+                        const t = e.touches[0];
+                        dragging = true;
+                        const rect = float.getBoundingClientRect();
+                        offsetX = t.clientX - rect.left;
+                        offsetY = t.clientY - rect.top;
+                    }, { passive: true });
+                    window.addEventListener('touchmove', (e) => {
+                        if (!dragging || !enableDrag()) return;
+                        const t = e.touches[0];
+                        float.style.left = `${t.clientX - offsetX}px`;
+                        float.style.top = `${t.clientY - offsetY}px`;
+                        float.style.transform = 'none';
+                    }, { passive: true });
+                    window.addEventListener('touchend', () => dragging = false);
+                }
+
+                // Click-to-expand icon inside title bar
+                const attachIconClick = (preEl) => {
+                    if (!preEl) return;
+                    preEl.addEventListener('click', (e) => {
+                        if (this.isExpanded) return; // handled by modal
+                        const rect = preEl.getBoundingClientRect();
+                        const style = window.getComputedStyle(preEl);
+                        const lineH = parseFloat(style.lineHeight) || 16;
+                        const tester = document.createElement('span');
+                        tester.style.visibility = 'hidden';
+                        tester.style.position = 'absolute';
+                        tester.style.whiteSpace = 'pre';
+                        tester.style.fontFamily = style.fontFamily;
+                        tester.textContent = 'X';
+                        document.body.appendChild(tester);
+                        const ch = Math.max(1, tester.getBoundingClientRect().width);
+                        tester.remove();
+                        const relX = e.clientX - rect.left;
+                        const relY = e.clientY - rect.top;
+                        const col = Math.floor(relX / ch);
+                        const row = Math.floor(relY / lineH);
+                        const width = parseInt(preEl.dataset.sbWidth || '30', 10);
+                        const iconCols = 3; // '[x]' or '[+]'
+                        // Adjust for left border '║'
+                        const contentCol = col - 1;
+                        // title row is 1 (0 = top border), accept clicks in last 6 columns to be generous
+                        const hitStart = Math.max(0, width - Math.max(6, iconCols));
+                        const hitEndExclusive = width; // before right border
+                        if (row === 1 && contentCol >= hitStart && contentCol < hitEndExclusive) {
+                            this.toggleExpand(true);
+                        }
+                    });
+                };
+                // No longer needed; using positioned button overlay for reliability
+            }
+
+            toggleExpand(expand) {
+                const modal = document.getElementById('shoutbox-float');
+                const base = document.getElementById('shoutbox-container');
+                if (!modal) return;
+                this.isExpanded = !!expand;
+                modal.style.display = this.isExpanded ? 'block' : 'none';
+                if (base) base.style.display = this.isExpanded ? 'none' : '';
+                // Make expanded view taller, especially on mobile
+                this.maxLines = this.isExpanded
+                  ? (window.innerWidth <= 600 ? 18 : 28)
+                  : 5;
+                this.renderMessages();
             }
 
             loadInitialMessages() {

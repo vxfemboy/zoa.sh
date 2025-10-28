@@ -31,6 +31,8 @@ tracing-actix-web = "0.7"
 monochora = "0.1.8"
 image = "0.25.8"
 uuid = { version = "1.0", features = ["v4", "serde"] }
+lru = "0.12"
+once_cell = "1.19"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.104"
@@ -41,6 +43,7 @@ web-sys = { version = "0.3", features = [
     "HtmlElement",
     "HtmlPreElement",
     "Window",
+    "Location",
     "MouseEvent",
     "console",
     "CssStyleDeclaration",
@@ -49,7 +52,11 @@ web-sys = { version = "0.3", features = [
     "Response",
     "RequestInit",
     "RequestMode",
-    "Headers"
+    "Headers",
+    "WebSocket",
+    "MessageEvent",
+    "EventTarget",
+    "Event"
 ] }
 js-sys = "0.3"
 
