@@ -3,9 +3,12 @@
 mod wasm {
     use js_sys::Math;
     use wasm_bindgen::prelude::*;
+    use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
-    use web_sys::{window, HtmlPreElement, MessageEvent, WebSocket};
+    use web_sys::{window, Document, HtmlPreElement, MessageEvent, WebSocket};
     use crate::mods::shoutbox_protocol::{ShoutboxMessage as ProtoMessage, ShoutboxCommand as ProtoCommand};
+    use serde::{Deserialize, Serialize};
+    use std::cell::RefCell;
 
     #[wasm_bindgen]
     extern "C" {
@@ -358,6 +361,411 @@ mod wasm {
                 ),
             )?;
             Ok(())
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Shoutbox (WASM client)
+    // ────────────────────────────────────────────────────────────────────────
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct UiMessage {
+        id: String,
+        username: String,
+        content: String,
+        timestamp: String,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct ActionEnvelope {
+        action: String,
+        messages: Option<Vec<UiMessage>>,
+        message: Option<UiMessage>,
+        user_count: Option<usize>,
+        error: Option<String>,
+    }
+
+    struct ShoutboxClient {
+        ws: Option<WebSocket>,
+        tiny_id: String,
+        small_id: String,
+        medium_id: String,
+        large_id: String,
+        modal_id: String,
+        is_expanded: bool,
+        max_lines: usize,
+        messages: Vec<UiMessage>,
+        connected_users: usize,
+    }
+
+    thread_local! {
+        static SHOUT: RefCell<Option<ShoutboxClient>> = RefCell::new(None);
+    }
+
+    fn get_document() -> Document { window().unwrap().document().unwrap() }
+
+    fn set_pre_text(id: &str, text: &str) {
+        if id.is_empty() { return; }
+        let doc = get_document();
+        if let Some(el) = doc.get_element_by_id(id) {
+            if let Ok(pre) = el.dyn_into::<HtmlPreElement>() { pre.set_text_content(Some(text)); }
+        }
+    }
+
+    fn measure_char_width_px() -> f64 {
+        let doc = get_document();
+        let span = match doc.create_element("span") { Ok(s) => s, Err(_) => return 8.0 };
+        let _ = span.set_attribute("style", "visibility:hidden;position:absolute;white-space:pre;font-family: 'Departure Mono','Courier New',monospace;font-size:14px;line-height:1.2;");
+        span.set_text_content(Some("X"));
+        let body = match doc.body() { Some(b) => b, None => return 8.0 };
+        let _ = body.append_child(&span);
+        let rect = js_sys::Reflect::get(&span, &JsValue::from_str("getBoundingClientRect")).ok();
+        let ch = if let Some(func) = rect.and_then(|f| f.dyn_into::<js_sys::Function>().ok()) {
+            if let Ok(rect_obj) = func.call0(&span) {
+                if let Ok(dom_rect) = rect_obj.dyn_into::<web_sys::DomRect>() { dom_rect.width() } else { 8.0 }
+            } else { 8.0 }
+        } else { 8.0 };
+        let _ = body.remove_child(&span);
+        if ch <= 0.0 { 8.0 } else { ch }
+    }
+
+    fn pad(s: &str, len: usize) -> String {
+        if s.len() >= len { s[..len.min(s.len())].to_string() } else { format!("{}{}", s, " ".repeat(len - s.len())) }
+    }
+
+fn truncate_utf8_safe(s: &str, max_bytes: usize) -> String {
+    if s.len() <= max_bytes { return s.to_string(); }
+    let mut out = String::new();
+    for ch in s.chars() {
+        let b = ch.len_utf8();
+        if out.len() + b > max_bytes { break; }
+        out.push(ch);
+    }
+    out
+}
+
+    fn build_box(title: &str, icon: &str, width: usize, status: &str, lines: &[String], visible_lines: usize) -> String {
+        let safe_width = width.max(20);
+        let border_top = format!("╔{}╗", "═".repeat(safe_width));
+        let border_bottom = format!("╚{}╝", "═".repeat(safe_width));
+        let border_line = format!("╠{}╣", "═".repeat(safe_width));
+        let empty_line = format!("║{}║", " ".repeat(safe_width));
+
+        // Title with right-side icon
+        let reserved = icon.len() + 1; // space + icon
+        let left_pad = ((safe_width.saturating_sub(title.len() + reserved)) / 2).max(0);
+        let right_pad = safe_width.saturating_sub(title.len() + reserved + left_pad);
+        let mut title_buf = String::new();
+        title_buf.push_str(&" ".repeat(left_pad));
+        title_buf.push_str(title);
+        title_buf.push_str(&" ".repeat(right_pad));
+        title_buf.push(' ');
+        title_buf.push_str(icon);
+        let title_line = format!("║{}║", pad(&title_buf, safe_width));
+
+        let status_line = format!("║ {}  ║", pad(status, safe_width.saturating_sub(3)));
+
+        let mut out = String::new();
+        out.push_str(&border_top); out.push('\n');
+        out.push_str(&title_line); out.push('\n');
+        out.push_str(&border_line); out.push('\n');
+        out.push_str(&empty_line); out.push('\n');
+        out.push_str(&status_line); out.push('\n');
+        out.push_str(&empty_line); out.push('\n');
+
+        for line in lines.iter().take(visible_lines) {
+            out.push_str(&format!("║ {}  ║\n", pad(line, safe_width.saturating_sub(3))));
+        }
+        let remaining = visible_lines.saturating_sub(lines.len());
+        for _ in 0..remaining { out.push_str(&format!("{}\n", empty_line)); }
+
+        out.push_str(&empty_line); out.push('\n');
+        out.push_str(&border_bottom);
+        out
+    }
+
+    fn render() {
+        SHOUT.with(|cell| {
+            let mut_opt = cell.borrow();
+            if let Some(client) = &*mut_opt {
+                let is_expanded = client.is_expanded;
+                let max_widths = [25usize, 30, 45, 55];
+                let status = format!("{} - {} users", if client.ws.is_some() {"Connected"} else {"Disconnected"}, client.connected_users);
+
+                // Build lines from messages
+                let max_width = |vw: usize| vw.saturating_sub(2);
+                let wrap = |text: &str, width: usize| -> Vec<String> {
+                    let mut out = Vec::new();
+                    let mut cur = String::new();
+                    for word in text.split(' ') {
+                        if cur.is_empty() { cur.push_str(word); }
+                        else if cur.len() + 1 + word.len() <= width { cur.push(' '); cur.push_str(word); }
+                        else {
+                            if !cur.is_empty() { out.push(cur.clone()); cur.clear(); }
+                            if word.len() > width {
+                                if is_expanded {
+                                    for chunk in word.as_bytes().chunks(width) { out.push(String::from_utf8_lossy(chunk).to_string()); }
+                                } else {
+                                    let safe = truncate_utf8_safe(word, width.saturating_sub(3));
+                                    out.push(format!("{}...", safe));
+                                }
+                            } else { cur.push_str(word); }
+                        }
+                    }
+                    if !cur.is_empty() { out.push(cur); }
+                    out
+                };
+
+                let mut rendered_lines: Vec<String> = Vec::new();
+                for m in &client.messages {
+                    let uname = if m.username.len() > 10 { &m.username[..10] } else { &m.username };
+                    let txt = format!("@{}: \"{}\"", uname, m.content);
+                    let wrapped = wrap(&txt, max_width(55)); // wrap to largest width, smaller will pad/truncate
+                    rendered_lines.extend(wrapped);
+                }
+                let lines = if rendered_lines.is_empty() { vec!["No messages yet. Be the first to shout!".to_string()] } else { rendered_lines };
+
+                let icon = if is_expanded { "[x]" } else { "[+]" };
+                // Choose visible lines: match site feel (collapsed near WHOAMI height)
+                let vw_now = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(800.0);
+                let visible = if is_expanded { client.max_lines } else { if vw_now <= 600.0 { 7 } else { 8 } };
+                let single = client.small_id.is_empty() && client.medium_id.is_empty() && client.large_id.is_empty();
+                if single {
+                    // Use breakpoint-based widths to match site design precisely
+                    let vw = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(800.0);
+                    // Match sidebar boxes: mobile forces .box-large (55), desktop uses breakpoints
+                    let width: usize = if vw <= 600.0 { 55 } else if vw <= 900.0 { 45 } else { 53 };
+                    let text = build_box("SHOUTBOX", icon, width, &status, &lines, visible);
+                    set_pre_text(&client.tiny_id, &text);
+                } else {
+                    let ids = [&client.tiny_id, &client.small_id, &client.medium_id, &client.large_id];
+                    for (i, id) in ids.iter().enumerate() {
+                        if !id.is_empty() {
+                            let text = build_box("SHOUTBOX", icon, max_widths[i], &status, &lines, visible);
+                            set_pre_text(id, &text);
+                        }
+                    }
+                }
+
+                // Modal size to viewport
+                let doc = get_document();
+                if let Some(el) = doc.get_element_by_id(&client.modal_id) {
+                    if let Ok(pre) = el.dyn_into::<HtmlPreElement>() {
+                        let vw = window().unwrap().inner_width().unwrap().as_f64().unwrap_or(800.0);
+                        // Expanded modal width based on measured char width to avoid cutoff
+                        let ch = measure_char_width_px();
+                        let side = 24.0;
+                        let mut chars = ((vw * 0.88) - side) / ch;
+                        if vw <= 600.0 { chars = chars.clamp(32.0, 40.0); } else { chars = chars.clamp(60.0, 95.0); }
+                        let modal_width: usize = chars.floor() as usize;
+                        let text = build_box("SHOUTBOX", icon, modal_width, &status, &lines, visible);
+                        pre.set_text_content(Some(&text));
+                    }
+                }
+            }
+        });
+    }
+
+    fn connect_ws() {
+        SHOUT.with(|cell| {
+            let mut s = cell.borrow_mut();
+            let client = s.as_mut().unwrap();
+            // Don't reconnect if already connected
+            if client.ws.is_some() { return; }
+            let win = match window() { Some(w) => w, None => { web_sys::console::log_1(&"No window".into()); return; } };
+            let location = win.location();
+            let raw_protocol = location.protocol().unwrap_or_else(|_| "http:".into());
+            let protocol = if raw_protocol == "https:" { "wss:" } else { "ws:" };
+            let host = location.host().unwrap_or_else(|_| {
+                web_sys::console::log_1(&"location.host failed; defaulting to localhost:8080".into());
+                String::from("localhost:8080")
+            });
+            let url = format!("{}//{}/ws/shoutbox", protocol, host);
+            web_sys::console::log_1(&format!("Connecting WebSocket to {}", url).into());
+            let ws = match WebSocket::new(&url) {
+                Ok(w) => w,
+                Err(e) => {
+                    web_sys::console::log_1(&format!("WebSocket connect failed: {:?}", e).into());
+                    return;
+                }
+            };
+
+            // Store WebSocket so we can send later (e.g., shoutbox_send)
+            client.ws = Some(ws.clone());
+            
+            // onmessage via set_onmessage using generic JsValue for maximum compatibility
+            let onmessage = Closure::<dyn FnMut(JsValue)>::new(move |e: JsValue| {
+                if let Ok(ev) = e.clone().dyn_into::<web_sys::MessageEvent>() {
+                    if let Some(s) = ev.data().as_string() {
+                        web_sys::console::log_1(&format!("WS message: {}", s).into());
+                        let mut should_render = false;
+                        SHOUT.with(|cell| {
+                            let mut guard = cell.borrow_mut();
+                            if let Some(client) = guard.as_mut() {
+                                if let Ok(env) = serde_json::from_str::<ActionEnvelope>(&s) {
+                                    match env.action.as_str() {
+                                        "messages" => { if let Some(list) = env.messages { client.messages = list; } }
+                                        "new_message" => { if let Some(msg) = env.message { client.messages.push(msg); if client.messages.len() > 50 { client.messages.remove(0); } } }
+                                        "user_count" => { if let Some(c) = env.user_count { client.connected_users = c; } }
+                                        _ => {}
+                                    }
+                                    should_render = true;
+                                } else if let Ok(proto) = serde_json::from_str::<ProtoMessage>(&s) {
+                                    match proto {
+                                        ProtoMessage::MessageList(list) => { client.messages = list.into_iter().map(|m| UiMessage { id:m.id, username:m.username, content:m.content, timestamp:m.timestamp }).collect(); }
+                                        ProtoMessage::NewMessage { id, username, content, timestamp } => { client.messages.push(UiMessage{ id, username, content, timestamp }); }
+                                        ProtoMessage::UserCount(n) => { client.connected_users = n; }
+                                        _ => {}
+                                    }
+                                    should_render = true;
+                                }
+                            }
+                        });
+                        if should_render { render(); }
+                    }
+                } else if let Some(s) = e.as_string() {
+                    web_sys::console::log_1(&format!("WS message: {}", s).into());
+                    let mut should_render = false;
+                    SHOUT.with(|cell| {
+                        let mut guard = cell.borrow_mut();
+                        if let Some(client) = guard.as_mut() {
+                            if let Ok(env) = serde_json::from_str::<ActionEnvelope>(&s) {
+                                match env.action.as_str() {
+                                    "messages" => { if let Some(list) = env.messages { client.messages = list; } }
+                                    "new_message" => { if let Some(msg) = env.message { client.messages.push(msg); if client.messages.len() > 50 { client.messages.remove(0); } } }
+                                    "user_count" => { if let Some(c) = env.user_count { client.connected_users = c; } }
+                                    _ => {}
+                                }
+                                should_render = true;
+                            } else if let Ok(proto) = serde_json::from_str::<ProtoMessage>(&s) {
+                                match proto {
+                                    ProtoMessage::MessageList(list) => { client.messages = list.into_iter().map(|m| UiMessage { id:m.id, username:m.username, content:m.content, timestamp:m.timestamp }).collect(); }
+                                    ProtoMessage::NewMessage { id, username, content, timestamp } => { client.messages.push(UiMessage{ id, username, content, timestamp }); }
+                                    ProtoMessage::UserCount(n) => { client.connected_users = n; }
+                                    _ => {}
+                                }
+                                should_render = true;
+                            }
+                        }
+                    });
+                    if should_render { render(); }
+                }
+            });
+            ws.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
+            onmessage.forget();
+
+            // onopen: request initial messages using legacy envelope
+            let ws_open = ws.clone();
+            let onopen = Closure::<dyn FnMut(JsValue)>::new(move |_e: JsValue| {
+                web_sys::console::log_1(&"WS open".into());
+                let init = serde_json::json!({ "action": "get_messages" }).to_string();
+                let _ = ws_open.send_with_str(&init);
+                // Also request user_count via legacy envelope to prompt a server push if implemented
+                let _ = ws_open.send_with_str(&serde_json::json!({"action":"user_count"}).to_string());
+                // Force a render to update status line immediately
+                render();
+            });
+            ws.set_onopen(Some(onopen.as_ref().unchecked_ref()));
+            onopen.forget();
+
+            // onerror: log
+            let onerror = Closure::<dyn FnMut(JsValue)>::new(move |_e: JsValue| {
+                web_sys::console::log_1(&"WebSocket error".into());
+            });
+            ws.set_onerror(Some(onerror.as_ref().unchecked_ref()));
+            onerror.forget();
+
+            // onclose: clear socket and attempt reconnect after short delay
+            let onclose = Closure::<dyn FnMut(JsValue)>::new(move |_e: JsValue| {
+                web_sys::console::log_1(&"WebSocket closed; scheduling reconnect".into());
+                // Clear socket state
+                SHOUT.with(|cell| {
+                    if let Some(client) = cell.borrow_mut().as_mut() { client.ws = None; }
+                });
+                // Schedule reconnect in ~1.5s
+                if let Some(win) = window() {
+                    let cb = Closure::<dyn FnMut()>::once(move || {
+                        connect_ws();
+                        render();
+                    });
+                    let _ = win.set_timeout_with_callback_and_timeout_and_arguments_0(cb.as_ref().unchecked_ref(), 1500);
+                    cb.forget();
+                }
+                render();
+            });
+            ws.set_onclose(Some(onclose.as_ref().unchecked_ref()));
+            onclose.forget();
+        });
+    }
+
+    #[wasm_bindgen]
+    pub fn shoutbox_reconnect() {
+        connect_ws();
+    }
+
+    #[wasm_bindgen]
+    pub fn init_shoutbox_client(tiny_id: &str, small_id: &str, medium_id: &str, large_id: &str, modal_id: &str) {
+        SHOUT.with(|cell| {
+            *cell.borrow_mut() = Some(ShoutboxClient {
+                ws: None,
+                tiny_id: tiny_id.to_string(),
+                small_id: small_id.to_string(),
+                medium_id: medium_id.to_string(),
+                large_id: large_id.to_string(),
+                modal_id: modal_id.to_string(),
+                is_expanded: false,
+                max_lines: 5,
+                messages: Vec::new(),
+                connected_users: 0,
+            });
+        });
+        connect_ws();
+        render();
+    }
+
+    #[wasm_bindgen]
+    pub fn init_shoutbox_client_single(collapsed_id: &str, modal_id: &str) {
+        SHOUT.with(|cell| {
+            *cell.borrow_mut() = Some(ShoutboxClient {
+                ws: None,
+                tiny_id: collapsed_id.to_string(),
+                small_id: String::new(),
+                medium_id: String::new(),
+                large_id: String::new(),
+                modal_id: modal_id.to_string(),
+                is_expanded: false,
+                max_lines: 5,
+                messages: Vec::new(),
+                connected_users: 0,
+            });
+        });
+        connect_ws();
+        render();
+    }
+
+    #[wasm_bindgen]
+    pub fn shoutbox_set_expanded(expanded: bool, lines: usize) {
+        SHOUT.with(|cell| {
+            if let Some(client) = cell.borrow_mut().as_mut() {
+                client.is_expanded = expanded;
+                client.max_lines = lines.max(1);
+            }
+        });
+        render();
+    }
+
+    #[wasm_bindgen]
+    pub fn shoutbox_send(username: String, content: String) {
+        let ws_opt = SHOUT.with(|cell| {
+            cell.borrow().as_ref().and_then(|c| c.ws.clone())
+        });
+        if let Some(ws) = ws_opt {
+            let cmd = serde_json::json!({
+                "action": "send_message",
+                "username": username,
+                "content": content
+            });
+            let _ = ws.send_with_str(&cmd.to_string());
         }
     }
 }

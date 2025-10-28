@@ -79,9 +79,9 @@ impl ContentManager {
     }
 
     fn create_posts_content(&self, posts: &[Post]) -> ResponsiveBoxes {
-        // Create dividers
-        let divider_tiny = "░".repeat(DIVIDER_LENGTH_TINY);
-        let divider_small = "░".repeat(DIVIDER_LENGTH_SMALL);
+        // Create dividers (match box content widths)
+        let divider_tiny = "░".repeat(BOX_WIDTH_SMALL.saturating_sub(4));
+        let divider_small = "░".repeat(BOX_WIDTH_MEDIUM.saturating_sub(4));
         let divider_medium = "░".repeat(DIVIDER_LENGTH_MEDIUM);
         let divider_large = "░".repeat(DIVIDER_LENGTH_LARGE);
 
@@ -89,22 +89,22 @@ impl ContentManager {
         let latest_post = &posts[0];
 
         let mobile_content_tiny = format!(
-            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼   │\n└────────────────────────┘",
+            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼    │\n└──────────────────────────┘",
             divider_tiny,
             latest_post.title,
             latest_post.date,
-            wrap_text(&latest_post.content, WRAP_WIDTH_TINY).join("\n"),
+            wrap_text(&latest_post.content, BOX_WIDTH_SMALL.saturating_sub(6)).join("\n"),
             latest_post.href,
             latest_post.title,
             divider_tiny
         );
 
         let mobile_content_small = format!(
-            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌────────────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼           │\n└────────────────────────────────┘",
+            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────────────────┐\n│  ▼ SHOW MORE POSTS ▼                │\n└──────────────────────────────────────┘",
             divider_small,
             latest_post.title,
             latest_post.date,
-            wrap_text(&latest_post.content, WRAP_WIDTH_SMALL).join("\n"),
+            wrap_text(&latest_post.content, BOX_WIDTH_MEDIUM.saturating_sub(6)).join("\n"),
             latest_post.href,
             latest_post.title,
             divider_small
@@ -155,12 +155,12 @@ impl ContentManager {
             tiny: crate::mods::create_header_box(
                 "POSTS",
                 &mobile_content_tiny,
-                BOX_WIDTH_TINY,
+                BOX_WIDTH_SMALL,
             ),
             small: crate::mods::create_header_box(
                 "POSTS",
                 &mobile_content_small,
-                BOX_WIDTH_SMALL,
+                BOX_WIDTH_MEDIUM,
             ),
             medium: crate::mods::create_header_box(
                 "POSTS",

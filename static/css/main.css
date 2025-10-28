@@ -104,8 +104,7 @@ pre {
     letter-spacing: 0;
     word-spacing: 0;
     font-variant-numeric: tabular-nums;
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
+
 }
 
 pre::after {
@@ -194,6 +193,9 @@ pre::after {
 .ascii-nav a, .ascii-content a, .ascii-sidebar a { color: #33aaff; text-decoration: none; }
 .ascii-nav a:hover, .ascii-content a:hover, .ascii-sidebar a:hover { text-decoration: underline; }
 
+.ascii-nav { display: flex; justify-content: center; }
+.ascii-footer { display: flex; justify-content: center; }
+
 #shoutbox-container { display: block; }
 #shoutbox-container pre { white-space: pre; font-family: "Departure Mono", "Courier New", monospace; overflow: hidden; word-wrap: normal; word-break: normal; }
 .shoutbox-input-container { margin-top: 5px; display: flex; justify-content: center; }
@@ -212,13 +214,14 @@ pre::after {
 #shoutbox-expand-btn:hover { border-color: #33aaff; }
 
 /* Floating (draggable) expanded shoutbox */
-#shoutbox-float { position: fixed; left: 50%; top: 20%; transform: translate(-50%, 0); display: none; z-index: 10000; max-width: 96vw; }
+#shoutbox-float { position: fixed; left: 50%; top: 15%; transform: translate(-50%, 0); display: none; z-index: 10000; max-width: 92vw; }
 #shoutbox-float .shoutbox-float-content { background: rgba(0,0,0,0.9); padding: 10px; border: 1px solid #333; display: inline-flex; flex-direction: column; gap: 8px; cursor: move; }
+#shoutbox-modal-pre { max-width: 90vw; display: block; }
 #shoutbox-modal-pre { white-space: pre; margin: 0; font-size: 14px; line-height: 1.2; }
 #shoutbox-close-btn { align-self: flex-end; background: #000; color: #fff; border: 1px solid #333; cursor: pointer; padding: 2px 6px; font-size: 12px; }
 #shoutbox-close-btn:hover { border-color: #33aaff; }
 
 @media (max-width: 600px) {
   #shoutbox-float { left: 50%; transform: translate(-50%, 0); }
-  #shoutbox-float .shoutbox-float-content { max-width: 94vw; }
+  #shoutbox-float .shoutbox-float-content { max-width: 90vw; }
 }
