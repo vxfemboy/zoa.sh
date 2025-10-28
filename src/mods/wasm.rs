@@ -473,10 +473,15 @@ fn truncate_utf8_safe(s: &str, max_bytes: usize) -> String {
         out.push_str(&status_line); out.push('\n');
         out.push_str(&empty_line); out.push('\n');
 
-        for line in lines.iter().take(visible_lines) {
+        // Show the most recent content: take from the end of the buffer
+        let total = lines.len();
+        let start = total.saturating_sub(visible_lines);
+        for i in start..total {
+            let line = &lines[i];
             out.push_str(&format!("║ {}  ║\n", pad(line, safe_width.saturating_sub(3))));
         }
-        let remaining = visible_lines.saturating_sub(lines.len());
+        // If there were fewer lines than the target height, pad the top with empties
+        let remaining = visible_lines.saturating_sub(total);
         for _ in 0..remaining { out.push_str(&format!("{}\n", empty_line)); }
 
         out.push_str(&empty_line); out.push('\n');
