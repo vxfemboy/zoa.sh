@@ -93,16 +93,16 @@ function setupDrag() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('shoutbox.js: DOMContentLoaded');
+  if (window.SADSITE_DEBUG) console.log('shoutbox.js: DOMContentLoaded');
   try {
-    console.log('shoutbox.js: initializing WASM...');
+    if (window.SADSITE_DEBUG) console.log('shoutbox.js: initializing WASM...');
     await init();
-    console.log('shoutbox.js: WASM loaded, calling init_shoutbox_client_single');
+    if (window.SADSITE_DEBUG) console.log('shoutbox.js: WASM loaded, calling init_shoutbox_client_single');
     // Single collapsed pre
     init_shoutbox_client_single('shoutbox','shoutbox-modal-pre');
-    console.log('shoutbox.js: shoutbox client initialized');
+    if (window.SADSITE_DEBUG) console.log('shoutbox.js: shoutbox client initialized');
   } catch (e) {
-    console.error('shoutbox.js: WASM init failed', e);
+    if (window.SADSITE_DEBUG) console.error('shoutbox.js: WASM init failed', e);
     // Continue without WASM shoutbox
   }
   setupInputHandlers();

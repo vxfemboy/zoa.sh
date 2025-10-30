@@ -141,6 +141,7 @@ impl ResponsiveBoxes {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_comments(username: &str, content: &str) -> Self {
         let comment_content = format!("@{}:\n\"{}\"", username, content);
 

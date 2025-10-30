@@ -1,5 +1,7 @@
 /target
 .env
+.*
 Cargo.lock
 /research
 /static/wasm
+deploy.sh

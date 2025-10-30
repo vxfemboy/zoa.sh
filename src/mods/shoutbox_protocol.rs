@@ -1,14 +1,21 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum ShoutboxMessage {
-    NewMessage { id: String, username: String, content: String, timestamp: String },
+    NewMessage {
+        id: String,
+        username: String,
+        content: String,
+        timestamp: String,
+    },
     MessageList(Vec<ChatMessage>),
     UserCount(usize),
     Error(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct ChatMessage {
     pub id: String,
     pub username: String,
@@ -21,5 +28,3 @@ pub enum ShoutboxCommand {
     GetMessages,
     SendMessage { username: String, content: String },
 }
-
-

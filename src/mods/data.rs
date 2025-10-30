@@ -25,6 +25,7 @@ pub struct SiteData {
     pub nav_items: Vec<NavItem>,
     pub posts: Vec<Post>,
     pub categories: Vec<String>,
+    #[allow(dead_code)]
     pub comments: Vec<Comment>,
     pub footer_text: String,
     pub about_content: String,

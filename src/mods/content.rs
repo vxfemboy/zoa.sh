@@ -152,16 +152,8 @@ impl ContentManager {
         );
 
         ResponsiveBoxes {
-            tiny: crate::mods::create_header_box(
-                "POSTS",
-                &mobile_content_tiny,
-                BOX_WIDTH_SMALL,
-            ),
-            small: crate::mods::create_header_box(
-                "POSTS",
-                &mobile_content_small,
-                BOX_WIDTH_MEDIUM,
-            ),
+            tiny: crate::mods::create_header_box("POSTS", &mobile_content_tiny, BOX_WIDTH_SMALL),
+            small: crate::mods::create_header_box("POSTS", &mobile_content_small, BOX_WIDTH_MEDIUM),
             medium: crate::mods::create_header_box(
                 "POSTS",
                 &all_posts_content_medium,

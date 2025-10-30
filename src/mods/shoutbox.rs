@@ -1,8 +1,8 @@
+use crate::mods::shoutbox_protocol::ShoutboxCommand as ProtoCommand;
 use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use serde::{Deserialize, Serialize};
-use crate::mods::shoutbox_protocol::{ChatMessage, ShoutboxCommand as ProtoCommand, ShoutboxMessage as ProtoMessage};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -45,7 +45,12 @@ impl Actor for ShoutboxSession {
         let server_addr = self.addr.clone();
         let session_id = self.id.clone();
         actix::spawn(async move {
-            let _ = server_addr.send(Connect { id: session_id, addr }).await;
+            let _ = server_addr
+                .send(Connect {
+                    id: session_id,
+                    addr,
+                })
+                .await;
         });
     }
 
@@ -98,26 +103,30 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
                                         message: None,
                                         error: None,
                                     };
-                                    let json = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
-                                    session_addr.do_send(ShoutboxMessage { id: String::new(), username: String::new(), content: json, timestamp: chrono::Utc::now() });
+                                    let json = serde_json::to_string(&response)
+                                        .unwrap_or_else(|_| "{}".to_string());
+                                    session_addr.do_send(ShoutboxMessage {
+                                        id: String::new(),
+                                        username: String::new(),
+                                        content: json,
+                                        timestamp: chrono::Utc::now(),
+                                    });
                                 }
                             });
                         }
                         ProtoCommand::SendMessage { username, content } => {
                             if !username.trim().is_empty() && !content.trim().is_empty() {
-                                if !username.trim().is_empty() && !content.trim().is_empty() {
-                                    let message = ShoutboxMessage {
-                                        id: Uuid::new_v4().to_string(),
-                                        username: username.trim().to_string(),
-                                        content: content.trim().to_string(),
-                                        timestamp: chrono::Utc::now(),
-                                    };
-                                    
-                                    let addr = self.addr.clone();
-                                    actix::spawn(async move {
-                                        let _ = addr.send(message).await;
-                                    });
-                                }
+                                let message = ShoutboxMessage {
+                                    id: Uuid::new_v4().to_string(),
+                                    username: username.trim().to_string(),
+                                    content: content.trim().to_string(),
+                                    timestamp: chrono::Utc::now(),
+                                };
+
+                                let addr = self.addr.clone();
+                                actix::spawn(async move {
+                                    let _ = addr.send(message).await;
+                                });
                             }
                         }
                     }
@@ -134,13 +143,21 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
                                         message: None,
                                         error: None,
                                     };
-                                    let json = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
-                                    session_addr.do_send(ShoutboxMessage { id: String::new(), username: String::new(), content: json, timestamp: chrono::Utc::now() });
+                                    let json = serde_json::to_string(&response)
+                                        .unwrap_or_else(|_| "{}".to_string());
+                                    session_addr.do_send(ShoutboxMessage {
+                                        id: String::new(),
+                                        username: String::new(),
+                                        content: json,
+                                        timestamp: chrono::Utc::now(),
+                                    });
                                 }
                             });
                         }
                         "send_message" => {
-                            if let (Some(username), Some(content)) = (command.username, command.content) {
+                            if let (Some(username), Some(content)) =
+                                (command.username, command.content)
+                            {
                                 if !username.trim().is_empty() && !content.trim().is_empty() {
                                     let message = ShoutboxMessage {
                                         id: Uuid::new_v4().to_string(),
@@ -162,7 +179,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
                                 message: None,
                                 error: Some("Unknown command".to_string()),
                             };
-                            ctx.text(serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string()));
+                            ctx.text(
+                                serde_json::to_string(&response)
+                                    .unwrap_or_else(|_| "{}".to_string()),
+                            );
                         }
                     }
                 }
@@ -177,18 +197,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
 }
 
 // Server actor to manage all sessions and messages
+#[derive(Default)]
 pub struct ShoutboxServer {
     sessions: HashMap<String, Addr<ShoutboxSession>>,
     messages: Vec<ShoutboxMessage>,
-}
-
-impl Default for ShoutboxServer {
-    fn default() -> ShoutboxServer {
-        ShoutboxServer {
-            sessions: HashMap::new(),
-            messages: Vec::new(),
-        }
-    }
 }
 
 impl Actor for ShoutboxServer {
@@ -219,7 +231,7 @@ impl Handler<ShoutboxMessage> for ShoutboxServer {
     fn handle(&mut self, msg: ShoutboxMessage, _: &mut Context<Self>) {
         // Store the message
         self.messages.push(msg.clone());
-        
+
         // Keep only the last 50 messages to prevent memory issues
         if self.messages.len() > 50 {
             self.messages.remove(0);
@@ -227,7 +239,7 @@ impl Handler<ShoutboxMessage> for ShoutboxServer {
 
         // Broadcast to all connected sessions
         for session in self.sessions.values() {
-            let _ = session.do_send(msg.clone());
+            session.do_send(msg.clone());
         }
     }
 }
@@ -247,10 +259,10 @@ impl ShoutboxServer {
             "action": "user_count",
             "user_count": user_count
         });
-        
+
         for session in self.sessions.values() {
             // Send user count update to each session
-            let _ = session.do_send(ShoutboxMessage {
+            session.do_send(ShoutboxMessage {
                 id: "".to_string(),
                 username: "".to_string(),
                 content: user_count_response.to_string(),
@@ -283,19 +295,26 @@ pub async fn shoutbox_ws(
     stream: web::Payload,
     srv: web::Data<Addr<ShoutboxServer>>,
 ) -> Result<HttpResponse, Error> {
-    let resp = ws::start(ShoutboxSession {
-        id: Uuid::new_v4().to_string(),
-        addr: srv.get_ref().clone(),
-    }, &req, stream)?;
+    let resp = ws::start(
+        ShoutboxSession {
+            id: Uuid::new_v4().to_string(),
+            addr: srv.get_ref().clone(),
+        },
+        &req,
+        stream,
+    )?;
     Ok(resp)
 }
 
 // HTTP API endpoints for shoutbox
-pub async fn get_shoutbox_messages(srv: web::Data<Addr<ShoutboxServer>>) -> Result<HttpResponse, Error> {
-    let messages = srv.send(GetMessages).await.map_err(|_| {
-        actix_web::error::ErrorInternalServerError("Failed to get messages")
-    })?;
-    
+pub async fn get_shoutbox_messages(
+    srv: web::Data<Addr<ShoutboxServer>>,
+) -> Result<HttpResponse, Error> {
+    let messages = srv
+        .send(GetMessages)
+        .await
+        .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to get messages"))?;
+
     Ok(HttpResponse::Ok().json(messages))
 }
 
@@ -304,10 +323,10 @@ pub async fn post_shoutbox_message(
     message: web::Json<ShoutboxMessage>,
 ) -> Result<HttpResponse, Error> {
     let message = message.into_inner();
-    srv.send(message).await.map_err(|_| {
-        actix_web::error::ErrorInternalServerError("Failed to send message")
-    })?;
-    
+    srv.send(message)
+        .await
+        .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to send message"))?;
+
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "status": "success"
     })))

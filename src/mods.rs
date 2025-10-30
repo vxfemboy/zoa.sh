@@ -12,10 +12,10 @@ pub mod errors;
 pub mod image_converter;
 pub mod responsive;
 pub mod shoutbox;
+pub mod shoutbox_protocol;
 pub mod stars;
 pub mod template_builder;
 pub mod wasm;
-pub mod shoutbox_protocol;
 
 #[cfg(test)]
 mod tests;
@@ -30,7 +30,6 @@ pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
 pub use shoutbox::*;
-pub use shoutbox_protocol::*;
 pub use stars::*;
 pub use template_builder::*;
 

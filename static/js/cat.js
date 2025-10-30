@@ -25,7 +25,7 @@ async function runCat() {
     }
     requestAnimationFrame(loop);
   } catch (e) {
-    console.warn('cat init failed', e);
+    if (window.SADSITE_DEBUG) console.warn('cat init failed', e);
   }
 }
 

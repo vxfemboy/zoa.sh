@@ -5,7 +5,9 @@ use std::sync::{Arc, RwLock};
 
 pub struct BoxCache {
     cache: Arc<RwLock<LruCache<String, String>>>,
+    #[allow(dead_code)]
     capacity: usize,
+    enabled: bool,
 }
 
 impl BoxCache {
@@ -15,19 +17,35 @@ impl BoxCache {
         Self {
             cache: Arc::new(RwLock::new(lru)),
             capacity,
+            enabled: true,
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_capacity(capacity: usize) -> Self {
         let cap = capacity.max(1);
         let lru = LruCache::new(NonZeroUsize::new(cap).unwrap());
         Self {
             cache: Arc::new(RwLock::new(lru)),
             capacity: cap,
+            enabled: true,
+        }
+    }
+
+    pub fn with_options(enabled: bool, capacity: usize) -> Self {
+        let cap = capacity.max(1);
+        let lru = LruCache::new(NonZeroUsize::new(cap).unwrap());
+        Self {
+            cache: Arc::new(RwLock::new(lru)),
+            capacity: cap,
+            enabled,
         }
     }
 
     pub fn clear(&self) -> crate::mods::Result<()> {
+        if !self.enabled {
+            return Ok(());
+        }
         let mut cache = self
             .cache
             .write()
@@ -37,6 +55,9 @@ impl BoxCache {
     }
 
     pub fn size(&self) -> crate::mods::Result<usize> {
+        if !self.enabled {
+            return Ok(0);
+        }
         let cache = self
             .cache
             .read()
@@ -45,6 +66,9 @@ impl BoxCache {
     }
 
     pub fn insert(&self, key: String, value: String) -> crate::mods::Result<()> {
+        if !self.enabled {
+            return Ok(());
+        }
         let mut cache = self
             .cache
             .write()
@@ -53,7 +77,11 @@ impl BoxCache {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn get(&self, key: &str) -> crate::mods::Result<Option<String>> {
+        if !self.enabled {
+            return Ok(None);
+        }
         let mut cache = self
             .cache
             .write()

@@ -6,6 +6,9 @@ pub struct Config {
     pub server: ServerConfig,
     pub paths: PathConfig,
     pub content: ContentConfig,
+    pub debug: bool,
+    pub cache_enabled: bool,
+    pub cache_capacity: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,6 +93,9 @@ impl Default for Config {
                     large: 72,
                 },
             },
+            debug: false,
+            cache_enabled: false,
+            cache_capacity: 256,
         }
     }
 }

@@ -1,9 +1,13 @@
 # ASCII Web Configuration
 
 [server]
-host = "0.0.0.0"
+host = "127.0.0.1"
 port = 8080
 workers = 4
+
+debug = false
+cache_enabled = false
+cache_capacity = 256
 
 [paths]
 templates = "templates"

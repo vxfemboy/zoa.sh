@@ -28,6 +28,11 @@ impl TemplateContextBuilder {
         self
     }
 
+    pub fn with_debug(mut self, debug: bool) -> Self {
+        self.context.insert("debug", &debug);
+        self
+    }
+
     #[allow(dead_code)]
     pub fn with_title_art(mut self, art: &str) -> Self {
         self.context.insert("title_art", art);

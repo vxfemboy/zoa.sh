@@ -7,13 +7,17 @@ pub const BOX_WIDTH_MEDIUM: usize = 60;
 pub const BOX_WIDTH_LARGE: usize = 80;
 
 // Divider lengths for different screen sizes
+#[allow(dead_code)]
 pub const DIVIDER_LENGTH_TINY: usize = 24;
+#[allow(dead_code)]
 pub const DIVIDER_LENGTH_SMALL: usize = 34;
 pub const DIVIDER_LENGTH_MEDIUM: usize = 54;
 pub const DIVIDER_LENGTH_LARGE: usize = 74;
 
 // Content wrapping widths
+#[allow(dead_code)]
 pub const WRAP_WIDTH_TINY: usize = 22;
+#[allow(dead_code)]
 pub const WRAP_WIDTH_SMALL: usize = 32;
 pub const WRAP_WIDTH_MEDIUM: usize = 52;
 pub const WRAP_WIDTH_LARGE: usize = 72;
