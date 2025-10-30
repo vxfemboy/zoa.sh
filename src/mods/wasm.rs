@@ -7,6 +7,7 @@ mod wasm {
     use js_sys::Math;
     use serde::{Deserialize, Serialize};
     use std::cell::RefCell;
+    use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
@@ -474,27 +475,36 @@ mod wasm {
         }
     }
 
-    fn pad(s: &str, len: usize) -> String {
-        if s.len() >= len {
-            s[..len.min(s.len())].to_string()
-        } else {
-            format!("{}{}", s, " ".repeat(len - s.len()))
-        }
+    fn display_width(s: &str) -> usize {
+        UnicodeWidthStr::width(s)
     }
 
-    fn truncate_utf8_safe(s: &str, max_bytes: usize) -> String {
-        if s.len() <= max_bytes {
+    fn truncate_display(s: &str, max_cols: usize) -> String {
+        if display_width(s) <= max_cols {
             return s.to_string();
         }
         let mut out = String::new();
+        let mut cols = 0usize;
         for ch in s.chars() {
-            let b = ch.len_utf8();
-            if out.len() + b > max_bytes {
+            let w = UnicodeWidthChar::width(ch).unwrap_or(1);
+            if cols + w > max_cols {
                 break;
             }
             out.push(ch);
+            cols += w;
         }
         out
+    }
+
+    fn pad_display(s: &str, total_cols: usize) -> String {
+        let w = display_width(s);
+        if w >= total_cols {
+            truncate_display(s, total_cols)
+        } else {
+            let mut out = String::from(s);
+            out.push_str(&" ".repeat(total_cols - w));
+            out
+        }
     }
 
     fn build_box(
@@ -512,18 +522,19 @@ mod wasm {
         let empty_line = format!("║{}║", " ".repeat(safe_width));
 
         // Title with right-side icon
-        let reserved = icon.len() + 1; // space + icon
-        let left_pad = ((safe_width.saturating_sub(title.len() + reserved)) / 2).max(0);
-        let right_pad = safe_width.saturating_sub(title.len() + reserved + left_pad);
+        let reserved = display_width(icon) + 1; // space + icon
+        let title_w = display_width(title);
+        let left_pad = ((safe_width.saturating_sub(title_w + reserved)) / 2).max(0);
+        let right_pad = safe_width.saturating_sub(title_w + reserved + left_pad);
         let mut title_buf = String::new();
         title_buf.push_str(&" ".repeat(left_pad));
         title_buf.push_str(title);
         title_buf.push_str(&" ".repeat(right_pad));
         title_buf.push(' ');
         title_buf.push_str(icon);
-        let title_line = format!("║{}║", pad(&title_buf, safe_width));
+        let title_line = format!("║{}║", pad_display(&title_buf, safe_width));
 
-        let status_line = format!("║ {}  ║", pad(status, safe_width.saturating_sub(3)));
+        let status_line = format!("║ {}  ║", pad_display(status, safe_width.saturating_sub(3)));
 
         let mut out = String::new();
         out.push_str(&border_top);
@@ -546,7 +557,7 @@ mod wasm {
             let line = &lines[i];
             out.push_str(&format!(
                 "║ {}  ║\n",
-                pad(line, safe_width.saturating_sub(3))
+                pad_display(line, safe_width.saturating_sub(3))
             ));
         }
         // If there were fewer lines than the target height, pad the top with empties
@@ -589,28 +600,45 @@ mod wasm {
                 let wrap = |text: &str, width: usize| -> Vec<String> {
                     let mut out = Vec::new();
                     let mut cur = String::new();
+                    let mut cur_w = 0usize;
                     for word in text.split(' ') {
+                        let ww = display_width(word);
                         if cur.is_empty() {
                             cur.push_str(word);
-                        } else if cur.len() + 1 + word.len() <= width {
+                            cur_w = ww;
+                            continue;
+                        }
+                        if cur_w + 1 + ww <= width {
                             cur.push(' ');
                             cur.push_str(word);
+                            cur_w += 1 + ww;
                         } else {
                             if !cur.is_empty() {
                                 out.push(cur.clone());
                                 cur.clear();
+                                cur_w = 0;
                             }
-                            if word.len() > width {
-                                if is_expanded {
-                                    for chunk in word.as_bytes().chunks(width) {
-                                        out.push(String::from_utf8_lossy(chunk).to_string());
+                            if ww > width {
+                                // Break the long word into display-width chunks
+                                let mut buf = String::new();
+                                let mut bw = 0usize;
+                                for ch in word.chars() {
+                                    let w = UnicodeWidthChar::width(ch).unwrap_or(1);
+                                    if bw + w > width {
+                                        out.push(buf.clone());
+                                        buf.clear();
+                                        bw = 0;
                                     }
-                                } else {
-                                    let safe = truncate_utf8_safe(word, width.saturating_sub(3));
-                                    out.push(format!("{}...", safe));
+                                    buf.push(ch);
+                                    bw += w;
+                                }
+                                if !buf.is_empty() {
+                                    cur = buf;
+                                    cur_w = bw;
                                 }
                             } else {
                                 cur.push_str(word);
+                                cur_w = ww;
                             }
                         }
                     }
@@ -622,11 +650,7 @@ mod wasm {
 
                 let mut rendered_lines: Vec<String> = Vec::new();
                 for m in &client.messages {
-                    let uname = if m.username.len() > 10 {
-                        &m.username[..10]
-                    } else {
-                        &m.username
-                    };
+                    let uname = truncate_display(&m.username, 10);
                     let txt = format!("@{}: \"{}\"", uname, m.content);
                     let wrapped = wrap(&txt, max_width(BOX_WIDTH_LARGE.saturating_sub(2))); // wrap to largest width, smaller will pad/truncate
                     rendered_lines.extend(wrapped);
