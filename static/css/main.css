@@ -129,6 +129,25 @@ pre::after {
     transform-origin: top center;
 }
 
+/* Smaller, readable ASCII lines for WHOAMI pfp inside boxes */
+.pfp-small {
+    font-size: 10px;          /* visibly small, not microscopic */
+    line-height: 0.1;          /* reduce vertical spacing between lines */
+    white-space: pre;        /* preserve spaces */
+    display: inline-block;   /* avoid affecting box layout */
+    transform: scaleY(1); /* slightly compress height without changing width */
+    transform-origin: top center;
+}
+
+/* Mobile tuning for WHOAMI pfp to fit inside the small box */
+@media (max-width: 600px) {
+  .pfp-small {
+    font-size: 7.16px;
+    line-height: 1;
+    transform: scaleY(1);
+  }
+}
+
 .ascii-title {
     font-size: 0.8vw;
     white-space: pre;
@@ -168,6 +187,8 @@ pre::after {
     .ascii-content .welcome-box .box-medium { display: block !important; }
     .ascii-content .latest-posts-box .box-small { display: block !important; }
     .ascii-sidebar .box-large { display: block !important; }
+    /* Ensure shoutbox under posts uses medium variant on mobile to match posts */
+    .ascii-content #shoutbox-container .box-medium { display: block !important; }
     #additional-posts-mobile .box-small { display: block !important; }
     .ascii-nav .box-medium { display: block !important; }
     .ascii-footer .box-medium { display: block !important; }
@@ -197,7 +218,8 @@ pre::after {
 .ascii-footer { display: flex; justify-content: center; }
 
 #shoutbox-container { display: block; }
-#shoutbox-container pre { white-space: pre; font-family: "Departure Mono", "Courier New", monospace; overflow: hidden; word-wrap: normal; word-break: normal; }
+#shoutbox-container pre { white-space: pre; font-family: "Departure Mono", "Courier New", monospace; overflow: hidden; word-wrap: normal; word-break: normal; width: 100%; display: block; }
+.sb-icon-hit { z-index: 2; }
 .shoutbox-input-container { margin-top: 5px; display: flex; justify-content: center; }
 .shoutbox-input-container input { background-color: #000; color: #fff; border: 1px solid #333; font-family: "Departure Mono", "Courier New", monospace; font-size: 12px; padding: 4px 8px; width: 200px; outline: none; }
 .shoutbox-input-container input:focus { border-color: #33aaff; box-shadow: 0 0 5px rgba(51, 170, 255, 0.3); }

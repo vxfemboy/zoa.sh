@@ -174,46 +174,31 @@ impl ResponsiveBoxes {
     }
 
     pub fn new_shoutbox() -> Self {
-        let shoutbox_content = "╔══════════════════════════════════════╗
-║           SHOUTBOX                   ║
-╠══════════════════════════════════════╣
-║                                      ║
-║  Connect to join the conversation!   ║
-║                                      ║
-║  Type your message below:            ║
-║  [username] [message]                ║
-║                                      ║
-║  Example:                            ║
-║  rustacean Hello world!              ║
-║                                      ║
-║  Messages will appear here in        ║
-║  real-time as they're posted...      ║
-║                                      ║
-╚══════════════════════════════════════╝";
+        let shoutbox_content = "";
 
         Self {
             tiny: BoxBuilder::new()
                 .with_title("SHOUTBOX")
                 .with_content(shoutbox_content)
-                .with_width(COMMENTS_WIDTH_TINY)
+                .with_width(BOX_WIDTH_TINY)
                 .with_style(BoxStyle::Header)
                 .build(),
             small: BoxBuilder::new()
                 .with_title("SHOUTBOX")
                 .with_content(shoutbox_content)
-                .with_width(COMMENTS_WIDTH_SMALL)
+                .with_width(BOX_WIDTH_SMALL)
                 .with_style(BoxStyle::Header)
                 .build(),
             medium: BoxBuilder::new()
                 .with_title("SHOUTBOX")
                 .with_content(shoutbox_content)
-                .with_width(COMMENTS_WIDTH_MEDIUM)
+                .with_width(BOX_WIDTH_MEDIUM)
                 .with_style(BoxStyle::Header)
                 .build(),
             large: BoxBuilder::new()
                 .with_title("SHOUTBOX")
                 .with_content(shoutbox_content)
-                .with_width(COMMENTS_WIDTH_LARGE)
+                .with_width(BOX_WIDTH_LARGE)
                 .with_style(BoxStyle::Header)
                 .build(),
         }

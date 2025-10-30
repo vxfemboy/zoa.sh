@@ -40,6 +40,17 @@
                     <div class="box-large"><pre>{{ latest_post_box.large | safe }}</pre></div>
                 </div>
 
+                <!-- Shoutbox moved under posts to match posts width -->
+                <div class="ascii-box" id="shoutbox-container" data-no-responsive>
+                    <div class="box-tiny"><pre id="shoutbox-tiny">{{ comments_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre id="shoutbox-small">{{ comments_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre id="shoutbox-medium">{{ comments_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre id="shoutbox-large">{{ comments_box.large | safe }}</pre></div>
+                    <div class="shoutbox-input-container">
+                        <input type="text" id="shoutbox-input" placeholder="username: message" maxlength="120">
+                    </div>
+                </div>
+
                 <!-- Additional posts for mobile dropdown -->
                 <div id="additional-posts-mobile" style="display:none;">
                     {% for post in additional_posts %}
@@ -75,15 +86,6 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
                     <div class="box-small"><pre>{{ categories_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ categories_box.medium | safe }}</pre></div>
                     <div class="box-large"><pre>{{ categories_box.large | safe }}</pre></div>
-                </div>
-
-                <div class="ascii-box" id="shoutbox-container" data-no-responsive>
-                    <div class="box-large">
-                        <pre id="shoutbox">{{ comments_box.large | safe }}</pre>
-                        <div class="shoutbox-input-container">
-                            <input type="text" id="shoutbox-input" placeholder="username: message" maxlength="120">
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -34,6 +34,12 @@ mod wasm {
 
     const NEKO_SPEED: f64 = 10.0; // Movement speed per tick (~matches current animation cadence)
 
+    // Local copies of box widths to avoid path resolution issues in wasm-only submodule
+    const BOX_WIDTH_TINY: usize = 30;
+    const BOX_WIDTH_SMALL: usize = 40;
+    const BOX_WIDTH_MEDIUM: usize = 60;
+    const BOX_WIDTH_LARGE: usize = 80;
+
     #[wasm_bindgen]
     pub struct AsciiCat {
         cat_element: HtmlPreElement,
@@ -560,7 +566,14 @@ mod wasm {
             let mut_opt = cell.borrow();
             if let Some(client) = &*mut_opt {
                 let is_expanded = client.is_expanded;
-                let max_widths = [25usize, 30, 45, 55];
+                // Match site box widths: posts use BOX_WIDTH_* as TOTAL width.
+                // Our builder expects CONTENT width, so subtract 2 for borders.
+                let max_widths = [
+                    BOX_WIDTH_TINY.saturating_sub(2),
+                    BOX_WIDTH_SMALL.saturating_sub(2),
+                    BOX_WIDTH_MEDIUM.saturating_sub(2),
+                    BOX_WIDTH_LARGE.saturating_sub(2),
+                ];
                 let status = format!(
                     "{} - {} users",
                     if client.ws.is_some() {
@@ -615,7 +628,7 @@ mod wasm {
                         &m.username
                     };
                     let txt = format!("@{}: \"{}\"", uname, m.content);
-                    let wrapped = wrap(&txt, max_width(55)); // wrap to largest width, smaller will pad/truncate
+                    let wrapped = wrap(&txt, max_width(BOX_WIDTH_LARGE.saturating_sub(2))); // wrap to largest width, smaller will pad/truncate
                     rendered_lines.extend(wrapped);
                 }
                 let lines = if rendered_lines.is_empty() {
@@ -652,13 +665,15 @@ mod wasm {
                         .unwrap()
                         .as_f64()
                         .unwrap_or(800.0);
-                    // Match sidebar boxes: mobile forces .box-large (55), desktop uses breakpoints
-                    let width: usize = if vw <= 600.0 {
-                        55
+                    // Match main content boxes: use BOX_WIDTH_* minus borders by breakpoint
+                    let width: usize = if vw <= 400.0 {
+                        BOX_WIDTH_MEDIUM.saturating_sub(2)
+                    } else if vw <= 600.0 {
+                        BOX_WIDTH_MEDIUM.saturating_sub(2)
                     } else if vw <= 900.0 {
-                        45
+                        BOX_WIDTH_MEDIUM.saturating_sub(2)
                     } else {
-                        53
+                        BOX_WIDTH_LARGE.saturating_sub(2)
                     };
                     let text = build_box("SHOUTBOX", icon, width, &status, &lines, visible);
                     set_pre_text(&client.tiny_id, &text);

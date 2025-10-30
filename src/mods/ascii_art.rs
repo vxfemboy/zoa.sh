@@ -499,7 +499,12 @@ pub fn create_about_box_with_ascii(
     let ascii_art_lines: Vec<&str> = ascii_art.lines().collect();
     let ascii_art_content = ascii_art_lines
         .iter()
-        .map(|line| format!("{}{}{}\n", left_border, line, right_border))
+        .map(|line| {
+            format!(
+                "{}<span class=\"pfp-small\">{}</span>{}\n",
+                left_border, line, right_border
+            )
+        })
         .collect::<String>();
 
     // Create text content lines with margins

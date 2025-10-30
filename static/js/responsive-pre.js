@@ -8,6 +8,16 @@ function pickSize() {
   return 'large';
 }
 
+function pickSizeFor(boxEl) {
+  // Respect special layout choices we previously enforced via CSS
+  const w = window.innerWidth || 1024;
+  if (w <= 600) {
+    if (boxEl.classList && boxEl.classList.contains('welcome-box')) return 'medium';
+    if (boxEl.classList && boxEl.classList.contains('latest-posts-box')) return 'small';
+  }
+  return pickSize();
+}
+
 function buildResponsivePre(boxEl) {
   const tiny = boxEl.querySelector('.box-tiny pre');
   const small = boxEl.querySelector('.box-small pre');
@@ -42,25 +52,27 @@ function buildResponsivePre(boxEl) {
   if (inputClone) boxEl.appendChild(inputClone);
 
   // Initial render
-  const sz = pickSize();
+  const sz = pickSizeFor(boxEl);
   pre.innerHTML = pre.dataset[sz] || '';
 }
 
 function updateAll() {
-  const sz = pickSize();
   document.querySelectorAll('.js-responsive-pre').forEach(pre => {
+    const boxEl = pre.parentElement;
+    const sz = pickSizeFor(boxEl);
     const html = pre.dataset[sz];
     if (html && pre.innerHTML !== html) pre.innerHTML = html;
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Convert all boxes except protected ones
+  // Convert all boxes except explicitly marked no-responsive
   document.querySelectorAll('.ascii-box').forEach(box => {
-    // Skip specific protected boxes
-    if (box.id === 'shoutbox-container') return;
+    // Skip boxes opted-out of responsive conversion
     if (box.hasAttribute('data-no-responsive')) return;
-    
+    // Explicitly skip shoutbox container to preserve IDs for WASM
+    if (box.id === 'shoutbox-container') return;
+
     // Convert all others: nav, welcome, posts, categories, footer
     buildResponsivePre(box);
   });

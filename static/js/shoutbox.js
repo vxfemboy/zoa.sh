@@ -1,6 +1,24 @@
 // Minimal JS UI wrapper; rendering + WebSocket handled in WASM
 import init, { init_shoutbox_client_single, shoutbox_set_expanded, shoutbox_send, shoutbox_reconnect } from '/static/wasm/ascii_web.js';
 
+function getVisibleShoutboxPreId() {
+  const cont = document.getElementById('shoutbox-container');
+  if (!cont) return 'shoutbox-large';
+  const candidates = [
+    'shoutbox-tiny',
+    'shoutbox-small',
+    'shoutbox-medium',
+    'shoutbox-large'
+  ];
+  for (const id of candidates) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const style = window.getComputedStyle(el.parentElement);
+    if (style && style.display !== 'none') return id;
+  }
+  return 'shoutbox-large';
+}
+
 function setupInputHandlers() {
   const ids = ['shoutbox-input','shoutbox-input-modal'];
   ids.forEach(id => {
@@ -30,7 +48,7 @@ function toggleExpand(expand) {
 }
 
 function setupExpandOverlays() {
-  const pre = document.getElementById('shoutbox');
+  const pre = document.getElementById(getVisibleShoutboxPreId());
   if (!pre) return;
   pre.style.position = 'relative';
 
@@ -98,9 +116,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.SADSITE_DEBUG) console.log('shoutbox.js: initializing WASM...');
     await init();
     if (window.SADSITE_DEBUG) console.log('shoutbox.js: WASM loaded, calling init_shoutbox_client_single');
-    // Single collapsed pre
-    init_shoutbox_client_single('shoutbox','shoutbox-modal-pre');
+    // Initialize using the currently visible shoutbox size
+    let currentId = getVisibleShoutboxPreId();
+    init_shoutbox_client_single(currentId,'shoutbox-modal-pre');
     if (window.SADSITE_DEBUG) console.log('shoutbox.js: shoutbox client initialized');
+
+    // Re-initialize when responsive size changes
+    window.addEventListener('resize', () => {
+      const nextId = getVisibleShoutboxPreId();
+      if (nextId !== currentId) {
+        currentId = nextId;
+        try { init_shoutbox_client_single(currentId,'shoutbox-modal-pre'); } catch (_) {}
+        setupExpandOverlays();
+      }
+    });
   } catch (e) {
     if (window.SADSITE_DEBUG) console.error('shoutbox.js: WASM init failed', e);
     // Continue without WASM shoutbox
