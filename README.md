@@ -1,151 +1,154 @@
-# ASCII Web
+```
+                     ╔═══════════════════════════════════════════════════════════════╗
+                     ║                                                               ║
+                     ║      ███████╗ █████╗ ██████╗ ███████╗██╗████████╗███████╗     ║
+                     ║      ██╔════╝██╔══██╗██╔══██╗██╔════╝██║╚══██╔══╝██╔════╝     ║
+                     ║      ███████╗███████║██║  ██║███████╗██║   ██║   █████╗       ║
+                     ║      ╚════██║██╔══██║██║  ██║╚════██║██║   ██║   ██╔══╝       ║
+                     ║      ███████║██║  ██║██████╔╝███████║██║   ██║   ███████╗     ║
+                     ║      ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚══════╝     ║
+                     ║                                                               ║
+                     ║             ascii art website engine in rust                  ║
+                     ║                                                               ║
+                     ╚═══════════════════════════════════════════════════════════════╝
+```
 
-A modern Rust-powered website that generates beautiful ASCII art borders and responsive boxes for content. Built with Actix Web, Tera templates, and WebAssembly for interactive elements.
+<div align="center">
 
-## ✨ Features
+**[kitten.st](https://kitten.st)** | retro web aesthetics for the modern age
 
-- **Dynamic ASCII Box Generation** - Responsive boxes that adapt to screen sizes
-- **Interactive WASM Cat** - WebAssembly-powered ASCII cat that follows your mouse
-- **Emoji Support** - Proper Unicode and emoji handling with Twemoji fallbacks
-- **Responsive Design** - Mobile-first design with multiple breakpoints
-- **Custom Monospace Fonts** - Departure Mono font stack with emoji fallbacks
-- **Template-Based Rendering** - Clean separation of logic and presentation
-- **Modular Architecture** - Well-organized codebase with proper separation of concerns
+`rust` `actix-web` `wasm` `ascii-art` `markdown` `syntax-highlighting`
 
-## 🏗️ Architecture
+</div>
+
+---
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  WHAT IS THIS                                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  a rust-powered website that generates responsive ASCII art boxes,           │
+│  renders markdown blog posts with syntax highlighting, and features          │
+│  an interactive WASM cat that follows your cursor around                     │
+│                                                                              │
+│  built for https://kitten.st - personal site of a gay femboy hacker          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+## features
+
+```
+  ╔════════════════════════════════════════════════════════════════════════╗
+  ║                                                                        ║
+  ║   [x] dynamic ASCII box generation with responsive breakpoints         ║
+  ║   [x] markdown blog with YAML frontmatter + syntax highlighting        ║
+  ║   [x] real-time shoutbox via websockets                                ║
+  ║   [x] interactive WASM cat (follows mouse, idle animations)            ║
+  ║   [x] proper unicode/emoji handling with twemoji fallbacks             ║
+  ║   [x] tag-based post filtering                                         ║
+  ║   [x] RSS feed generation                                              ║
+  ║   [x] SEO (sitemap, robots.txt, meta tags)                             ║
+  ║                                                                        ║
+  ╚════════════════════════════════════════════════════════════════════════╝
+```
+
+## quickstart
+
+```bash
+# clone it
+git clone https://github.com/vxfemboy/sadsite
+cd sadsite
+
+# build the wasm cat
+./build-wasm.sh
+
+# run it
+cargo run
+
+# visit http://localhost:8080
+```
+
+## structure
 
 ```
 src/
-├── main.rs          # Actix Web server and routing
-├── lib.rs           # WASM module exports
-├── mods.rs          # Module exports and shared types
+├── main.rs              # actix-web server, routes, handlers
+├── lib.rs               # wasm exports
 └── mods/
-    ├── ascii_art.rs # ASCII box generation and Unicode handling
-    ├── stars.rs     # Animated star generation
-    ├── wasm.rs      # WebAssembly cat implementation
-    ├── constants.rs # Configuration constants
-    ├── data.rs      # Site content and data
-    ├── responsive.rs# Responsive box creation
-    └── content.rs   # Content management logic
+    ├── ascii_art.rs     # box generation, unicode width calc
+    ├── markdown.rs      # blog post parser + syntax highlighting
+    ├── shoutbox.rs      # websocket chat system
+    ├── wasm.rs          # interactive cat logic
+    ├── responsive.rs    # multi-breakpoint box builder
+    ├── content.rs       # page context assembly
+    ├── data.rs          # site content/nav items
+    ├── constants.rs     # widths, breakpoints, config
+    └── ...
+
+posts/                   # markdown blog posts go here
+templates/               # tera html templates
+static/                  # css, js, fonts, images
 ```
 
-## 🚀 Prerequisites
+## blog posts
 
-- Rust (latest stable version)
-- Cargo (comes with Rust)
-- wasm-pack (for WASM builds)
+drop `.md` files in `posts/` with frontmatter:
 
-## 📦 Setup
+```markdown
+---
+title: your post title
+date: 2024-12-28
+tags: rust, hacking, uwu
+---
 
-1. Clone the repository
-2. Install wasm-pack (if not already installed):
-   ```bash
-   cargo install wasm-pack
-   ```
-3. Add your fonts to the `static/fonts` directory:
-   - DepartureMono-Regular.woff2
-   - DepartureMono-Regular.woff
-   - DepartureMono-Regular.otf
+# your content here
 
-## 🏃‍♂️ Running the Project
-
-### Development Server
-```bash
-cargo run
-```
-The server will start at `http://localhost:8080`
-
-### Build WASM Module
-```bash
-./build-wasm.sh
-```
-This builds the WebAssembly cat module for the frontend.
-
-### Production Build
-```bash
-cargo build --release
+code blocks get syntax highlighting automatically
 ```
 
-## 🎨 ASCII Box Generation
+## api
 
-The project includes sophisticated ASCII box generation with:
-
-1. **Responsive Boxes** - Automatically adapt to screen sizes (tiny, small, medium, large)
-2. **Unicode Support** - Proper handling of emojis and special characters
-3. **Multiple Styles** - Different box styles based on content width
-4. **Text Wrapping** - Intelligent text wrapping with visual width calculation
-
-### Box Types
-- `create_header_box()` - Boxes with titles and content
-- `create_footer_box()` - Simple footer boxes
-- `create_nav_box()` - Navigation boxes with links
-
-## 🐱 Interactive Features
-
-- **WASM Cat** - An ASCII cat that follows your mouse cursor
-- **Idle Animations** - Cat performs various idle animations
-- **Responsive Behavior** - Cat adapts to different screen sizes
-- **Performance Optimized** - Smooth 60fps animations
-
-## 🛠️ Customization
-
-### Content Management
-Edit `src/mods/data.rs` to modify:
-- Navigation items
-- Blog posts
-- Categories
-- Comments
-- Footer text
-
-### Styling
-Modify `templates/index.html.tera` for:
-- Layout changes
-- CSS styling
-- Responsive breakpoints
-
-### Constants
-Adjust `src/mods/constants.rs` for:
-- Box widths
-- Screen breakpoints
-- Animation settings
-
-## 🧪 Testing
-
-```bash
-# Run tests
-cargo test
-
-# Run with output
-cargo test -- --nocapture
+```
+GET  /                      main page
+GET  /blog                  blog index (supports ?tag=filter)
+GET  /post/{slug}           individual post
+GET  /rss.xml               rss feed
+GET  /sitemap.xml           sitemap
+GET  /api/posts             json post list
+GET  /api/health            health check
+WS   /ws/shoutbox           shoutbox websocket
 ```
 
-## 📚 API Endpoints
+## config
 
-- `GET /` - Main page
-- `GET /cat/{action}` - Individual cat animation frames
-- `GET /static/*` - Static assets
+create `config.toml`:
 
-## 🔧 Development
+```toml
+debug = false
+cache_enabled = true
+cache_capacity = 1000
 
-### Code Organization
-- **Clean Architecture** - Separation of concerns with modular design
-- **Error Handling** - Proper error types and handling
-- **Type Safety** - Strong typing throughout the codebase
-- **Performance** - Optimized for both server and client
+[server]
+host = "127.0.0.1"
+port = 8080
+```
 
-### Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+---
 
-## 📄 License
+<div align="center">
 
-This project is licensed under the MIT License.
+```
+        /\_/\
+       ( o.o )
+        > ^ <
+       /|   |\
+      (_|   |_)
+```
 
-## 🙏 Acknowledgments
+made with mass amounts of mass
 
-- [oneko.js](https://github.com/adryd325/oneko.js) - Inspiration for the interactive cat
-- [Twemoji](https://twemoji.twitter.com/) - Emoji fallback support
-- [Departure Mono](https://github.com/eliheuer/departure-mono) - Beautiful monospace font
+**[vxfemboy](https://github.com/vxfemboy)**
+
+</div>
