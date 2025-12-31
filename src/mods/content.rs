@@ -1,5 +1,4 @@
 use crate::mods::constants::*;
-use crate::mods::creatures::generate_creature;
 use crate::mods::data::Post;
 use crate::mods::{
     generate_stars, replace_problematic_chars, wrap_text, PageContext, ResponsiveBoxes, SiteData,
@@ -80,9 +79,6 @@ impl ContentManager {
         // Create additional posts
         let additional_posts: Vec<Post> = processed_posts.iter().skip(1).take(3).cloned().collect();
 
-        // Generate a random creature for this page load
-        let creature = generate_creature();
-
         Ok(PageContext {
             title_art,
             navigation_box: navigation_box.into(),
@@ -95,7 +91,6 @@ impl ContentManager {
             stars,
             posts: processed_posts,
             additional_posts,
-            creature,
         })
     }
 

@@ -74,18 +74,6 @@
                     </div>
                 </div>
 
-                <!-- Random ASCII creature -->
-                <div class="ascii-box creature-box">
-                    <pre class="creature-art">╭─────────────────────╮
-│    today's friend   │
-├─────────────────────┤
-│                     │
-{{ creature.art | safe }}
-│                     │
-│  name: {{ creature.name }}
-╰─────────────────────╯</pre>
-                </div>
-
                 <!-- Additional posts for mobile dropdown -->
                 <div id="additional-posts-mobile" style="display:none;">
                     {% for post in additional_posts %}
