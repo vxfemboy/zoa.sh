@@ -687,7 +687,7 @@ mod wasm {
                         .unwrap_or(800.0);
                     // Match main content boxes: use BOX_WIDTH_* minus borders by breakpoint
                     let width: usize = if vw <= 600.0 {
-                        BOX_WIDTH_SMALL.saturating_sub(2)  // Mobile uses small (40-char) boxes
+                        BOX_WIDTH_SMALL.saturating_sub(2) // Mobile uses small (40-char) boxes
                     } else if vw <= 900.0 {
                         BOX_WIDTH_MEDIUM.saturating_sub(2)
                     } else {

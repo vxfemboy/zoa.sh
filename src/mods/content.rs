@@ -153,7 +153,10 @@ impl ContentManager {
                 .join(&format!("\n\n{}\n\n", divider_medium)),
             divider_medium,
             if has_more {
-                format!("\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>", posts.len())
+                format!(
+                    "\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>",
+                    posts.len()
+                )
             } else {
                 String::new()
             }
@@ -179,7 +182,10 @@ impl ContentManager {
                 .join(&format!("\n\n{}\n\n", divider_large)),
             divider_large,
             if has_more {
-                format!("\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>", posts.len())
+                format!(
+                    "\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>",
+                    posts.len()
+                )
             } else {
                 String::new()
             }

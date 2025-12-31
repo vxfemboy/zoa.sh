@@ -143,13 +143,11 @@ impl ResponsiveBoxes {
 
     /// Create categories box with clickable tag links
     pub fn new_tag_categories(tags: &[String], active_tag: Option<&String>) -> Self {
-        let content = std::iter::once(
-            if active_tag.is_none() {
-                "• <b>[all]</b>".to_string()
-            } else {
-                "• <a href=\"/blog\">[all]</a>".to_string()
-            }
-        )
+        let content = std::iter::once(if active_tag.is_none() {
+            "• <b>[all]</b>".to_string()
+        } else {
+            "• <a href=\"/blog\">[all]</a>".to_string()
+        })
         .chain(tags.iter().map(|tag| {
             if active_tag == Some(tag) {
                 format!("• <b>[{}]</b>", tag)

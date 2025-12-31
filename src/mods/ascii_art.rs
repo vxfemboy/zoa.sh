@@ -468,10 +468,34 @@ pub fn create_post_header_box(title: &str, date: &str, width: usize) -> String {
     let content_width = actual_width.saturating_sub(2);
 
     let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
-    let bottom_left = if actual_width < 20 { "+" } else if actual_width < 40 { "└" } else { "╚" };
-    let bottom_right = if actual_width < 20 { "+" } else if actual_width < 40 { "┘" } else { "╝" };
-    let sep_left = if actual_width < 20 { "+" } else if actual_width < 40 { "├" } else { "╠" };
-    let sep_right = if actual_width < 20 { "+" } else if actual_width < 40 { "┤" } else { "╣" };
+    let bottom_left = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "└"
+    } else {
+        "╚"
+    };
+    let bottom_right = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "┘"
+    } else {
+        "╝"
+    };
+    let sep_left = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "├"
+    } else {
+        "╠"
+    };
+    let sep_right = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "┤"
+    } else {
+        "╣"
+    };
 
     let horizontal_line = horizontal.repeat(content_width);
     let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
@@ -481,18 +505,42 @@ pub fn create_post_header_box(title: &str, date: &str, width: usize) -> String {
     let bottom = format!("{}{}{}\n", bottom_left, horizontal_line, bottom_right);
 
     // Title line (centered)
-    let title_line = create_content_line(left_border, title, right_border, horizontal_visual_width, true);
+    let title_line = create_content_line(
+        left_border,
+        title,
+        right_border,
+        horizontal_visual_width,
+        true,
+    );
 
     // Date line
     let date_with_margin = format!(" {} ", date);
-    let date_line = create_content_line(left_border, &date_with_margin, right_border, horizontal_visual_width, false);
+    let date_line = create_content_line(
+        left_border,
+        &date_with_margin,
+        right_border,
+        horizontal_visual_width,
+        false,
+    );
 
     // Empty line
-    let empty_line = create_content_line(left_border, "", right_border, horizontal_visual_width, false);
+    let empty_line = create_content_line(
+        left_border,
+        "",
+        right_border,
+        horizontal_visual_width,
+        false,
+    );
 
     // Back to blog link
     let back_link = " <a href=\"/blog\">&lt;&lt; Back to Blog</a> ";
-    let back_line = create_content_line(left_border, back_link, right_border, horizontal_visual_width, false);
+    let back_line = create_content_line(
+        left_border,
+        back_link,
+        right_border,
+        horizontal_visual_width,
+        false,
+    );
 
     format!(
         "{}{}{}{}{}{}{}",

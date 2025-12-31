@@ -56,8 +56,12 @@ async fn blog_index(
     let valid_tag = query.tag.as_ref().filter(|t| all_tags.contains(t));
 
     // Filter posts by tag if specified and valid
-    let filtered_posts: Vec<_> = if let Some(ref tag) = valid_tag {
-        context.posts.iter().filter(|p| p.tags.contains(tag)).collect()
+    let filtered_posts: Vec<_> = if let Some(tag) = valid_tag {
+        context
+            .posts
+            .iter()
+            .filter(|p| p.tags.contains(tag))
+            .collect()
     } else {
         context.posts.iter().collect()
     };
@@ -119,27 +123,36 @@ async fn blog_index(
     ctx.insert("navigation_box", &context.navigation_box);
     // RSS box
     let rss_box = ResponsiveBoxes::new_rss_box();
-    ctx.insert("rss_box", &BoxSizes {
-        tiny: rss_box.tiny,
-        small: rss_box.small,
-        medium: rss_box.medium,
-        large: rss_box.large,
-    });
-    ctx.insert("categories_box", &BoxSizes {
-        tiny: categories_box.tiny,
-        small: categories_box.small,
-        medium: categories_box.medium,
-        large: categories_box.large,
-    });
+    ctx.insert(
+        "rss_box",
+        &BoxSizes {
+            tiny: rss_box.tiny,
+            small: rss_box.small,
+            medium: rss_box.medium,
+            large: rss_box.large,
+        },
+    );
+    ctx.insert(
+        "categories_box",
+        &BoxSizes {
+            tiny: categories_box.tiny,
+            small: categories_box.small,
+            medium: categories_box.medium,
+            large: categories_box.large,
+        },
+    );
     ctx.insert("footer_box", &context.footer_box);
     ctx.insert("stars", &context.stars);
     ctx.insert("posts", &posts_with_boxes);
-    ctx.insert("blog_header_box", &BoxSizes {
-        tiny: blog_header.tiny,
-        small: blog_header.small,
-        medium: blog_header.medium,
-        large: blog_header.large,
-    });
+    ctx.insert(
+        "blog_header_box",
+        &BoxSizes {
+            tiny: blog_header.tiny,
+            small: blog_header.small,
+            medium: blog_header.medium,
+            large: blog_header.large,
+        },
+    );
     ctx.insert("current_tag", &valid_tag);
     ctx.insert("debug", &config.debug);
 
@@ -297,12 +310,15 @@ async fn post_view(
     ctx.insert("debug", &config.debug);
 
     // Post header box (combined with back link)
-    ctx.insert("post_header_box", &BoxSizes {
-        tiny: post_header.tiny,
-        small: post_header.small,
-        medium: post_header.medium,
-        large: post_header.large,
-    });
+    ctx.insert(
+        "post_header_box",
+        &BoxSizes {
+            tiny: post_header.tiny,
+            small: post_header.small,
+            medium: post_header.medium,
+            large: post_header.large,
+        },
+    );
 
     // Load shared layout elements
     let content_manager = ContentManager::new();
