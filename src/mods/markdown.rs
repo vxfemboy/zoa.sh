@@ -21,7 +21,6 @@ pub struct MarkdownPost {
     pub tags: Vec<String>,
     pub content_html: String,
     pub content_plain: String,
-    pub excerpt: String,
 }
 
 /// Syntax highlighter using syntect
@@ -216,22 +215,6 @@ fn generate_slug(filename: &str, title: &str) -> String {
         .join("-")
 }
 
-/// Create an excerpt from content (first ~150 chars)
-fn create_excerpt(content: &str, max_len: usize) -> String {
-    let plain = html_to_plain_text(content);
-    if plain.len() <= max_len {
-        return plain;
-    }
-
-    // Find a good break point
-    let truncated = &plain[..max_len];
-    if let Some(last_space) = truncated.rfind(' ') {
-        format!("{}...", &truncated[..last_space])
-    } else {
-        format!("{}...", truncated)
-    }
-}
-
 /// Load a single markdown file
 pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
     let content = fs::read_to_string(path).ok()?;
@@ -267,7 +250,6 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
 
     let content_html = markdown_to_html(markdown_content);
     let content_plain = html_to_plain_text(&content_html);
-    let excerpt = create_excerpt(&content_html, 150);
 
     Some(MarkdownPost {
         title,
@@ -276,7 +258,6 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
         tags,
         content_html,
         content_plain,
-        excerpt,
     })
 }
 
