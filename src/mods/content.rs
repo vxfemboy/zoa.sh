@@ -5,6 +5,19 @@ use crate::mods::{
 };
 use std::fs;
 
+/// Truncate text to max length at word boundary
+fn truncate_content(text: &str, max_len: usize) -> String {
+    if text.len() <= max_len {
+        return text.to_string();
+    }
+    let truncated = &text[..max_len];
+    if let Some(last_space) = truncated.rfind(' ') {
+        format!("{}...", &truncated[..last_space])
+    } else {
+        format!("{}...", truncated)
+    }
+}
+
 pub struct ContentManager {
     data: SiteData,
 }
@@ -36,7 +49,10 @@ impl ContentManager {
                 title: replace_problematic_chars(&post.title),
                 href: post.href.clone(),
                 date: post.date.clone(),
+                slug: post.slug.clone(),
+                tags: post.tags.clone(),
                 content: replace_problematic_chars(&post.content),
+                content_html: post.content_html.clone(),
             })
             .collect();
 
@@ -88,12 +104,15 @@ impl ContentManager {
         // Mobile content - only latest post initially
         let latest_post = &posts[0];
 
+        // Truncate content to 280 chars max before wrapping
+        let truncated_content = truncate_content(&latest_post.content, 280);
+
         let mobile_content_tiny = format!(
             "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼    │\n└──────────────────────────┘",
             divider_tiny,
             latest_post.title,
             latest_post.date,
-            wrap_text(&latest_post.content, BOX_WIDTH_SMALL.saturating_sub(6)).join("\n"),
+            wrap_text(&truncated_content, BOX_WIDTH_SMALL.saturating_sub(6)).join("\n"),
             latest_post.href,
             latest_post.title,
             divider_tiny
@@ -104,51 +123,66 @@ impl ContentManager {
             divider_small,
             latest_post.title,
             latest_post.date,
-            wrap_text(&latest_post.content, BOX_WIDTH_MEDIUM.saturating_sub(6)).join("\n"),
+            wrap_text(&truncated_content, BOX_WIDTH_MEDIUM.saturating_sub(6)).join("\n"),
             latest_post.href,
             latest_post.title,
             divider_small
         );
 
-        // Desktop content - all posts
+        // Desktop content - show only first 3 posts, link to /blog for more
+        let display_posts: Vec<_> = posts.iter().take(3).collect();
+        let has_more = posts.len() > 3;
+
         let all_posts_content_medium = format!(
-            "\n{}\n\n{}\n\n{}",
+            "\n{}\n\n{}\n\n{}{}",
             divider_medium,
-            posts
+            display_posts
                 .iter()
                 .map(|post| {
+                    let truncated = truncate_content(&post.content, 280);
                     format!(
                         "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
                         post.title,
                         post.date,
-                        wrap_text(&post.content, WRAP_WIDTH_MEDIUM).join("\n"),
+                        wrap_text(&truncated, WRAP_WIDTH_MEDIUM).join("\n"),
                         post.href,
                         post.title
                     )
                 })
                 .collect::<Vec<_>>()
                 .join(&format!("\n\n{}\n\n", divider_medium)),
-            divider_medium
+            divider_medium,
+            if has_more {
+                format!("\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>", posts.len())
+            } else {
+                String::new()
+            }
         );
 
         let all_posts_content_large = format!(
-            "\n{}\n\n{}\n\n{}",
+            "\n{}\n\n{}\n\n{}{}",
             divider_large,
-            posts
+            display_posts
                 .iter()
                 .map(|post| {
+                    let truncated = truncate_content(&post.content, 280);
                     format!(
                         "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
                         post.title,
                         post.date,
-                        wrap_text(&post.content, WRAP_WIDTH_LARGE).join("\n"),
+                        wrap_text(&truncated, WRAP_WIDTH_LARGE).join("\n"),
                         post.href,
                         post.title
                     )
                 })
                 .collect::<Vec<_>>()
                 .join(&format!("\n\n{}\n\n", divider_large)),
-            divider_large
+            divider_large,
+            if has_more {
+                format!("\n\n<a href=\"/blog\">[ View all {} posts >> ]</a>", posts.len())
+            } else {
+                String::new()
+            }
         );
 
         ResponsiveBoxes {

@@ -1,4 +1,5 @@
 use crate::mods::image_converter::ImageConverter;
+use crate::mods::markdown;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -11,7 +12,10 @@ pub struct NavItem {
 pub struct Post {
     pub title: String,
     pub date: String,
+    pub slug: String,
+    pub tags: Vec<String>,
     pub content: String,
+    pub content_html: String,
     pub href: String,
 }
 
@@ -47,11 +51,26 @@ impl SiteData {
             .convert_profile_image("static/profile.png")
             .unwrap_or_else(|_| "ASCII profile image not available".to_string());
 
+        // Load posts from markdown files
+        let md_posts = markdown::load_all_posts("posts");
+        let posts: Vec<Post> = md_posts
+            .into_iter()
+            .map(|mp| Post {
+                title: mp.title,
+                date: mp.date,
+                slug: mp.slug.clone(),
+                tags: mp.tags,
+                content: mp.content_plain,
+                content_html: mp.content_html,
+                href: format!("/post/{}", mp.slug),
+            })
+            .collect();
+
         Self {
             nav_items: vec![
                 NavItem {
                     text: "HOME".to_string(),
-                    href: "#".to_string(),
+                    href: "/".to_string(),
                 },
                 NavItem {
                     text: "ABOUT".to_string(),
@@ -63,34 +82,14 @@ impl SiteData {
                 },
                 NavItem {
                     text: "BLOG".to_string(),
-                    href: "#".to_string(),
+                    href: "/blog".to_string(),
                 },
                 NavItem {
                     text: "CONTACT".to_string(),
                     href: "#".to_string(),
                 },
             ],
-            posts: vec![
-                Post {
-                    title: "RIP KAYOS".to_string(),
-                    date: "2024-08-18".to_string(),
-                    content: "see you in the packet flow old friend...".to_string(),
-                    href: "https://soundcloud.com/queed-inc".to_string(),
-                },
-                Post {
-                    title: "a story about a cat".to_string(),
-                    date: "2024-08-15".to_string(),
-                    content: "meowmeow meow meow meow meow meow meow meow meow meow.".to_string(),
-                    href: "https://poptart.cat".to_string(),
-                },
-                Post {
-                    title: "Welcome to My Website".to_string(),
-                    date: "2024-08-15".to_string(),
-                    content: "This is my first post on this Rust-powered ASCII art website. I'm excited to share my thoughts and projects here.".to_string(),
-                    href: "#".to_string(),
-                },
-
-            ],
+            posts,
             categories: vec![
                 "Software".to_string(),
                 "Network".to_string(),
@@ -110,7 +109,7 @@ impl SiteData {
             footer_text: "🄯 vxfemboy | meow <3".to_string(),
             about_content: "I press buttons.".to_string(),
             about_ascii_art: profile_ascii,
-            welcome_content: "Hello and welcome to my website!\n\nlol i wanna die.".to_string(),
+            welcome_content: "Haiiiiiii welcome to my site lol".to_string(),
         }
     }
 }

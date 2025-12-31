@@ -130,21 +130,22 @@ pre::after {
 }
 
 /* Smaller, readable ASCII lines for WHOAMI pfp inside boxes */
+/* The pfp is 75 chars wide and needs to fit in boxes of varying widths */
 .pfp-small {
-    font-size: 10px;          /* visibly small, not microscopic */
-    line-height: 0.1;          /* reduce vertical spacing between lines */
-    white-space: pre;        /* preserve spaces */
-    display: inline-block;   /* avoid affecting box layout */
-    transform: scaleY(1); /* slightly compress height without changing width */
-    transform-origin: top center;
+    font-size: inherit;       /* inherit from parent pre */
+    line-height: 1;           /* normal line height */
+    white-space: pre;         /* preserve spaces */
+    display: block;           /* block display */
+    transform: scale(0.7);    /* scale to fit 75-char pfp in ~55-char large box */
+    transform-origin: top left;
+    margin-bottom: -30%;      /* compensate for scaled height */
 }
 
-/* Mobile tuning for WHOAMI pfp to fit inside the small box */
+/* Mobile tuning for WHOAMI pfp - scale more for 30-char small boxes */
 @media (max-width: 600px) {
   .pfp-small {
-    font-size: 7.16px;
-    line-height: 1;
-    transform: scaleY(1);
+    transform: scale(0.38);   /* scale to fit 75-char pfp in ~30-char box */
+    margin-bottom: -60%;      /* compensate for scaled height */
   }
 }
 
@@ -184,31 +185,65 @@ pre::after {
 
 @media (max-width: 600px) {
     .box-tiny, .box-small, .box-medium, .box-large { display: none !important; }
-    .ascii-content .welcome-box .box-medium { display: block !important; }
+    /* Content boxes - use small (40-char) which fits better on mobile */
+    .ascii-content .welcome-box .box-small { display: block !important; }
     .ascii-content .latest-posts-box .box-small { display: block !important; }
-    .ascii-sidebar .box-large { display: block !important; }
-    /* Ensure shoutbox under posts uses medium variant on mobile to match posts */
-    .ascii-content #shoutbox-container .box-medium { display: block !important; }
+    /* Sidebar boxes - use small (30-45 char) for about/categories */
+    .ascii-sidebar .box-small { display: block !important; }
+    /* Shoutbox under posts */
+    .ascii-content #shoutbox-container .box-small { display: block !important; }
     #additional-posts-mobile .box-small { display: block !important; }
-    .ascii-nav .box-medium { display: block !important; }
-    .ascii-footer .box-medium { display: block !important; }
+    /* Nav and footer - use small for mobile */
+    .ascii-nav .box-small { display: block !important; }
+    .ascii-footer .box-small { display: block !important; }
     .ascii-nav pre { text-align: center !important; }
     #ascii-cat { font-size: 1.5px !important; }
 }
 
+/* Sidebar layout (for pages with sidebar) */
 .main-content-wrapper { display: flex; gap: 10px; }
 .ascii-content { flex: 4; display: flex; flex-direction: column; gap: 10px; }
 .ascii-sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* Centered layout (no sidebar) */
+.main-content-centered {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.main-content-centered .ascii-content {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.main-content-centered .ascii-box {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
 
 @media (max-width: 600px) {
     .main-content-wrapper { flex-direction: column; }
     .ascii-sidebar { flex: 1; width: 100%; }
     .ascii-content { flex: 1; width: 100%; }
-    pre { font-size: 10px; overflow-x: auto; max-width: 100%; }
-    .ascii-title { font-size: 2vw; }
+    .main-content-centered .ascii-content { width: 100%; }
+    /* Keep readable font size, allow horizontal scroll for wide boxes */
+    pre { font-size: 11px; overflow-x: auto; max-width: 100%; }
+    .ascii-title { font-size: 1.4vw; }
     .ascii-box { max-width: 100%; overflow-x: auto; margin: 0 auto; }
     .ascii-container { padding: 5px; text-align: center; }
     pre { text-align: left; margin: 0 auto; display: block; }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    pre { font-size: 9px; }
+    .ascii-title { font-size: 1.2vw; }
+    .ascii-container { padding: 3px; }
 }
 
 .ascii-nav a, .ascii-content a, .ascii-sidebar a { color: #33aaff; text-decoration: none; }
@@ -245,5 +280,179 @@ pre::after {
 
 @media (max-width: 600px) {
   #shoutbox-float { left: 50%; transform: translate(-50%, 0); }
-  #shoutbox-float .shoutbox-float-content { max-width: 90vw; }
+  #shoutbox-float .shoutbox-float-content { max-width: 95vw; overflow-x: auto; }
+  #shoutbox-modal-pre { font-size: 10px; }
+}
+
+@media (max-width: 400px) {
+  #shoutbox-modal-pre { font-size: 8px; }
+}
+
+/* Blog page styles */
+.blog-content {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blog-post-card {
+    margin-bottom: 0;
+}
+
+.blog-post-card pre {
+    color: #fff;
+}
+
+.blog-post-card strong {
+    color: #33aaff;
+}
+
+.post-date {
+    color: #888;
+    font-style: italic;
+}
+
+/* Blog page responsive - show small boxes on mobile */
+@media (max-width: 600px) {
+    .blog-content .box-small { display: block !important; }
+    .blog-content .box-tiny,
+    .blog-content .box-medium,
+    .blog-content .box-large { display: none !important; }
+
+    .post-content .box-small { display: block !important; }
+    .post-content .box-tiny,
+    .post-content .box-medium,
+    .post-content .box-large { display: none !important; }
+}
+
+/* Individual post page styles */
+.post-content {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.post-header, .post-nav {
+    margin-bottom: 0;
+}
+
+.post-body {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #333;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.post-html-content {
+    padding: 20px 30px;
+    line-height: 1.7;
+    font-size: 14px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.post-html-content h1,
+.post-html-content h2,
+.post-html-content h3 {
+    color: #33aaff;
+    margin: 1em 0 0.5em 0;
+}
+
+.post-html-content h1 { font-size: 1.5em; }
+.post-html-content h2 { font-size: 1.3em; }
+.post-html-content h3 { font-size: 1.1em; }
+
+.post-html-content p {
+    margin: 0.8em 0;
+}
+
+.post-html-content ul, .post-html-content ol {
+    margin: 0.8em 0;
+    padding-left: 2em;
+}
+
+.post-html-content li {
+    margin: 0.3em 0;
+}
+
+.post-html-content code {
+    background: rgba(51, 170, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Departure Mono", "Courier New", monospace;
+}
+
+.post-html-content pre {
+    background: #2b303b;
+    border: 1px solid #4f5b66;
+    padding: 15px;
+    margin: 1em 0;
+    overflow-x: auto;
+    border-radius: 4px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.post-html-content pre code {
+    background: none;
+    padding: 0;
+    white-space: pre;
+}
+
+/* Syntax highlighting overrides for syntect output */
+.post-html-content pre[style] {
+    background: #2b303b !important;
+    border: 1px solid #4f5b66;
+    padding: 15px;
+    margin: 1em 0;
+    overflow-x: auto;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.post-html-content a {
+    color: #33aaff;
+    text-decoration: none;
+}
+
+.post-html-content a:hover {
+    text-decoration: underline;
+}
+
+.post-html-content blockquote {
+    border-left: 3px solid #33aaff;
+    margin: 1em 0;
+    padding-left: 1em;
+    color: #aaa;
+}
+
+.post-html-content table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    width: 100%;
+}
+
+.post-html-content th, .post-html-content td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.post-html-content th {
+    background: rgba(51, 170, 255, 0.1);
+}
+
+.post-html-content strong {
+    color: #fff;
+}
+
+.post-html-content em {
+    color: #ccc;
 }

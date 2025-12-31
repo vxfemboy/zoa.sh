@@ -251,6 +251,32 @@ fn count_visual_width_excluding_html(text: &str) -> usize {
                 visual_width += get_actual_char_width(chars[i]);
                 i += 1;
             }
+        } else if chars[i] == '&' {
+            // Check for HTML entities like &lt; &gt; &amp; &quot; &#39;
+            let remaining: String = chars[i..].iter().collect();
+            if remaining.starts_with("&lt;") {
+                visual_width += 1.0; // <
+                i += 4;
+            } else if remaining.starts_with("&gt;") {
+                visual_width += 1.0; // >
+                i += 4;
+            } else if remaining.starts_with("&amp;") {
+                visual_width += 1.0; // &
+                i += 5;
+            } else if remaining.starts_with("&quot;") {
+                visual_width += 1.0; // "
+                i += 6;
+            } else if remaining.starts_with("&#39;") {
+                visual_width += 1.0; // '
+                i += 5;
+            } else if remaining.starts_with("&nbsp;") {
+                visual_width += 1.0; // non-breaking space
+                i += 6;
+            } else {
+                // Not a recognized entity, count the &
+                visual_width += get_actual_char_width(chars[i]);
+                i += 1;
+            }
         } else {
             // Regular character - use actual width (with overrides for problematic chars)
             visual_width += get_actual_char_width(chars[i]);
@@ -436,6 +462,44 @@ pub fn create_header_box(title: &str, content: &str, width: usize) -> String {
     )
 }
 
+/// Create a post header box with title/date at top, divider, and back link at bottom
+pub fn create_post_header_box(title: &str, date: &str, width: usize) -> String {
+    let actual_width = width.max(10);
+    let content_width = actual_width.saturating_sub(2);
+
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
+    let bottom_left = if actual_width < 20 { "+" } else if actual_width < 40 { "└" } else { "╚" };
+    let bottom_right = if actual_width < 20 { "+" } else if actual_width < 40 { "┘" } else { "╝" };
+    let sep_left = if actual_width < 20 { "+" } else if actual_width < 40 { "├" } else { "╠" };
+    let sep_right = if actual_width < 20 { "+" } else if actual_width < 40 { "┤" } else { "╣" };
+
+    let horizontal_line = horizontal.repeat(content_width);
+    let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
+
+    let top = format!("{}{}{}\n", top_left, horizontal_line, top_right);
+    let sep = format!("{}{}{}\n", sep_left, horizontal_line, sep_right);
+    let bottom = format!("{}{}{}\n", bottom_left, horizontal_line, bottom_right);
+
+    // Title line (centered)
+    let title_line = create_content_line(left_border, title, right_border, horizontal_visual_width, true);
+
+    // Date line
+    let date_with_margin = format!(" {} ", date);
+    let date_line = create_content_line(left_border, &date_with_margin, right_border, horizontal_visual_width, false);
+
+    // Empty line
+    let empty_line = create_content_line(left_border, "", right_border, horizontal_visual_width, false);
+
+    // Back to blog link
+    let back_link = " <a href=\"/blog\">&lt;&lt; Back to Blog</a> ";
+    let back_line = create_content_line(left_border, back_link, right_border, horizontal_visual_width, false);
+
+    format!(
+        "{}{}{}{}{}{}{}",
+        top, title_line, date_line, empty_line, sep, back_line, bottom
+    )
+}
+
 pub fn create_about_box_with_ascii(
     title: &str,
     text_content: &str,
@@ -526,6 +590,75 @@ pub fn create_about_box_with_ascii(
         "{}{}{}{}{}{}",
         top, title_line, header_sep, ascii_art_content, text_content_lines, bottom
     )
+}
+
+/// Create a content box without a title header - just borders around content
+pub fn create_content_box(content: &str, width: usize) -> String {
+    let actual_width = width.max(10);
+    let content_width = actual_width.saturating_sub(2);
+
+    let (top_left, horizontal, top_right, left_border, right_border) = get_box_chars(actual_width);
+    let bottom_left = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "└"
+    } else {
+        "╚"
+    };
+    let bottom_right = if actual_width < 20 {
+        "+"
+    } else if actual_width < 40 {
+        "┘"
+    } else {
+        "╝"
+    };
+
+    let horizontal_line = horizontal.repeat(content_width);
+    let top = format!("{}{}{}\n", top_left, horizontal_line, top_right);
+    let bottom = format!("{}{}{}\n", bottom_left, horizontal_line, bottom_right);
+
+    let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
+
+    // Wrap content to fit within box, preserving paragraph breaks
+    let mut content_lines = String::new();
+    let wrap_width = horizontal_visual_width.saturating_sub(2); // Account for margins
+
+    for paragraph in content.split("\n\n") {
+        if paragraph.trim().is_empty() {
+            // Empty line
+            content_lines.push_str(&create_content_line(
+                left_border,
+                "",
+                right_border,
+                horizontal_visual_width,
+                false,
+            ));
+            continue;
+        }
+
+        // Wrap this paragraph
+        let wrapped = wrap_text(paragraph, wrap_width);
+        for line in wrapped {
+            let line_with_margin = format!(" {} ", line);
+            content_lines.push_str(&create_content_line(
+                left_border,
+                &line_with_margin,
+                right_border,
+                horizontal_visual_width,
+                false,
+            ));
+        }
+        // Add blank line after paragraph
+        content_lines.push_str(&create_content_line(
+            left_border,
+            "",
+            right_border,
+            horizontal_visual_width,
+            false,
+        ));
+    }
+
+    format!("{}{}{}", top, content_lines, bottom)
 }
 
 pub fn create_nav_box(items: &[NavItem], width: usize) -> String {

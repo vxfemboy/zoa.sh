@@ -10,6 +10,7 @@ pub mod content;
 pub mod data;
 pub mod errors;
 pub mod image_converter;
+pub mod markdown;
 pub mod responsive;
 pub mod shoutbox;
 pub mod shoutbox_protocol;

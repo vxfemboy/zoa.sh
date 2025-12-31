@@ -664,10 +664,8 @@ mod wasm {
                 let icon = if is_expanded { "[x]" } else { "[+]" };
                 // Choose visible lines: match site feel (collapsed near WHOAMI height)
                 let vw_now = window()
-                    .unwrap()
-                    .inner_width()
-                    .unwrap()
-                    .as_f64()
+                    .and_then(|w| w.inner_width().ok())
+                    .and_then(|v| v.as_f64())
                     .unwrap_or(800.0);
                 let visible = if is_expanded {
                     client.max_lines
@@ -684,16 +682,12 @@ mod wasm {
                 if single {
                     // Use breakpoint-based widths to match site design precisely
                     let vw = window()
-                        .unwrap()
-                        .inner_width()
-                        .unwrap()
-                        .as_f64()
+                        .and_then(|w| w.inner_width().ok())
+                        .and_then(|v| v.as_f64())
                         .unwrap_or(800.0);
                     // Match main content boxes: use BOX_WIDTH_* minus borders by breakpoint
-                    let width: usize = if vw <= 400.0 {
-                        BOX_WIDTH_MEDIUM.saturating_sub(2)
-                    } else if vw <= 600.0 {
-                        BOX_WIDTH_MEDIUM.saturating_sub(2)
+                    let width: usize = if vw <= 600.0 {
+                        BOX_WIDTH_SMALL.saturating_sub(2)  // Mobile uses small (40-char) boxes
                     } else if vw <= 900.0 {
                         BOX_WIDTH_MEDIUM.saturating_sub(2)
                     } else {
@@ -723,26 +717,22 @@ mod wasm {
                     }
                 }
 
-                // Modal size to viewport
+                // Modal uses same box widths as collapsed shoutbox
                 let doc = get_document();
                 if let Some(el) = doc.get_element_by_id(&client.modal_id) {
                     if let Ok(pre) = el.dyn_into::<HtmlPreElement>() {
                         let vw = window()
-                            .unwrap()
-                            .inner_width()
-                            .unwrap()
-                            .as_f64()
+                            .and_then(|w| w.inner_width().ok())
+                            .and_then(|v| v.as_f64())
                             .unwrap_or(800.0);
-                        // Expanded modal width based on measured char width to avoid cutoff
-                        let ch = measure_char_width_px();
-                        let side = 24.0;
-                        let mut chars = ((vw * 0.88) - side) / ch;
-                        if vw <= 600.0 {
-                            chars = chars.clamp(32.0, 40.0);
+                        // Use same box widths as the collapsed boxes
+                        let modal_width: usize = if vw <= 600.0 {
+                            BOX_WIDTH_SMALL.saturating_sub(2)
+                        } else if vw <= 900.0 {
+                            BOX_WIDTH_MEDIUM.saturating_sub(2)
                         } else {
-                            chars = chars.clamp(60.0, 95.0);
-                        }
-                        let modal_width: usize = chars.floor() as usize;
+                            BOX_WIDTH_LARGE.saturating_sub(2)
+                        };
                         let text =
                             build_box("SHOUTBOX", icon, modal_width, &status, &lines, visible);
                         pre.set_text_content(Some(&text));
@@ -755,7 +745,10 @@ mod wasm {
     fn connect_ws() {
         SHOUT.with(|cell| {
             let mut s = cell.borrow_mut();
-            let client = s.as_mut().unwrap();
+            let client = match s.as_mut() {
+                Some(c) => c,
+                None => return,
+            };
             // Don't reconnect if already connected
             if client.ws.is_some() {
                 return;

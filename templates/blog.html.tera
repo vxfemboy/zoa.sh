@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - vxfemboy</title>
+    <meta name="description" content="Blog posts from vxfemboy - tutorials, projects, and random thoughts">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kitten.st/blog">
+    <meta property="og:title" content="Blog - vxfemboy">
+    <meta property="og:description" content="Blog posts from vxfemboy - tutorials, projects, and random thoughts">
+    <meta property="og:image" content="https://kitten.st/static/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Blog - vxfemboy">
+    <meta name="twitter:description" content="Blog posts from vxfemboy - tutorials, projects, and random thoughts">
+    <meta name="twitter:image" content="https://kitten.st/static/og-image.png">
+
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="alternate" type="application/rss+xml" title="vxfemboy blog RSS" href="/rss.xml">
+    <script>window.SADSITE_DEBUG = {{ debug | json_encode }};</script>
+</head>
+<body>
+    <div id="stars-container">
+        {% for star in stars %}
+            <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
+        {% endfor %}
+    </div>
+    <div class="ascii-container">
+        <div class="ascii-title">
+            <pre>{{ title_art | safe }}</pre>
+        </div>
+
+        <div class="ascii-nav">
+            <div class="box-tiny"><pre>{{ navigation_box.tiny | safe }}</pre></div>
+            <div class="box-small"><pre>{{ navigation_box.small | safe }}</pre></div>
+            <div class="box-medium"><pre>{{ navigation_box.medium | safe }}</pre></div>
+            <div class="box-large"><pre>{{ navigation_box.large | safe }}</pre></div>
+        </div>
+
+        <div class="main-content-wrapper">
+            <div class="ascii-content blog-content">
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ blog_header_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ blog_header_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ blog_header_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ blog_header_box.large | safe }}</pre></div>
+                </div>
+
+                {% for post in posts %}
+                <div class="ascii-box blog-post-card">
+                    <div class="box-tiny"><pre>{{ post.box_tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ post.box_small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ post.box_medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ post.box_large | safe }}</pre></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="ascii-sidebar">
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ rss_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ rss_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ rss_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ rss_box.large | safe }}</pre></div>
+                </div>
+
+                <div class="ascii-box">
+                    <div class="box-tiny"><pre>{{ categories_box.tiny | safe }}</pre></div>
+                    <div class="box-small"><pre>{{ categories_box.small | safe }}</pre></div>
+                    <div class="box-medium"><pre>{{ categories_box.medium | safe }}</pre></div>
+                    <div class="box-large"><pre>{{ categories_box.large | safe }}</pre></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ascii-footer">
+            <div class="box-tiny"><pre>{{ footer_box.tiny | safe }}</pre></div>
+            <div class="box-small"><pre>{{ footer_box.small | safe }}</pre></div>
+            <div class="box-medium"><pre>{{ footer_box.medium | safe }}</pre></div>
+            <div class="box-large"><pre>{{ footer_box.large | safe }}</pre></div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/cat.js"></script>
+    <script type="module" src="/static/js/responsive-pre.js"></script>
+</body>
+</html>

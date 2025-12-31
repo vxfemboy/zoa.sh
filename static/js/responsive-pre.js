@@ -12,8 +12,8 @@ function pickSizeFor(boxEl) {
   // Respect special layout choices we previously enforced via CSS
   const w = window.innerWidth || 1024;
   if (w <= 600) {
-    if (boxEl.classList && boxEl.classList.contains('welcome-box')) return 'medium';
-    if (boxEl.classList && boxEl.classList.contains('latest-posts-box')) return 'small';
+    // All boxes use 'small' variant on mobile for better fit
+    return 'small';
   }
   return pickSize();
 }
