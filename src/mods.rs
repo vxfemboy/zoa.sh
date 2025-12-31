@@ -7,6 +7,7 @@ pub mod cache;
 pub mod config;
 pub mod constants;
 pub mod content;
+pub mod creatures;
 pub mod data;
 pub mod errors;
 pub mod image_converter;
@@ -27,6 +28,7 @@ pub use ascii_art::*;
 pub use cache::*;
 pub use config::*;
 pub use content::*;
+pub use creatures::Creature;
 pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
@@ -55,4 +57,5 @@ pub struct PageContext {
     pub stars: Vec<Star>,
     pub posts: Vec<Post>,
     pub additional_posts: Vec<Post>,
+    pub creature: Creature,
 }

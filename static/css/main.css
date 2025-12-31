@@ -456,3 +456,16 @@ pre::after {
 .post-html-content em {
     color: #ccc;
 }
+
+/* Random ASCII creature box */
+.creature-box {
+    margin-top: 1em;
+    text-align: center;
+}
+
+.creature-art {
+    color: #ff69b4;
+    text-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+    display: inline-block;
+    text-align: left;
+}
