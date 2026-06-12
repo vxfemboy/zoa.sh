@@ -15,7 +15,7 @@
 
 <div align="center">
 
-**[kitten.st](https://kitten.st)** | retro web aesthetics for the modern age
+**[zoa.sh](https://zoa.sh)** | retro web aesthetics for the modern age
 
 `rust` `actix-web` `wasm` `ascii-art` `markdown` `syntax-highlighting`
 
@@ -32,7 +32,7 @@
 │  renders markdown blog posts with syntax highlighting, and features          │
 │  an interactive WASM cat that follows your cursor around                     │
 │                                                                              │
-│  built for https://kitten.st - personal site of a gay femboy hacker          │
+│  built for https://zoa.sh - personal site of a gay femboy hacker          │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```

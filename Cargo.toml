@@ -2,8 +2,8 @@
 name = "ascii_web"
 version = "0.1.0"
 edition = "2021"
-description = "A modern Rust-powered website with ASCII art and interactive WASM elements"
-repository = "https://github.com/yourusername/sadsite"
+description = "Zoa Hickenlooper's personal website (zoa.sh)"
+repository = "https://github.com/vxfemboy/zoa.sh"
 license = "MIT"
 
 [lib]
@@ -35,6 +35,10 @@ lru = "0.12"
 once_cell = "1.19"
 pulldown-cmark = "0.10"
 syntect = "5.2"
+# Pinned: time 0.3.48 adds a From impl that collides with cookie 0.16.2's
+# blanket impl (E0119); actix-web 4.x is locked to cookie 0.16. 0.3.47 is the
+# highest version that still satisfies plist's `^0.3.47` requirement.
+time = "=0.3.47"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.104"

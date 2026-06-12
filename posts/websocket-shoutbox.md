@@ -30,7 +30,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ShoutboxSession {
 ## Client Side (WASM)
 
 ```javascript
-const ws = new WebSocket('wss://kitten.st/ws/shoutbox');
+const ws = new WebSocket('wss://zoa.sh/ws/shoutbox');
 ws.onmessage = (event) => {
     const msg = JSON.parse(event.data);
     appendMessage(msg.username, msg.content);

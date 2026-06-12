@@ -440,41 +440,6 @@ mod wasm {
         }
     }
 
-    fn measure_char_width_px() -> f64 {
-        let doc = get_document();
-        let span = match doc.create_element("span") {
-            Ok(s) => s,
-            Err(_) => return 8.0,
-        };
-        let _ = span.set_attribute("style", "visibility:hidden;position:absolute;white-space:pre;font-family: 'Departure Mono','Courier New',monospace;font-size:14px;line-height:1.2;");
-        span.set_text_content(Some("X"));
-        let body = match doc.body() {
-            Some(b) => b,
-            None => return 8.0,
-        };
-        let _ = body.append_child(&span);
-        let rect = js_sys::Reflect::get(&span, &JsValue::from_str("getBoundingClientRect")).ok();
-        let ch = if let Some(func) = rect.and_then(|f| f.dyn_into::<js_sys::Function>().ok()) {
-            if let Ok(rect_obj) = func.call0(&span) {
-                if let Ok(dom_rect) = rect_obj.dyn_into::<web_sys::DomRect>() {
-                    dom_rect.width()
-                } else {
-                    8.0
-                }
-            } else {
-                8.0
-            }
-        } else {
-            8.0
-        };
-        let _ = body.remove_child(&span);
-        if ch <= 0.0 {
-            8.0
-        } else {
-            ch
-        }
-    }
-
     fn display_width(s: &str) -> usize {
         UnicodeWidthStr::width(s)
     }

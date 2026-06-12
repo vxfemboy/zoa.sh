@@ -8,16 +8,16 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kitten.st/">
+    <meta property="og:url" content="https://zoa.sh/">
     <meta property="og:title" content="vxfemboy">
     <meta property="og:description" content="ASCII art, code, and chaos">
-    <meta property="og:image" content="https://kitten.st/static/og-image.png">
+    <meta property="og:image" content="https://zoa.sh/static/og-image.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="vxfemboy">
     <meta name="twitter:description" content="ASCII art, code, and chaos">
-    <meta name="twitter:image" content="https://kitten.st/static/og-image.png">
+    <meta name="twitter:image" content="https://zoa.sh/static/og-image.png">
 
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">
