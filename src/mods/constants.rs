@@ -37,12 +37,6 @@ pub const ABOUT_WIDTH_SMALL: usize = 30;
 pub const ABOUT_WIDTH_MEDIUM: usize = 45;
 pub const ABOUT_WIDTH_LARGE: usize = 55;
 
-// Comments box widths
-pub const COMMENTS_WIDTH_TINY: usize = 25;
-pub const COMMENTS_WIDTH_SMALL: usize = 30;
-pub const COMMENTS_WIDTH_MEDIUM: usize = 45;
-pub const COMMENTS_WIDTH_LARGE: usize = 55;
-
 // Categories box widths
 pub const CATEGORIES_WIDTH_TINY: usize = 25;
 pub const CATEGORIES_WIDTH_SMALL: usize = 30;

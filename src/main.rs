@@ -1,5 +1,5 @@
-use actix::Actor;
 use actix_files::Files;
+use actix_web::middleware::from_fn;
 use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
 use std::collections::HashSet;
@@ -388,9 +388,6 @@ async fn main() -> Result<(), AppError> {
         config.cache_capacity,
     ));
 
-    // Initialize shoutbox server
-    let shoutbox_server = ShoutboxServer::default().start();
-
     let app_config = config.clone();
     HttpServer::new(move || {
         let cfg = app_config.clone();
@@ -398,7 +395,6 @@ async fn main() -> Result<(), AppError> {
             .app_data(web::Data::new(tera.clone()))
             .app_data(cache.clone())
             .app_data(web::Data::new(cfg))
-            .app_data(web::Data::new(shoutbox_server.clone()))
             .wrap(middleware::Logger::default())
             .wrap(
                 middleware::DefaultHeaders::new()
@@ -406,6 +402,8 @@ async fn main() -> Result<(), AppError> {
                     .add(("X-Frame-Options", "DENY"))
                     .add(("X-XSS-Protection", "1; mode=block")),
             )
+            // Outermost: rewrite HTML → ANSI for curl/wget clients (all pages).
+            .wrap(from_fn(mods::text::curl_ansi))
             .route("/", web::get().to(index))
             .route("/blog", web::get().to(blog_index))
             .route("/post/{slug}", web::get().to(post_view))
@@ -419,15 +417,6 @@ async fn main() -> Result<(), AppError> {
             .route("/api/health", web::get().to(api_health))
             .route("/api/cache/stats", web::get().to(api_cache_stats))
             .route("/api/cache/clear", web::post().to(api_clear_cache))
-            .route("/ws/shoutbox", web::get().to(shoutbox_ws))
-            .route(
-                "/api/shoutbox/messages",
-                web::get().to(get_shoutbox_messages),
-            )
-            .route(
-                "/api/shoutbox/messages",
-                web::post().to(post_shoutbox_message),
-            )
             .service(Files::new("/static", "static"))
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?

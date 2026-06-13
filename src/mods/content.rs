@@ -65,8 +65,6 @@ impl ContentManager {
         );
         let categories_box = ResponsiveBoxes::new_categories(&self.data.categories);
 
-        let comments_box = ResponsiveBoxes::new_shoutbox();
-
         let footer_text = replace_problematic_chars(&self.data.footer_text);
         let footer_box = ResponsiveBoxes::new_footer(&footer_text);
 
@@ -86,7 +84,6 @@ impl ContentManager {
             latest_post_box: latest_post_box.into(),
             about_box: about_box.into(),
             categories_box: categories_box.into(),
-            comments_box: comments_box.into(),
             footer_box: footer_box.into(),
             stars,
             posts: processed_posts,

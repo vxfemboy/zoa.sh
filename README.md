@@ -1,16 +1,20 @@
 ```
-                     ╔═══════════════════════════════════════════════════════════════╗
-                     ║                                                               ║
-                     ║      ███████╗ █████╗ ██████╗ ███████╗██╗████████╗███████╗     ║
-                     ║      ██╔════╝██╔══██╗██╔══██╗██╔════╝██║╚══██╔══╝██╔════╝     ║
-                     ║      ███████╗███████║██║  ██║███████╗██║   ██║   █████╗       ║
-                     ║      ╚════██║██╔══██║██║  ██║╚════██║██║   ██║   ██╔══╝       ║
-                     ║      ███████║██║  ██║██████╔╝███████║██║   ██║   ███████╗     ║
-                     ║      ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚══════╝     ║
-                     ║                                                               ║
-                     ║             ascii art website engine in rust                  ║
-                     ║                                                               ║
-                     ╚═══════════════════════════════════════════════════════════════╝
+                                                                      _
+       ..       .:, .                                             `*-.
+                 ..,'        ...  'cdOOl.  .:dko,,ko.              )  _`-.
+            .':ox0K0l.      'kOccoo:;kW0:;dxo;.  ;XNc             .  : `. .
+       .,coxkkdxKKl.       .dN0d:.  .xWXOo;.     ,KW0,            : _   '  \
+ .codxkkxdc,..;xx'        ,xXK:   .:xXNd.        ;KNNx.           ; *` _.   `*-._
+ .:ol:'.    'dk:        ;doxNk..:dxdkNK;         :0dkNl           `-.-'          `-.
+          .lOl.   ..  'xx,.oN0xkd:..xWd.         l0;;KK;    ...      ;       `       `.
+        .:kd'    'kd..ONd:dKNk;.   :X0,          o0,.xN0dooool;      :.       .        \
+       ,xx;      .k0,.oOOxxXX:    'OXc      ..';l0XkxxONKl..         . \  .   :   .-'   .
+     .dk:.        ,OO; .  ,0K,   .dNo.     xOOkxOXd'. .kNd.          '  `+.;  ;  '      :
+   .l0Olcodxxxkkkkx0NXd'  ,KK,  .oXd.      ...  lO,    'ONd.         :  '  |    ;       ;-.
+  :ONXOxdl:;,'''',:cokKO  ;KK, .dKl.           .Ox.     'ONx.        ; '   : :`-:     _.`* ;
+.xKxc,.               ..  ,KNockk,             lK:       .kN0:     .*' /  .*' ; .*`- +'  `*'
+.:'                       .dXKkc.             '0k.        .lx;     `*-*   `*-*  `*-*'
+                            ..                .;.
 ```
 
 <div align="center">
@@ -32,7 +36,7 @@
 │  renders markdown blog posts with syntax highlighting, and features          │
 │  an interactive WASM cat that follows your cursor around                     │
 │                                                                              │
-│  built for https://zoa.sh - personal site of a gay femboy hacker          │
+│  built for https://zoa.sh - personal site of a gay femboy                    │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -44,7 +48,7 @@
   ║                                                                        ║
   ║   [x] dynamic ASCII box generation with responsive breakpoints         ║
   ║   [x] markdown blog with YAML frontmatter + syntax highlighting        ║
-  ║   [x] real-time shoutbox via websockets                                ║
+  ║   [x] curl/ansi terminal rendering (curl zoa.sh)                       ║
   ║   [x] interactive WASM cat (follows mouse, idle animations)            ║
   ║   [x] proper unicode/emoji handling with twemoji fallbacks             ║
   ║   [x] tag-based post filtering                                         ║
@@ -58,17 +62,36 @@
 
 ```bash
 # clone it
-git clone https://github.com/vxfemboy/sadsite
-cd sadsite
+git clone https://github.com/vxfemboy/zoa.sh
+cd zoa.sh
 
-# build the wasm cat
-./build-wasm.sh
-
-# run it
+# run it — `cargo run` builds the wasm cat automatically (via build.rs)
 cargo run
 
 # visit http://localhost:8080
+# or, from a terminal:  curl http://localhost:8080
 ```
+
+## development
+
+```bash
+# auto-reload: rebuilds wasm + restarts the server on save
+./dev.sh
+# (install a watcher first: `cargo install watchexec-cli` or `cargo install cargo-watch`)
+
+# plain run — build.rs compiles the wasm into static/wasm as part of the build
+cargo run
+
+# skip the implicit wasm build (faster server-only rebuilds; CI uses this)
+SKIP_WASM=1 cargo run
+
+# build the wasm by hand (what CI and SKIP_WASM=1 builds rely on)
+./build-wasm.sh
+```
+
+`curl`/`wget` clients get an ANSI-rendered terminal version of any page
+(the HTML is converted to colored plaintext using the site's own CSS). See the
+[actix auto-reload docs](https://actix.rs/docs/autoreload/) for background.
 
 ## structure
 
@@ -79,7 +102,7 @@ src/
 └── mods/
     ├── ascii_art.rs     # box generation, unicode width calc
     ├── markdown.rs      # blog post parser + syntax highlighting
-    ├── shoutbox.rs      # websocket chat system
+    ├── text.rs          # curl/ANSI terminal rendering (all pages)
     ├── wasm.rs          # interactive cat logic
     ├── responsive.rs    # multi-breakpoint box builder
     ├── content.rs       # page context assembly
@@ -118,7 +141,8 @@ GET  /rss.xml               rss feed
 GET  /sitemap.xml           sitemap
 GET  /api/posts             json post list
 GET  /api/health            health check
-WS   /ws/shoutbox           shoutbox websocket
+
+# any page returns ANSI plaintext when requested with a curl/wget User-Agent
 ```
 
 ## config

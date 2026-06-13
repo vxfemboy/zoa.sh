@@ -8,6 +8,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # build.rs builds the WASM on every `cargo build`; CI builds it explicitly via
+  # ./build-wasm.sh instead, so skip the implicit build to avoid doing it twice.
+  SKIP_WASM: 1
 
 jobs:
   test:
@@ -103,15 +106,15 @@ jobs:
     - name: Create deployment artifact
       run: |
         mkdir -p deployment
-        cp target/release/ascii_web deployment/
+        cp target/release/zoa-sh deployment/
         cp -r static deployment/
         cp -r templates deployment/
         cp Cargo.toml deployment/
         cp README.md deployment/
-        tar -czf ascii-web-deployment.tar.gz deployment/
-    
+        tar -czf zoa-sh-deployment.tar.gz deployment/
+
     - name: Upload deployment artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ascii-web-deployment
-        path: ascii-web-deployment.tar.gz
+        name: zoa-sh-deployment
+        path: zoa-sh-deployment.tar.gz

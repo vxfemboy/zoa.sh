@@ -22,7 +22,7 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="alternate" type="application/rss+xml" title="vxfemboy blog RSS" href="/rss.xml">
-    <script>window.SADSITE_DEBUG = {{ debug | json_encode }};</script>
+    <script>window.ZOA_DEBUG = {{ debug | json_encode }};</script>
     <div id="stars-container">
         {% for star in stars %}
             <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
@@ -63,17 +63,6 @@
                     <div class="box-large"><pre>{{ latest_post_box.large | safe }}</pre></div>
                 </div>
 
-                <!-- Shoutbox moved under posts to match posts width -->
-                <div class="ascii-box" id="shoutbox-container" data-no-responsive>
-                    <div class="box-tiny"><pre id="shoutbox-tiny">{{ comments_box.tiny | safe }}</pre></div>
-                    <div class="box-small"><pre id="shoutbox-small">{{ comments_box.small | safe }}</pre></div>
-                    <div class="box-medium"><pre id="shoutbox-medium">{{ comments_box.medium | safe }}</pre></div>
-                    <div class="box-large"><pre id="shoutbox-large">{{ comments_box.large | safe }}</pre></div>
-                    <div class="shoutbox-input-container">
-                        <input type="text" id="shoutbox-input" placeholder="username: message" maxlength="120">
-                    </div>
-                </div>
-
                 <!-- Additional posts for mobile dropdown -->
                 <div id="additional-posts-mobile" style="display:none;">
                     {% for post in additional_posts %}
@@ -106,21 +95,8 @@ Read more: <a href="{{ post.href }}">{{ post.title }}</a>
     </div>
 
     <script type="module" src="/static/js/cat.js"></script>
-    <script type="module" src="/static/js/shoutbox.js"></script>
     <script type="module" src="/static/js/show-more.js"></script>
     <script type="module" src="/static/js/responsive-pre.js"></script>
-
-    <!-- Floating (draggable) Shoutbox -->
-    <div id="shoutbox-float">
-        <div class="shoutbox-float-content" style="position: relative;">
-            <pre id="shoutbox-modal-pre"></pre>
-            <div class="shoutbox-input-container">
-                <input type="text" id="shoutbox-input-modal" placeholder="username: message" maxlength="120">
-            </div>
-            <!-- Click overlay for [x] icon inside expanded title bar -->
-            <button id="sb-collapse-btn" class="sb-icon-hit" type="button" title="Collapse shoutbox" style="right: 6px; top: 18px; width: 40px; height: 18px; background: transparent; border: 0; padding: 0; z-index: 1;"></button>
-        </div>
-    </div>
 
 </body>
 </html> 

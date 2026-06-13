@@ -1,11 +1,11 @@
 # ASCII Web Configuration
 
 [server]
-host = "127.0.0.1"
+host = "0.0.0.0"
 port = 8080
 workers = 4
 
-debug = false
+debug = true
 cache_enabled = false
 cache_capacity = 0
 

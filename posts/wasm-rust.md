@@ -46,7 +46,7 @@ pub fn render_ascii_cat(state: &str) -> String {
 ## Loading in HTML
 
 ```javascript
-import init, { render_ascii_cat } from '/static/wasm/ascii_web.js';
+import init, { render_ascii_cat } from '/static/wasm/zoa_sh.js';
 
 await init();
 const cat = render_ascii_cat("sleep");

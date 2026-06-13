@@ -19,18 +19,10 @@ pub struct Post {
     pub href: String,
 }
 
-#[derive(Serialize)]
-pub struct Comment {
-    pub username: String,
-    pub content: String,
-}
-
 pub struct SiteData {
     pub nav_items: Vec<NavItem>,
     pub posts: Vec<Post>,
     pub categories: Vec<String>,
-    #[allow(dead_code)]
-    pub comments: Vec<Comment>,
     pub footer_text: String,
     pub about_content: String,
     pub about_ascii_art: String,
@@ -95,16 +87,6 @@ impl SiteData {
                 "Network".to_string(),
                 "Security".to_string(),
                 "Hardware".to_string(),
-            ],
-            comments: vec![
-                Comment {
-                    username: "rustacean".to_string(),
-                    content: "Love the ASCII aesthetic!".to_string(),
-                },
-                Comment {
-                    username: "terminal_lover".to_string(),
-                    content: "This brings back memories of the old terminal days. Beautiful implementation!".to_string(),
-                },
             ],
             footer_text: "🄯 vxfemboy | meow <3".to_string(),
             about_content: "I press buttons.".to_string(),

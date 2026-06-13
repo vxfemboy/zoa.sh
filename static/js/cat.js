@@ -1,4 +1,4 @@
-import init, { AsciiCat } from '/static/wasm/ascii_web.js';
+import init, { AsciiCat } from '/static/wasm/zoa_sh.js';
 
 async function runCat() {
   try {
@@ -25,7 +25,7 @@ async function runCat() {
     }
     requestAnimationFrame(loop);
   } catch (e) {
-    if (window.SADSITE_DEBUG) console.warn('cat init failed', e);
+    if (window.ZOA_DEBUG) console.warn('cat init failed', e);
   }
 }
 

@@ -1,4 +1,4 @@
-use rand::{rng, Rng};
+use rand::{rng, RngExt};
 use serde::Serialize;
 
 const STAR_CHARS: &[&str] = &[

@@ -33,10 +33,6 @@ function buildResponsivePre(boxEl) {
     large: large ? large.innerHTML : (medium ? medium.innerHTML : (small ? small.innerHTML : (tiny ? tiny.innerHTML : '')))
   };
 
-  // Preserve one input container if present (e.g., shoutbox)
-  const anyInput = boxEl.querySelector('.shoutbox-input-container');
-  const inputClone = anyInput ? anyInput.cloneNode(true) : null;
-
   // Remove all existing size boxes
   boxEl.querySelectorAll('.box-tiny, .box-small, .box-medium, .box-large').forEach(n => n.remove());
 
@@ -48,8 +44,6 @@ function buildResponsivePre(boxEl) {
   pre.dataset.medium = sanitize(map.medium);
   pre.dataset.large = sanitize(map.large);
   boxEl.prepend(pre);
-
-  if (inputClone) boxEl.appendChild(inputClone);
 
   // Initial render
   const sz = pickSizeFor(boxEl);
@@ -70,8 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.ascii-box').forEach(box => {
     // Skip boxes opted-out of responsive conversion
     if (box.hasAttribute('data-no-responsive')) return;
-    // Explicitly skip shoutbox container to preserve IDs for WASM
-    if (box.id === 'shoutbox-container') return;
 
     // Convert all others: nav, welcome, posts, categories, footer
     buildResponsivePre(box);

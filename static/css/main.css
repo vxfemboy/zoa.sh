@@ -190,8 +190,6 @@ pre::after {
     .ascii-content .latest-posts-box .box-small { display: block !important; }
     /* Sidebar boxes - use small (30-45 char) for about/categories */
     .ascii-sidebar .box-small { display: block !important; }
-    /* Shoutbox under posts */
-    .ascii-content #shoutbox-container .box-small { display: block !important; }
     #additional-posts-mobile .box-small { display: block !important; }
     /* Nav and footer - use small for mobile */
     .ascii-nav .box-small { display: block !important; }
@@ -252,41 +250,7 @@ pre::after {
 .ascii-nav { display: flex; justify-content: center; }
 .ascii-footer { display: flex; justify-content: center; }
 
-#shoutbox-container { display: block; }
-#shoutbox-container pre { white-space: pre; font-family: "Departure Mono", "Courier New", monospace; overflow: hidden; word-wrap: normal; word-break: normal; width: 100%; display: block; }
-.sb-icon-hit { z-index: 2; }
-.shoutbox-input-container { margin-top: 5px; display: flex; justify-content: center; }
-.shoutbox-input-container input { background-color: #000; color: #fff; border: 1px solid #333; font-family: "Departure Mono", "Courier New", monospace; font-size: 12px; padding: 4px 8px; width: 200px; outline: none; }
-.shoutbox-input-container input:focus { border-color: #33aaff; box-shadow: 0 0 5px rgba(51, 170, 255, 0.3); }
-.shoutbox-input-container input::placeholder { color: #666; }
-
-/* Click overlay for ASCII title icon */
-.sb-icon-hit { position: absolute; cursor: pointer; }
-
 .emoji-img { display: inline-block; height: 1em; width: 1ch !important; min-width: 1ch; max-width: 1ch; vertical-align: baseline; object-fit: contain; margin: 0; padding: 0; border: 0; }
-
-/* Shoutbox expand controls */
-.shoutbox-controls { display: flex; justify-content: flex-end; }
-#shoutbox-expand-btn { background: #000; color: #fff; border: 1px solid #333; cursor: pointer; padding: 2px 6px; font-size: 12px; }
-#shoutbox-expand-btn:hover { border-color: #33aaff; }
-
-/* Floating (draggable) expanded shoutbox */
-#shoutbox-float { position: fixed; left: 50%; top: 15%; transform: translate(-50%, 0); display: none; z-index: 10000; max-width: 92vw; }
-#shoutbox-float .shoutbox-float-content { background: rgba(0,0,0,0.9); padding: 10px; border: 1px solid #333; display: inline-flex; flex-direction: column; gap: 8px; cursor: move; }
-#shoutbox-modal-pre { max-width: 90vw; display: block; }
-#shoutbox-modal-pre { white-space: pre; margin: 0; font-size: 14px; line-height: 1.2; }
-#shoutbox-close-btn { align-self: flex-end; background: #000; color: #fff; border: 1px solid #333; cursor: pointer; padding: 2px 6px; font-size: 12px; }
-#shoutbox-close-btn:hover { border-color: #33aaff; }
-
-@media (max-width: 600px) {
-  #shoutbox-float { left: 50%; transform: translate(-50%, 0); }
-  #shoutbox-float .shoutbox-float-content { max-width: 95vw; overflow-x: auto; }
-  #shoutbox-modal-pre { font-size: 10px; }
-}
-
-@media (max-width: 400px) {
-  #shoutbox-modal-pre { font-size: 8px; }
-}
 
 /* Blog page styles */
 .blog-content {

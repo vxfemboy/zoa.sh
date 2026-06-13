@@ -19,7 +19,6 @@ impl TemplateContextBuilder {
         self.context.insert("latest_post_box", &ctx.latest_post_box);
         self.context.insert("about_box", &ctx.about_box);
         self.context.insert("categories_box", &ctx.categories_box);
-        self.context.insert("comments_box", &ctx.comments_box);
         self.context.insert("footer_box", &ctx.footer_box);
         self.context.insert("stars", &ctx.stars);
         self.context.insert("posts", &ctx.posts);

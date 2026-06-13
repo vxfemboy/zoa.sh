@@ -19,9 +19,6 @@
         <div class="ascii-box">
             <pre>{{ categories_box | safe }}</pre>
         </div>
-        <div class="ascii-box">
-            <pre>{{ comments_box | safe }}</pre>
-        </div>
     </div>
 </div>
 

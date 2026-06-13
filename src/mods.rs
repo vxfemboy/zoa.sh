@@ -12,10 +12,9 @@ pub mod errors;
 pub mod image_converter;
 pub mod markdown;
 pub mod responsive;
-pub mod shoutbox;
-pub mod shoutbox_protocol;
 pub mod stars;
 pub mod template_builder;
+pub mod text;
 pub mod wasm;
 
 #[cfg(test)]
@@ -30,7 +29,6 @@ pub use content::*;
 pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
-pub use shoutbox::*;
 pub use stars::*;
 pub use template_builder::*;
 
@@ -50,7 +48,6 @@ pub struct PageContext {
     pub latest_post_box: BoxSizes,
     pub about_box: BoxSizes,
     pub categories_box: BoxSizes,
-    pub comments_box: BoxSizes,
     pub footer_box: BoxSizes,
     pub stars: Vec<Star>,
     pub posts: Vec<Post>,

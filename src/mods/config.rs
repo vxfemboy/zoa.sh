@@ -104,7 +104,7 @@ impl Config {
     pub fn load() -> crate::mods::Result<Self> {
         let settings = config::Config::builder()
             .add_source(config::File::with_name("config").required(false))
-            .add_source(config::Environment::with_prefix("ASCII_WEB"));
+            .add_source(config::Environment::with_prefix("ZOA"));
 
         // Set defaults manually since set_defaults doesn't exist
         let default_config = Config::default();
