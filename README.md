@@ -93,6 +93,16 @@ SKIP_WASM=1 cargo run
 (the HTML is converted to colored plaintext using the site's own CSS). See the
 [actix auto-reload docs](https://actix.rs/docs/autoreload/) for background.
 
+The `/about` portrait is the GitHub avatar rendered as truecolor ANSI half-blocks
+(`▀` cells, two pixels each), converted from source by the `gen-avatar` binary and
+committed to `templates/ascii/avatar.html` (browser) + `avatar.ans` (curl/terminal).
+Regenerate it with:
+
+```bash
+cargo run --bin gen-avatar                 # fetches github.com/vxfemboy.png
+cargo run --bin gen-avatar -- ~/dl/me.png  # or convert a local image
+```
+
 ## structure
 
 ```
@@ -103,6 +113,7 @@ src/
     ├── ascii_art.rs     # box generation, unicode width calc
     ├── markdown.rs      # blog post parser + syntax highlighting
     ├── text.rs          # curl/ANSI terminal rendering (all pages)
+    ├── about.rs         # /about page content + sections
     ├── wasm.rs          # interactive cat logic
     ├── responsive.rs    # multi-breakpoint box builder
     ├── content.rs       # page context assembly

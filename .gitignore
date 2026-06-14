@@ -2,6 +2,6 @@
 .env
 .*
 Cargo.lock
-/research
 /static/wasm
-deploy.sh
+CLAUDE.md
+/research

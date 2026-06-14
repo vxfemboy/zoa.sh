@@ -332,6 +332,32 @@ async fn post_view(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
+/// About page - Zoa's bio, experience, skills, education, and links.
+async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+    let content_manager = ContentManager::new();
+    let context = content_manager.create_page_context()?;
+    let about = mods::about::build_about_boxes();
+
+    let mut ctx = tera::Context::new();
+    // Shared chrome reused from the main page context.
+    ctx.insert("title_art", &context.title_art);
+    ctx.insert("navigation_box", &context.navigation_box);
+    ctx.insert("footer_box", &context.footer_box);
+    ctx.insert("stars", &context.stars);
+    // ASCII portrait (GitHub avatar) for the sidebar.
+    ctx.insert("profile_art", &mods::about::load_profile_art());
+    // About-specific sections.
+    ctx.insert("summary_box", &about.summary_box);
+    ctx.insert("experience_cards", &about.experience_cards);
+    ctx.insert("skills_box", &about.skills_box);
+    ctx.insert("education_box", &about.education_box);
+    ctx.insert("links_box", &about.links_box);
+    ctx.insert("debug", &config.debug);
+
+    let rendered = tera.render("about.html.tera", &ctx)?;
+    Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
+}
+
 async fn index(
     tera: web::Data<Tera>,
     cache: web::Data<BoxCache>,
@@ -405,6 +431,7 @@ async fn main() -> Result<(), AppError> {
             // Outermost: rewrite HTML → ANSI for curl/wget clients (all pages).
             .wrap(from_fn(mods::text::curl_ansi))
             .route("/", web::get().to(index))
+            .route("/about", web::get().to(about))
             .route("/blog", web::get().to(blog_index))
             .route("/post/{slug}", web::get().to(post_view))
             .route("/rss.xml", web::get().to(rss_feed))

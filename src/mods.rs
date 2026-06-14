@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 // Re-export all modules
+pub mod about;
 pub mod api;
 pub mod ascii_art;
 pub mod cache;

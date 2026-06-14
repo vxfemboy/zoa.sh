@@ -66,7 +66,7 @@ impl SiteData {
                 },
                 NavItem {
                     text: "ABOUT".to_string(),
-                    href: "#".to_string(),
+                    href: "/about".to_string(),
                 },
                 NavItem {
                     text: "PROJECTS".to_string(),

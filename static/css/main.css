@@ -203,6 +203,26 @@ pre::after {
 .ascii-content { flex: 4; display: flex; flex-direction: column; gap: 10px; }
 .ascii-sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
+/* About page: GitHub-avatar truecolor half-block portrait (generated from source
+   by `cargo run --bin gen-avatar`). Uses the normal box font so the framed
+   55-col portrait lines up with the SKILLS/EDUCATION/LINKS boxes; line-height 1
+   keeps the half-blocks contiguous (no gaps between rows). */
+.profile-art {
+    font-family: "Departure Mono", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: pre;
+    margin: 0;
+    display: block;
+    color: #fff;
+}
+.profile-art span { display: inline; }
+@media (max-width: 600px) {
+    /* Scale down so the fixed-width portrait still fits the narrow column. */
+    .profile-art { font-size: 11px; }
+}
+
 /* Centered layout (no sidebar) */
 .main-content-centered {
     display: flex;

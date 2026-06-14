@@ -5,6 +5,9 @@ edition = "2021"
 description = "Zoa Hickenlooper's website (zoa.sh)"
 repository = "https://github.com/vxfemboy/zoa.sh"
 license = "MIT"
+# The server is the default binary; `gen-avatar` is an opt-in helper
+# (`cargo run --bin gen-avatar`).
+default-run = "zoa-sh"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -28,6 +31,9 @@ tracing-subscriber = "0.3.23"
 tracing-actix-web = "0.7.21"
 monochora = "0.1.8"
 image = "0.25.8"
+# Used only by the `gen-avatar` helper binary to fetch the GitHub avatar; already
+# present transitively via monochora, so no extra build cost.
+reqwest = { version = "0.11", features = ["blocking"] }
 scraper = "0.20"
 csscolorparser = "0.7"
 regex = "1"
