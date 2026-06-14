@@ -348,7 +348,7 @@ async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpR
     ctx.insert("profile_art", &mods::about::load_profile_art());
     // About-specific sections.
     ctx.insert("summary_box", &about.summary_box);
-    ctx.insert("experience_cards", &about.experience_cards);
+    ctx.insert("experience_box", &mods::about::experience_box());
     ctx.insert("skills_box", &about.skills_box);
     ctx.insert("education_box", &about.education_box);
     ctx.insert("links_box", &about.links_box);

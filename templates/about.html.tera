@@ -49,14 +49,9 @@
                     <div class="box-large"><pre>{{ summary_box.large | safe }}</pre></div>
                 </div>
 
-                {% for card in experience_cards %}
                 <div class="ascii-box">
-                    <div class="box-tiny"><pre>{{ card.tiny | safe }}</pre></div>
-                    <div class="box-small"><pre>{{ card.small | safe }}</pre></div>
-                    <div class="box-medium"><pre>{{ card.medium | safe }}</pre></div>
-                    <div class="box-large"><pre>{{ card.large | safe }}</pre></div>
+                    <div class="exp-box">{{ experience_box | safe }}</div>
                 </div>
-                {% endfor %}
             </div>
 
             <div class="ascii-sidebar">
@@ -97,5 +92,6 @@
 
     <script type="module" src="/static/js/cat.js"></script>
     <script type="module" src="/static/js/responsive-pre.js"></script>
+    <script type="module" src="/static/js/about.js"></script>
 </body>
 </html>

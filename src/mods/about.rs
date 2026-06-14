@@ -7,14 +7,167 @@
 
 use crate::mods::constants::*;
 use crate::mods::{create_header_box, wrap_text, BoxSizes};
+use serde::Serialize;
+use unicode_width::UnicodeWidthStr;
 
 pub struct AboutBoxes {
     pub summary_box: BoxSizes,
-    /// One bordered card per role (portfolio-style), in the main column.
-    pub experience_cards: Vec<BoxSizes>,
     pub skills_box: BoxSizes,
     pub education_box: BoxSizes,
     pub links_box: BoxSizes,
+}
+
+/// A single role for the interactive experience timeline (rendered as a `tree`-
+/// style chart with click-to-expand bios).
+#[derive(Serialize)]
+pub struct Job {
+    /// Padded to a fixed width so the tree columns align in monospace / curl.
+    pub date: String,
+    pub company: String,
+    pub role: String,
+    pub bio: String,
+}
+
+/// Curated work history, newest first. Full voice retained.
+pub fn experience() -> Vec<Job> {
+    let rows: &[(&str, &str, &str, &str)] = &[
+        (
+            "2024–now",
+            "femboy cyber networks",
+            "founder",
+            "building an ISP that actually gives a damn about the people incumbents forgot. BGP peering, fiber, upstream wrangling. yes the name is real. yes the ASN is live.",
+        ),
+        (
+            "2026",
+            "dash crystal",
+            "research software engineer",
+            "applied AI research: LLM fine-tuning (LoRA + multi-GPU full fine-tunes), eval harnesses, training-observability infra, systems instrumentation.",
+        ),
+        (
+            "2023–24",
+            "occamsec",
+            "software engineer",
+            "frontend + backend for InCenter, an automated breach-and-attack simulation platform. shipped the infra on AWS with terraform + ansible.",
+        ),
+        (
+            "2022–23",
+            "iproyal",
+            "network software engineer",
+            "network software engineering on proxy infrastructure at scale. yes i thought about packets constantly. yes that was fine.",
+        ),
+        (
+            "2020–23",
+            "stealth AI startup",
+            "founder & engineer",
+            "solo-built an AI automation + marketing company. reverse-engineered platform APIs, ran stable diffusion pipelines before \"generative AI\" was a buzzword, conversational agents, hands-free multi-platform automation, automated payouts. mostly adult content creators -- pays better, problems are more interesting. scaled it solo until someone bought the whole thing. \"before it was cool.\"",
+        ),
+        (
+            "2021–22",
+            "filmtek cloud",
+            "embedded linux engineer",
+            "custom kernels, ported linux to embedded devices, kernel + socket level code, firewall/security software, hand-applied firmware patches. ran daily pentests, red/blue teams.",
+        ),
+        (
+            "2021",
+            "goldman sachs",
+            "unix sysadmin / IT engineer",
+            "domain user/group management, rewrote linux docs that hadn't been touched in years. resolved bugs that would've evaporated 6M+ in under 5 minutes.",
+        ),
+    ];
+    rows.iter()
+        .map(|(date, company, role, bio)| Job {
+            date: format!("{:<8}", date),
+            company: company.to_string(),
+            role: role.to_string(),
+            bio: bio.to_string(),
+        })
+        .collect()
+}
+
+// Experience box geometry — matches the 80-col SUMMARY box (inner = 78 between
+// the ║ borders; content rows reserve a 1-space margin each side → 76 of text).
+const EXP_INNER: usize = 78;
+const EXP_TEXT: usize = EXP_INNER - 2;
+
+fn esc(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+/// A full-width bordered row: `║ {html padded to EXP_TEXT} ║`.
+fn exp_content_row(html: &str, visible: usize) -> String {
+    format!(
+        "<div class=\"exp-row\">║ {}{} ║</div>",
+        html,
+        " ".repeat(EXP_TEXT.saturating_sub(visible))
+    )
+}
+
+/// The EXPERIENCE section as a single ASCII box (matching the other boxes) with
+/// a `tree`-style, click-to-expand timeline. Each row is a complete `║ … ║` line,
+/// and each job's bio rows live in a collapsible wrapper, so hiding them just
+/// closes the box up without breaking the borders. Returns HTML — render `safe`.
+pub fn experience_box() -> String {
+    let mut s = String::new();
+    let bar = "═".repeat(EXP_INNER);
+    s.push_str(&format!("<div class=\"exp-row\">╔{bar}╗</div>"));
+    // Centered title row.
+    let title = "EXPERIENCE";
+    let pad = EXP_INNER - title.len();
+    let (l, r) = (pad / 2, pad - pad / 2);
+    s.push_str(&format!(
+        "<div class=\"exp-row\">║{}{}{}║</div>",
+        " ".repeat(l),
+        title,
+        " ".repeat(r)
+    ));
+    s.push_str(&format!("<div class=\"exp-row\">╠{bar}╣</div>"));
+    s.push_str(&exp_content_row(
+        "<span class=\"exp-root\">~/career</span>",
+        "~/career".width(),
+    ));
+
+    let jobs = experience();
+    let last = jobs.len().saturating_sub(1);
+    for (i, job) in jobs.iter().enumerate() {
+        let conn = if i == last { "└─" } else { "├─" };
+        // Head row (clickable).
+        let head_plain = format!("{} {} {} · {} [+]", conn, job.date, job.company, job.role);
+        let head_html = format!(
+            "<span class=\"exp-conn\">{conn}</span> \
+             <span class=\"exp-date\">{}</span> \
+             <span class=\"exp-co\">{}</span> · \
+             <span class=\"exp-role\">{}</span> \
+             <span class=\"exp-toggle\">[+]</span>",
+            esc(&job.date),
+            esc(&job.company),
+            esc(&job.role)
+        );
+        s.push_str("<div class=\"exp-job\">");
+        s.push_str(&format!(
+            "<button type=\"button\" class=\"exp-row exp-head\">║ {}{} ║</button>",
+            head_html,
+            " ".repeat(EXP_TEXT.saturating_sub(head_plain.width()))
+        ));
+        // Bio rows (collapsible). The bio is wrapped to leave room for the
+        // 3-col branch prefix (`│  ` / `   `).
+        let branch = if i == last { "   " } else { "│  " };
+        s.push_str("<div class=\"exp-bio\">");
+        for line in wrap_text(&job.bio, EXP_TEXT - 3) {
+            let visible = 3 + line.width();
+            s.push_str(&format!(
+                "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
+                branch,
+                esc(&line),
+                " ".repeat(EXP_TEXT.saturating_sub(visible))
+            ));
+        }
+        s.push_str("</div></div>");
+    }
+
+    s.push_str(&format!("<div class=\"exp-row\">╚{bar}╝</div>"));
+    s
 }
 
 /// The truecolor half-block portrait (HTML) shown in the about sidebar.
@@ -33,8 +186,9 @@ fn render_section(title: &str, body: &str, box_width: usize, wrap_width: usize) 
     for line in body.lines() {
         if line.trim().is_empty() {
             out.push('\n');
-        } else if line.contains("<a ") || line.starts_with('>') {
-            // Link/quote lines pass through untouched (wrapping would split tags).
+        } else if line.contains('<') || line.starts_with('>') {
+            // Lines with HTML (links, asm spans) pass through untouched —
+            // word-wrapping them would split the tags.
             out.push_str(line);
             out.push('\n');
         } else if let Some(rest) = line.strip_prefix("• ") {
@@ -107,45 +261,13 @@ packet bender
 
 San Francisco, California
 
-mov rax, \"about me\" ; ret
+<span class=\"asm-kw\">mov</span> <span class=\"asm-reg\">rax</span>, <span class=\"asm-str\">\"about me\"</span> <span class=\"asm-comment\">; ret</span>
 
 self-taught since before i could legally drive. i live at the intersection of kernels, networking, firmware, and whatever rabbit hole i fell into this week. built an ISP, sold a company once. write Rust that would make most people uncomfortable.
 
 daily-drive mainline kernels by choice, not accident. every device i own has run linux for the last 18 years. run BGP in production and think about it in the shower.
 
 i never said i was stable. the code usually is though.";
-
-    // One card per role: (company title, "role · dates\n\nblurb").
-    let experience: &[(&str, &str)] = &[
-        (
-            "FEMBOY CYBER NETWORKS",
-            "founder · 2024-present\n\nbuilding an ISP that actually gives a damn about the people incumbents forgot. BGP peering, fiber, upstream wrangling. yes the name is real. yes the ASN is live.",
-        ),
-        (
-            "DASH CRYSTAL",
-            "research software engineer · 2026\n\napplied AI research: LLM fine-tuning (LoRA + multi-GPU full fine-tunes), eval harnesses, training-observability infra, systems instrumentation.",
-        ),
-        (
-            "OCCAMSEC",
-            "software engineer · 2023-2024\n\nfrontend + backend for InCenter, an automated breach-and-attack simulation platform. shipped the infra on AWS with terraform + ansible.",
-        ),
-        (
-            "IPROYAL",
-            "network software engineer · 2022-2023\n\nnetwork software engineering on proxy infrastructure at scale. yes i thought about packets constantly. yes that was fine.",
-        ),
-        (
-            "STEALTH AI STARTUP",
-            "founder & engineer · 2020-2023\n\nsolo-built an AI automation + marketing company. reverse-engineered platform APIs, ran stable diffusion pipelines before \"generative AI\" was a buzzword, conversational agents, hands-free multi-platform automation, automated payouts. mostly adult content creators -- pays better, problems are more interesting. scaled it solo until someone bought the whole thing. \"before it was cool.\"",
-        ),
-        (
-            "FILMTEK CLOUD",
-            "embedded linux engineer · 2021-2022\n\ncustom kernels, ported linux to embedded devices, kernel + socket level code, firewall/security software, hand-applied firmware patches. ran daily pentests, red/blue teams.",
-        ),
-        (
-            "GOLDMAN SACHS",
-            "unix sysadmin / IT engineer · 2021\n\ndomain user/group management, rewrote linux docs that hadn't been touched in years. resolved bugs that would've evaporated 6M+ in under 5 minutes.",
-        ),
-    ];
 
     let skills = "\
 top skills
@@ -175,10 +297,6 @@ network engineering · 2023-2025";
 
     AboutBoxes {
         summary_box: section("SUMMARY", summary),
-        experience_cards: experience
-            .iter()
-            .map(|(company, body)| section(company, body))
-            .collect(),
         skills_box: section_narrow("SKILLS", skills),
         education_box: section_narrow("EDUCATION", education),
         links_box: section_narrow("LINKS", links),

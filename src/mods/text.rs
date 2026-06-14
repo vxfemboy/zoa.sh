@@ -76,7 +76,52 @@ pub fn render_html_to_ansi(html: &str) -> String {
 
     // Collapse runs of 3+ blank lines down to 2 for tidier terminal output.
     let collapsed = Regex::new(r"\n{3,}").unwrap().replace_all(&out, "\n\n");
-    format!("{}{}\n", collapsed.trim_end(), RESET)
+    format!("{}{}\n", collapsed.trim(), RESET)
+}
+
+/// Explicit truecolor ANSI for the experience-tree / asm classes. The CSS→ANSI
+/// parser can't handle hyphenated class names, so map them here (kept in sync
+/// with `static/css/main.css`).
+fn class_ansi(class: &str) -> Option<&'static str> {
+    Some(match class {
+        "exp-title" | "asm-kw" => "\x1b[38;2;198;120;221m", // purple
+        "exp-date" | "asm-reg" => "\x1b[38;2;86;182;194m",  // cyan
+        "exp-co" | "asm-str" => "\x1b[38;2;152;195;121m",   // green
+        "exp-conn" | "exp-root" | "asm-comment" => "\x1b[38;2;92;99;112m", // dim
+        "exp-role" => "\x1b[38;2;171;178;191m",             // light gray
+        "exp-toggle" => "\x1b[38;2;198;120;221m",
+        _ => return None,
+    })
+}
+
+/// Render one experience-tree line (title/root/head/bio) on its own line,
+/// coloring child spans by class and preserving inter-span spacing + padding.
+/// Structural template whitespace (newlines/indent) is dropped.
+fn emit_tree_line(element: &ElementRef, output: &mut String) {
+    const RESET: &str = "\x1b[0m";
+    output.push('\n');
+    let own = element.value().attr("class").unwrap_or("");
+    let own_color = own.split_whitespace().find_map(class_ansi).unwrap_or("");
+    for node in element.children() {
+        if let Some(child) = ElementRef::wrap(node) {
+            let cls = child.value().attr("class").unwrap_or("");
+            let color = cls
+                .split_whitespace()
+                .find_map(class_ansi)
+                .unwrap_or(own_color);
+            let text: String = child.text().collect();
+            output.push_str(color);
+            output.push_str(&text);
+            output.push_str(RESET);
+        } else if let Some(text) = node.value().as_text() {
+            if text.contains('\n') {
+                continue; // structural indentation, not content
+            }
+            output.push_str(own_color);
+            output.push_str(text);
+            output.push_str(RESET);
+        }
+    }
 }
 
 fn style_for<'a>(
@@ -88,12 +133,12 @@ fn style_for<'a>(
         .value()
         .attr("class")
         .and_then(|class| {
-            class
-                .split_whitespace()
-                .find_map(|c| css_styles.get(&format!(".{}", c)))
+            class.split_whitespace().find_map(|c| {
+                class_ansi(c).or_else(|| css_styles.get(&format!(".{}", c)).map(|s| s.as_str()))
+            })
         })
-        .or_else(|| css_styles.get(tag_name))
-        .unwrap_or_else(|| css_styles.get("default").unwrap())
+        .or_else(|| css_styles.get(tag_name).map(|s| s.as_str()))
+        .unwrap_or_else(|| css_styles.get("default").map(|s| s.as_str()).unwrap_or(""))
 }
 
 fn format_element(
@@ -118,8 +163,20 @@ fn format_element(
     // The profile portrait is colored HTML spans; emit its precomputed truecolor
     // ANSI half-block version instead of recoloring per CSS.
     if classes.split_whitespace().any(|c| c == "profile-art") {
+        // Blank line before the box so it doesn't butt against the previous one
+        // (e.g. the EXPERIENCE box's bottom border). Runs of newlines are
+        // collapsed to one blank line by render_html_to_ansi.
+        output.push_str("\n\n");
         output.push_str(&PROFILE_ANSI);
         output.push('\n');
+        return;
+    }
+
+    // Experience-box rows: each on its own line, preserving significant
+    // whitespace (border ║, column padding, inter-span spaces) which the generic
+    // recursion would trim. curl shows all bios regardless of collapsed state.
+    if classes.split_whitespace().any(|c| c == "exp-row") {
+        emit_tree_line(element, output);
         return;
     }
 
@@ -142,11 +199,13 @@ fn format_element(
         }
 
         // ASCII-art boxes and code blocks: emit verbatim (preserve whitespace).
+        // Lead with a blank line so stacked boxes are visually separated (runs of
+        // newlines collapse to one blank line in render_html_to_ansi).
         "pre" => {
             let text = element.text().collect::<String>();
             let trimmed = text.trim_matches('\n');
             if !trimmed.trim().is_empty() {
-                output.push_str(&format!("{}{}\n", style, trimmed));
+                output.push_str(&format!("\n{}{}\n", style, trimmed));
                 output.push_str(RESET);
                 output.push('\n');
             }

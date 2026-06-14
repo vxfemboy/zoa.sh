@@ -223,6 +223,49 @@ pre::after {
     .profile-art { font-size: 11px; }
 }
 
+/* ── asm syntax highlight (the `mov rax, "about me" ; ret` flourish) ── */
+.asm-kw      { color: #c678dd; }  /* mnemonic */
+.asm-reg     { color: #56b6c2; }  /* register */
+.asm-str     { color: #98c379; }  /* string   */
+.asm-comment { color: #5c6370; }  /* comment  */
+
+/* ── experience: a real ASCII box (matches the others) with a collapsible,
+      tree-command-style timeline. Each .exp-row is a full `║ … ║` line, so
+      hiding a job's bio rows just closes the box up without breaking borders. ── */
+.exp-box {
+    font-family: "Departure Mono", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: pre;
+    text-align: left;
+    display: inline-block;
+    color: #c8c8c8;
+}
+.exp-row { display: block; }
+.exp-head {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    white-space: pre;
+    cursor: pointer;
+}
+.exp-head:hover { background: rgba(198, 120, 221, 0.12); }
+.exp-root   { color: #5c6370; }
+.exp-conn   { color: #5c6370; }
+.exp-date   { color: #56b6c2; }
+.exp-co     { color: #98c379; }
+.exp-role   { color: #abb2bf; }
+.exp-toggle { color: #c678dd; }
+.exp-bio { display: none; }
+.exp-job.open .exp-bio { display: block; }
+
+
 /* Centered layout (no sidebar) */
 .main-content-centered {
     display: flex;
