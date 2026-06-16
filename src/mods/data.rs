@@ -70,7 +70,7 @@ impl SiteData {
                 },
                 NavItem {
                     text: "PROJECTS".to_string(),
-                    href: "https://github.com/vxfemboy".to_string(),
+                    href: "/projects".to_string(),
                 },
                 NavItem {
                     text: "BLOG".to_string(),

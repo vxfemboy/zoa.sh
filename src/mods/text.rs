@@ -153,10 +153,9 @@ fn format_element(
     // emits the same box at four widths (.box-tiny/small/medium/large); for the
     // terminal we keep only the widest one.
     let classes = element.value().attr("class").unwrap_or("");
-    if classes
-        .split_whitespace()
-        .any(|c| c == "star" || c == "box-tiny" || c == "box-small" || c == "box-medium")
-    {
+    if classes.split_whitespace().any(|c| {
+        c == "star" || c == "box-tiny" || c == "box-small" || c == "box-medium" || c == "exp-mobile"
+    }) {
         return;
     }
 

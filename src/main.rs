@@ -249,6 +249,16 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://zoa.sh/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoa.sh/projects</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://zoa.sh/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -348,7 +358,12 @@ async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpR
     ctx.insert("profile_art", &mods::about::load_profile_art());
     // About-specific sections.
     ctx.insert("summary_box", &about.summary_box);
-    ctx.insert("experience_box", &mods::about::experience_box());
+    // Wide desktop variant + compact mobile variant (swapped by CSS media query).
+    ctx.insert("experience_box", &mods::about::experience_box(78, false));
+    ctx.insert(
+        "experience_box_mobile",
+        &mods::about::experience_box(40, true),
+    );
     ctx.insert("skills_box", &about.skills_box);
     ctx.insert("education_box", &about.education_box);
     ctx.insert("links_box", &about.links_box);
@@ -383,6 +398,25 @@ async fn index(
         context.welcome_box.large.clone(),
     );
 
+    Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
+}
+
+/// Projects page — portfolio cards.
+async fn projects(
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let context = ContentManager::new().create_page_context()?;
+
+    let mut ctx = tera::Context::new();
+    ctx.insert("title_art", &context.title_art);
+    ctx.insert("navigation_box", &context.navigation_box);
+    ctx.insert("footer_box", &context.footer_box);
+    ctx.insert("stars", &context.stars);
+    ctx.insert("projects", &mods::projects::project_boxes());
+    ctx.insert("debug", &config.debug);
+
+    let rendered = tera.render("projects.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
@@ -432,6 +466,7 @@ async fn main() -> Result<(), AppError> {
             .wrap(from_fn(mods::text::curl_ansi))
             .route("/", web::get().to(index))
             .route("/about", web::get().to(about))
+            .route("/projects", web::get().to(projects))
             .route("/blog", web::get().to(blog_index))
             .route("/post/{slug}", web::get().to(post_view))
             .route("/rss.xml", web::get().to(rss_feed))

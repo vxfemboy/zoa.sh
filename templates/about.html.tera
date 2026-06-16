@@ -49,8 +49,11 @@
                     <div class="box-large"><pre>{{ summary_box.large | safe }}</pre></div>
                 </div>
 
-                <div class="ascii-box">
+                <div class="ascii-box exp-desktop" data-no-responsive>
                     <div class="exp-box">{{ experience_box | safe }}</div>
+                </div>
+                <div class="ascii-box exp-mobile" data-no-responsive>
+                    <div class="exp-box">{{ experience_box_mobile | safe }}</div>
                 </div>
             </div>
 

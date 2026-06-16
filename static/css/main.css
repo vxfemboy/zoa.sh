@@ -265,6 +265,15 @@ pre::after {
 .exp-bio { display: none; }
 .exp-job.open .exp-bio { display: block; }
 
+/* Desktop shows the wide (80-col) box; mobile shows the compact (~42-col) box. */
+.exp-mobile { display: none; }
+@media (max-width: 600px) {
+    .exp-desktop { display: none; }
+    .exp-mobile { display: block; }
+    /* 42-col box at 12px (~302px) fits narrow screens without horizontal scroll. */
+    .exp-mobile .exp-box { font-size: 12px; }
+}
+
 
 /* Centered layout (no sidebar) */
 .main-content-centered {

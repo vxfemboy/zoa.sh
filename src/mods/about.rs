@@ -84,37 +84,38 @@ pub fn experience() -> Vec<Job> {
         .collect()
 }
 
-// Experience box geometry — matches the 80-col SUMMARY box (inner = 78 between
-// the ║ borders; content rows reserve a 1-space margin each side → 76 of text).
-const EXP_INNER: usize = 78;
-const EXP_TEXT: usize = EXP_INNER - 2;
-
 fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
 }
 
-/// A full-width bordered row: `║ {html padded to EXP_TEXT} ║`.
-fn exp_content_row(html: &str, visible: usize) -> String {
+/// A full-width bordered row: `║ {html padded to text} ║` (text = inner - 2,
+/// the 1-space margin each side).
+fn exp_content_row(html: &str, visible: usize, text: usize) -> String {
     format!(
         "<div class=\"exp-row\">║ {}{} ║</div>",
         html,
-        " ".repeat(EXP_TEXT.saturating_sub(visible))
+        " ".repeat(text.saturating_sub(visible))
     )
 }
 
-/// The EXPERIENCE section as a single ASCII box (matching the other boxes) with
-/// a `tree`-style, click-to-expand timeline. Each row is a complete `║ … ║` line,
+/// The EXPERIENCE section as an ASCII box (matching the other boxes) with a
+/// `tree`-style, click-to-expand timeline. Each row is a complete `║ … ║` line,
 /// and each job's bio rows live in a collapsible wrapper, so hiding them just
 /// closes the box up without breaking the borders. Returns HTML — render `safe`.
-pub fn experience_box() -> String {
+///
+/// `inner` is the column count between the ║ borders (box width = inner + 2).
+/// When `compact` (the narrow mobile variant) the head shows just date + company
+/// and the role is folded into the bio so the line fits a ~40-col box.
+pub fn experience_box(inner: usize, compact: bool) -> String {
+    let text = inner - 2;
+    let bar = "═".repeat(inner);
     let mut s = String::new();
-    let bar = "═".repeat(EXP_INNER);
     s.push_str(&format!("<div class=\"exp-row\">╔{bar}╗</div>"));
     // Centered title row.
     let title = "EXPERIENCE";
-    let pad = EXP_INNER - title.len();
+    let pad = inner - title.len();
     let (l, r) = (pad / 2, pad - pad / 2);
     s.push_str(&format!(
         "<div class=\"exp-row\">║{}{}{}║</div>",
@@ -126,42 +127,82 @@ pub fn experience_box() -> String {
     s.push_str(&exp_content_row(
         "<span class=\"exp-root\">~/career</span>",
         "~/career".width(),
+        text,
     ));
 
     let jobs = experience();
     let last = jobs.len().saturating_sub(1);
     for (i, job) in jobs.iter().enumerate() {
         let conn = if i == last { "└─" } else { "├─" };
-        // Head row (clickable).
-        let head_plain = format!("{} {} {} · {} [+]", conn, job.date, job.company, job.role);
-        let head_html = format!(
-            "<span class=\"exp-conn\">{conn}</span> \
-             <span class=\"exp-date\">{}</span> \
-             <span class=\"exp-co\">{}</span> · \
-             <span class=\"exp-role\">{}</span> \
-             <span class=\"exp-toggle\">[+]</span>",
-            esc(&job.date),
-            esc(&job.company),
-            esc(&job.role)
-        );
+        // Head row (clickable). Compact drops the role from the head line.
+        let (head_plain, head_html) = if compact {
+            (
+                format!("{} {} {} [+]", conn, job.date, job.company),
+                format!(
+                    "<span class=\"exp-conn\">{conn}</span> \
+                     <span class=\"exp-date\">{}</span> \
+                     <span class=\"exp-co\">{}</span> \
+                     <span class=\"exp-toggle\">[+]</span>",
+                    esc(&job.date),
+                    esc(&job.company),
+                ),
+            )
+        } else {
+            (
+                format!("{} {} {} · {} [+]", conn, job.date, job.company, job.role),
+                format!(
+                    "<span class=\"exp-conn\">{conn}</span> \
+                     <span class=\"exp-date\">{}</span> \
+                     <span class=\"exp-co\">{}</span> · \
+                     <span class=\"exp-role\">{}</span> \
+                     <span class=\"exp-toggle\">[+]</span>",
+                    esc(&job.date),
+                    esc(&job.company),
+                    esc(&job.role)
+                ),
+            )
+        };
         s.push_str("<div class=\"exp-job\">");
         s.push_str(&format!(
             "<button type=\"button\" class=\"exp-row exp-head\">║ {}{} ║</button>",
             head_html,
-            " ".repeat(EXP_TEXT.saturating_sub(head_plain.width()))
+            " ".repeat(text.saturating_sub(head_plain.width()))
         ));
-        // Bio rows (collapsible). The bio is wrapped to leave room for the
-        // 3-col branch prefix (`│  ` / `   `).
+        // Bio rows (collapsible), wrapped to leave room for the 3-col branch
+        // prefix. In compact mode the role leads the bio (it's not on the head),
+        // as its own colored paragraph separated from the description.
         let branch = if i == last { "   " } else { "│  " };
+        let paragraphs: Vec<(&str, Option<&str>)> = if compact {
+            vec![
+                (job.role.as_str(), Some("exp-role")),
+                (job.bio.as_str(), None),
+            ]
+        } else {
+            vec![(job.bio.as_str(), None)]
+        };
         s.push_str("<div class=\"exp-bio\">");
-        for line in wrap_text(&job.bio, EXP_TEXT - 3) {
-            let visible = 3 + line.width();
-            s.push_str(&format!(
-                "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
-                branch,
-                esc(&line),
-                " ".repeat(EXP_TEXT.saturating_sub(visible))
-            ));
+        for (pi, (ptext, pclass)) in paragraphs.iter().enumerate() {
+            if pi > 0 {
+                // Blank branch row between paragraphs.
+                s.push_str(&format!(
+                    "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{} ║</div>",
+                    branch,
+                    " ".repeat(text - 3)
+                ));
+            }
+            for line in wrap_text(ptext, text - 3) {
+                let visible = 3 + line.width();
+                let body = match pclass {
+                    Some(cls) => format!("<span class=\"{}\">{}</span>", cls, esc(&line)),
+                    None => esc(&line),
+                };
+                s.push_str(&format!(
+                    "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
+                    branch,
+                    body,
+                    " ".repeat(text.saturating_sub(visible))
+                ));
+            }
         }
         s.push_str("</div></div>");
     }
@@ -211,8 +252,10 @@ fn render_section(title: &str, body: &str, box_width: usize, wrap_width: usize) 
     create_header_box(title, out.trim_end_matches('\n'), box_width)
 }
 
-/// Build a wide section (main column) across all four breakpoints.
-fn section(title: &str, body: &str) -> BoxSizes {
+/// Build a wide section (main column) across all four breakpoints. Shared with
+/// the projects page. Body lines containing HTML (links) pass through untouched;
+/// prose wraps; `• ` bullets get a hanging indent.
+pub(crate) fn section(title: &str, body: &str) -> BoxSizes {
     BoxSizes {
         tiny: render_section(title, body, BOX_WIDTH_TINY, WRAP_WIDTH_TINY),
         small: render_section(title, body, BOX_WIDTH_SMALL, WRAP_WIDTH_SMALL),
