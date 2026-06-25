@@ -1,13 +1,15 @@
 # ASCII Web Configuration
 
+# Top-level keys must come before any [table] (TOML rule) — otherwise they're
+# parsed as members of the preceding table.
+debug = true
+cache_enabled = false
+cache_capacity = 0
+
 [server]
 host = "0.0.0.0"
 port = 8080
 workers = 4
-
-debug = true
-cache_enabled = false
-cache_capacity = 0
 
 [paths]
 templates = "templates"
@@ -35,3 +37,16 @@ tiny = 22
 small = 32
 medium = 52
 large = 72
+
+# /about profile portrait (ANSI half-block). When auto_update is true the server
+# fetches `url` and regenerates templates/ascii/avatar.{html,ans} on startup;
+# if the fetch fails (offline) the committed asset is kept.
+[pfp]
+auto_update = true
+url = "https://github.com/vxfemboy.png"
+width = 51
+brightness = 0.0
+contrast = 1.0
+# Don't refetch if the portrait was regenerated within this many seconds
+# (rate-limits the source and avoids dev-watcher restart loops). 0 = always.
+refresh_interval_secs = 21600

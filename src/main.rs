@@ -423,7 +423,13 @@ async fn projects(
 #[actix_web::main]
 async fn main() -> Result<(), AppError> {
     // Load configuration first to configure logging
-    let config = Config::load().unwrap_or_else(|_| Config::default());
+    let config = match Config::load() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("CONFIG LOAD ERROR: {e}");
+            Config::default()
+        }
+    };
 
     // Initialize tracing with level controlled by config.debug
     tracing_subscriber::fmt()
@@ -438,6 +444,44 @@ async fn main() -> Result<(), AppError> {
         "Starting Web server on {}:{}",
         config.server.host, config.server.port
     );
+
+    // Auto-refresh the /about portrait from the configured source (e.g. the
+    // GitHub avatar). Runs off-thread so a slow/offline fetch doesn't block
+    // startup; on failure the committed templates/ascii/avatar.* is kept.
+    //
+    // Skip if the portrait was regenerated within `refresh_interval_secs` — this
+    // both rate-limits GitHub and prevents a restart loop when a file watcher
+    // (dev.sh) is watching templates/ (the refresh writes avatar.html there).
+    let pfp_fresh = std::fs::metadata("templates/ascii/avatar.html")
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| t.elapsed().ok())
+        .map(|age| age.as_secs() < config.pfp.refresh_interval_secs)
+        .unwrap_or(false);
+    if config.pfp.auto_update && !pfp_fresh {
+        let pfp = config.pfp.clone();
+        match tokio::task::spawn_blocking(move || {
+            let opts = zoa_sh::ansi_image::PfpOptions {
+                width_cells: pfp.width,
+                brightness: pfp.brightness as f32,
+                contrast: pfp.contrast as f32,
+            };
+            zoa_sh::ansi_image::refresh(
+                &pfp.url,
+                &opts,
+                "templates/ascii/avatar.html",
+                "templates/ascii/avatar.ans",
+            )
+        })
+        .await
+        {
+            Ok(Ok(())) => info!("pfp: refreshed portrait from {}", config.pfp.url),
+            Ok(Err(e)) => {
+                tracing::warn!("pfp: refresh failed ({e}); keeping committed avatar")
+            }
+            Err(e) => tracing::warn!("pfp: refresh task panicked ({e}); keeping committed avatar"),
+        }
+    }
 
     // Initialize Tera templates
     let tera = Tera::new("templates/**/*")?;

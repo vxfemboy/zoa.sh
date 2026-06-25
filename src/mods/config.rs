@@ -6,9 +6,45 @@ pub struct Config {
     pub server: ServerConfig,
     pub paths: PathConfig,
     pub content: ContentConfig,
+    #[serde(default)]
+    pub pfp: PfpConfig,
     pub debug: bool,
     pub cache_enabled: bool,
     pub cache_capacity: usize,
+}
+
+/// `/about` profile-portrait (ANSI half-block) settings.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(default)]
+pub struct PfpConfig {
+    /// Fetch `url` and regenerate the portrait on server startup. If the fetch
+    /// fails (offline/CI), the committed `templates/ascii/avatar.*` is kept.
+    pub auto_update: bool,
+    /// Source image — an http(s) URL (e.g. the GitHub avatar) or a local path.
+    pub url: String,
+    /// Portrait width in half-block cells (box width = `width + 4`).
+    pub width: usize,
+    /// Brightness added after contrast, in [-1.0, 1.0]. 0.0 = none.
+    pub brightness: f64,
+    /// Contrast multiplier around mid-gray. 1.0 = none, >1 punchier.
+    pub contrast: f64,
+    /// Skip the startup refresh if the committed portrait was regenerated within
+    /// this many seconds. Avoids refetching on every restart / dev reload (which
+    /// would otherwise loop with a file watcher). 0 = always refresh.
+    pub refresh_interval_secs: u64,
+}
+
+impl Default for PfpConfig {
+    fn default() -> Self {
+        Self {
+            auto_update: false,
+            url: "https://github.com/vxfemboy.png".to_string(),
+            width: 51,
+            brightness: 0.0,
+            contrast: 1.0,
+            refresh_interval_secs: 21600, // 6h
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -93,6 +129,7 @@ impl Default for Config {
                     large: 72,
                 },
             },
+            pfp: PfpConfig::default(),
             debug: false,
             cache_enabled: false,
             cache_capacity: 256,

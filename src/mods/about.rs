@@ -35,43 +35,170 @@ pub fn experience() -> Vec<Job> {
             "2024–now",
             "femboy cyber networks",
             "founder",
-            "building an ISP that actually gives a damn about the people incumbents forgot. BGP peering, fiber, upstream wrangling. yes the name is real. yes the ASN is live.",
+            "building an ISP that actually gives a damn about the people incumbents forgot.\n\
+             \n\
+             BGP peering, fiber infrastructure, network engineering, upstream wrangling,\n\
+             customer ops. yes the name is real. yes the ASN is live. yes the routing\n\
+             tables are beautiful and i am very normal about them.\n\
+             \n\
+             ( ･`ω･´) building the internet of tomorrow ヽ(⌐■_■)ノ",
         ),
         (
             "2026",
             "dash crystal",
             "research software engineer",
-            "applied AI research: LLM fine-tuning (LoRA + multi-GPU full fine-tunes), eval harnesses, training-observability infra, systems instrumentation.",
+            "applied AI research on the software engineering side. trained models, built the infrastructure to train and measure them, and instrumented existing systems to squeeze research data out of them.\n\
+             \n\
+             what i shipped:\n\
+             \n\
+             LLM fine-tuning - supervised fine-tuning of large language models for structured, domain-specific tasks. curriculum-based data generation, parameter-efficient training (LoRA) on single GPUs and full fine-tunes distributed across multi-GPU clusters. wrote the eval harnesses to actually verify the models learned what they were supposed to.\n\
+             \n\
+             ML training infrastructure - internal training-observability tooling: thread-safe metric tracking, distributed-aware aggregation, anomaly detection, low overhead by design. strict typing, high coverage, CI. shipped.\n\
+             systems instrumentation - research-grade logging bolted into existing high-performance systems to quantify where the work was actually happening, without touching their behavior.\n\
+             \n\
+             infra - self-hosted internal services and deployment automation.\n\
+             \n\
+             // research is just breaking things on purpose and writing down what fell out.",
         ),
         (
             "2023–24",
             "occamsec",
             "software engineer",
-            "frontend + backend for InCenter, an automated breach-and-attack simulation platform. shipped the infra on AWS with terraform + ansible.",
+            "frontend and backend dev for InCenter — an automated breach and attack\n\
+             simulation platform covering web, network, and cloud security.\n\
+             \n\
+             deployed and configured InCenter infra on AWS using terraform and ansible.\n\
+             \n\
+             // the job where breaking things was the actual job description.",
         ),
         (
             "2022–23",
             "iproyal",
             "network software engineer",
-            "network software engineering on proxy infrastructure at scale. yes i thought about packets constantly. yes that was fine.",
+            "network software engineering on proxy infrastructure at scale.\n\
+             yes i thought about packets constantly. yes that was fine.",
         ),
         (
             "2020–23",
             "stealth AI startup",
             "founder & engineer",
-            "solo-built an AI automation + marketing company. reverse-engineered platform APIs, ran stable diffusion pipelines before \"generative AI\" was a buzzword, conversational agents, hands-free multi-platform automation, automated payouts. mostly adult content creators -- pays better, problems are more interesting. scaled it solo until someone bought the whole thing. \"before it was cool.\"",
+            "solo founded and ran an AI automation and marketing company. just me. built everything,\n\
+             sold everything, supported everything.\n\
+             \n\
+             most of my clients were adult content creators was on OnlyFans, Fansly, Twitter,\n\
+             Tumblr, Cam Sites, etc that whole world. also had mainstream social media growth clients and social media marketing agencies work with me to help their customers (YouTube, Instagram, Spotify, Discord, the usual). the adult industry was the bulk of it.\n\
+             \n\
+             honestly the adult entertainment industry pays better and the technical problems are more\n\
+             interesting.\n\
+             \n\
+             what i shipped:\n\
+             \n\
+             - stable diffusion pipelines + custom AI image editing tooling,\n\
+               you know, before \"generative AI\" was a buzzword anyone used\n\
+             - conversational AI agents handling inbound DMs and fan interactions\n\
+             \n\
+             - full platform automation: posting, scheduling, shares, reposts,\n\
+               likes, replies, follows running simultaneously across Twitter,\n\
+               Instagram, Tumblr and more, hands-free\n\
+             - automated transaction handling fan pays, gets acknowledged,\n\
+               money routes to the creator, zero manual intervention\n\
+             - audience targeting and growth systems that turned one-time\n\
+               followers into recurring paying subscribers for my clients\n\
+             - the whole stack was designed so clients checked a dashboard\n\
+               occasionally and otherwise forgot it existed\n\
+             \n\
+             retention was the metric that mattered. clients stayed because their own subscriber bases kept growing and paying.\n\
+             recurring revenue on both ends.\n\
+             \n\
+             ran it all solo. customer acquisition, support, dev, infra, billing\n\
+             \n\
+             scaled it to the point someone made an offer on the whole thing: software, IP, client relationships, resources, everything.\n\
+             asset acquisition.\n\
+             NDA covers buyer identity and terms.\n\
+             \n\
+             // reverse engineered platform APIs, built thin clients for major social and messaging services, ran adult content automation AI infrastructure at scale. from my bed.\n\
+             \"before it was cool.\"",
         ),
         (
             "2021–22",
             "filmtek cloud",
             "embedded linux engineer",
-            "custom kernels, ported linux to embedded devices, kernel + socket level code, firewall/security software, hand-applied firmware patches. ran daily pentests, red/blue teams.",
+            "built and compiled custom kernels. ported linux to embedded devices.\n\
+             wrote kernel-level and socket-level code. developed and modified firewall\n\
+             and security software. custom linux firmware with hand-applied patches.\n\
+             \n\
+             racked servers, NAS, switches. configured DDNS, DHCP, name servers.\n\
+             debugged hardware issues. ran daily internal and external pentests.\n\
+             organized red and blue teams on the company network. wrote security\n\
+             reports and patching plans. automated scanning of new database leaks\n\
+             for employee records. hired and trained new employees.\n\
+             \n\
+             // if it compiles it ships. learned why that's a bad philosophy here.",
         ),
         (
             "2021",
             "goldman sachs",
             "unix sysadmin / IT engineer",
-            "domain user/group management, rewrote linux docs that hadn't been touched in years. resolved bugs that would've evaporated 6M+ in under 5 minutes.",
+            "domain user and group management. rewrote linux and unix documentation\n\
+             that hadn't been touched in years.\n\
+             \n\
+             // the documentation was basically archaeology\n\
+             \n\
+             resolved undocumented server issues\n\
+             for clients and engineers. fixed ICA remote client connectivity.\n\
+             sorted out aruba router, VOIP, and firewall configs.\n\
+             rebooted the rdps;\n\
+             \n\
+             // resolved bugs that would have led to over 6 million in investments to disapear in under 5 minutes",
+        ),
+        (
+            "feb 21",
+            "foxconn",
+            "server engineer",
+            "test servers, storage, switches and sub-assemblies.\n\
+             verify proper components are received per order pick list prior to build.\n\
+             scan all components into the manufacturing shop floor system to ensure proper parts and inventory tracking.\n\
+             use online methods and work instructions to build racks per customer specification.",
+        ),
+        (
+            "2020–21",
+            "pizzeria limone",
+            "software engineer",
+            "built internal tooling to automate analytics and invoicing.\n\
+             found an active RCE exploit a former employee had left running. killed it.\n\
+             debugged a broken SMTP server. built webservers for employee training,\n\
+             interview management, and onboarding.\n\
+             \n\
+             // did incident response at a pizza place. it counted.",
+        ),
+        (
+            "2019",
+            "herbs for health",
+            "tech support",
+            "network monitoring, security config, access permissions, diagnosing\n\
+             networking problems with diagnostic tooling, routine maintenance.\n\
+             \n\
+             // early IT. everyone starts somewhere.",
+        ),
+        (
+            "2014–18",
+            "canyons school district",
+            "IT support",
+            "maintained schools networks, internally and externally tested and reported security flaws and vulnerabilities district wide, fixed teachers and student machines, set up classroom networks and devices.\n\
+             \n\
+             \n\
+             // tldr: i got into 'ethical hacking' by finding holes in networks i was supposed to be using to do homework on ;3\n\
+             // classic origin story",
+        ),
+        (
+            "2016–17",
+            "nickelcade",
+            "repair tech",
+            "fixed arcade and vending machines. soldering, wiring diagrams, replacing\n\
+             mechanical and electrical parts. diagnosed malfunctions, ordered parts,\n\
+             handled billing.\n\
+             \n\
+             // this is where i learned that hardware is just software you can hit",
         ),
     ];
     rows.iter()
@@ -88,6 +215,51 @@ fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
+}
+
+/// Word-wrap each newline-separated paragraph; blank lines become empty rows.
+fn wrap_bio_paragraphs(text: &str, max_width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    for chunk in text.split('\n') {
+        let trimmed = chunk.trim();
+        if trimmed.is_empty() {
+            lines.push(String::new());
+        } else {
+            lines.extend(wrap_text(trimmed, max_width));
+        }
+    }
+    lines
+}
+
+fn push_bio_rows(
+    s: &mut String,
+    branch: &str,
+    text: usize,
+    lines: &[String],
+    pclass: Option<&str>,
+) {
+    let width = text - 3;
+    for line in lines {
+        if line.is_empty() {
+            s.push_str(&format!(
+                "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{} ║</div>",
+                branch,
+                " ".repeat(width)
+            ));
+            continue;
+        }
+        let visible = 3 + line.width();
+        let body = match pclass {
+            Some(cls) => format!("<span class=\"{}\">{}</span>", cls, esc(line)),
+            None => esc(line),
+        };
+        s.push_str(&format!(
+            "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
+            branch,
+            body,
+            " ".repeat(text.saturating_sub(visible))
+        ));
+    }
 }
 
 /// A full-width bordered row: `║ {html padded to text} ║` (text = inner - 2,
@@ -190,19 +362,13 @@ pub fn experience_box(inner: usize, compact: bool) -> String {
                     " ".repeat(text - 3)
                 ));
             }
-            for line in wrap_text(ptext, text - 3) {
-                let visible = 3 + line.width();
-                let body = match pclass {
-                    Some(cls) => format!("<span class=\"{}\">{}</span>", cls, esc(&line)),
-                    None => esc(&line),
-                };
-                s.push_str(&format!(
-                    "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
-                    branch,
-                    body,
-                    " ".repeat(text.saturating_sub(visible))
-                ));
-            }
+            push_bio_rows(
+                &mut s,
+                branch,
+                text,
+                &wrap_bio_paragraphs(ptext, text - 3),
+                *pclass,
+            );
         }
         s.push_str("</div></div>");
     }
