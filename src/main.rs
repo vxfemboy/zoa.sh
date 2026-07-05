@@ -259,6 +259,16 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://zoa.sh/uses</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://zoa.sh/now</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://zoa.sh/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -365,7 +375,6 @@ async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpR
         &mods::about::experience_box(40, true),
     );
     ctx.insert("skills_box", &about.skills_box);
-    ctx.insert("education_box", &about.education_box);
     ctx.insert("links_box", &about.links_box);
     ctx.insert("debug", &config.debug);
 
@@ -418,6 +427,51 @@ async fn projects(
 
     let rendered = tera.render("projects.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
+}
+
+/// Render a simple centered-card page (uses / now): shared chrome + a list of
+/// boxes under `key`, rendered with `template`.
+async fn card_page(
+    tera: &web::Data<Tera>,
+    config: &web::Data<Config>,
+    template: &str,
+    key: &str,
+    boxes: Vec<BoxSizes>,
+) -> Result<HttpResponse, AppError> {
+    let context = ContentManager::new().create_page_context()?;
+    let mut ctx = tera::Context::new();
+    ctx.insert("title_art", &context.title_art);
+    ctx.insert("navigation_box", &context.navigation_box);
+    ctx.insert("footer_box", &context.footer_box);
+    ctx.insert("stars", &context.stars);
+    ctx.insert(key, &boxes);
+    ctx.insert("debug", &config.debug);
+    let rendered = tera.render(template, &ctx)?;
+    Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
+}
+
+/// Uses page — tools & setup (uses.tech style).
+async fn uses(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+    card_page(
+        &tera,
+        &config,
+        "uses.html.tera",
+        "uses",
+        mods::uses::uses_boxes(),
+    )
+    .await
+}
+
+/// Now page — current focus (nownownow.com style).
+async fn now(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+    card_page(
+        &tera,
+        &config,
+        "now.html.tera",
+        "now",
+        mods::now::now_boxes(),
+    )
+    .await
 }
 
 #[actix_web::main]
@@ -511,6 +565,8 @@ async fn main() -> Result<(), AppError> {
             .route("/", web::get().to(index))
             .route("/about", web::get().to(about))
             .route("/projects", web::get().to(projects))
+            .route("/uses", web::get().to(uses))
+            .route("/now", web::get().to(now))
             .route("/blog", web::get().to(blog_index))
             .route("/post/{slug}", web::get().to(post_view))
             .route("/rss.xml", web::get().to(rss_feed))

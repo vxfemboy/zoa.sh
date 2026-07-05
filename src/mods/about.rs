@@ -13,7 +13,6 @@ use unicode_width::UnicodeWidthStr;
 pub struct AboutBoxes {
     pub summary_box: BoxSizes,
     pub skills_box: BoxSizes,
-    pub education_box: BoxSizes,
     pub links_box: BoxSizes,
 }
 
@@ -491,23 +490,18 @@ certifications
 • Certified Boykisser License
 • IC3 Digital Literacy Certification";
 
-    let education = "\
-Canyons Technical Education Center
-computer engineering · 2016-2018
-
-Salt Lake Community College
-network engineering · 2023-2025";
-
     let links = "\
 • github: <a href=\"https://github.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">vxfemboy</a>
 • x: <a href=\"https://x.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">vxfemboy</a>
 • linkedin: <a href=\"https://www.linkedin.com/in/vxfemboy\" target=\"_blank\" rel=\"noopener\">in/vxfemboy</a>
-• email: <a href=\"mailto:zoa@zoa.sh\">zoa@zoa.sh</a>";
+• email: <a href=\"mailto:zoa@zoa.sh\">zoa@zoa.sh</a>
+
+• uses: <a href=\"/uses\">/uses</a>
+• now: <a href=\"/now\">/now</a>";
 
     AboutBoxes {
         summary_box: section("SUMMARY", summary),
         skills_box: section_narrow("SKILLS", skills),
-        education_box: section_narrow("EDUCATION", education),
         links_box: section_narrow("LINKS", links),
     }
 }

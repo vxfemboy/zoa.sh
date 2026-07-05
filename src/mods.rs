@@ -12,11 +12,13 @@ pub mod data;
 pub mod errors;
 pub mod image_converter;
 pub mod markdown;
+pub mod now;
 pub mod projects;
 pub mod responsive;
 pub mod stars;
 pub mod template_builder;
 pub mod text;
+pub mod uses;
 pub mod wasm;
 
 #[cfg(test)]

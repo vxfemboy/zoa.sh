@@ -70,13 +70,6 @@
                 </div>
 
                 <div class="ascii-box">
-                    <div class="box-tiny"><pre>{{ education_box.tiny | safe }}</pre></div>
-                    <div class="box-small"><pre>{{ education_box.small | safe }}</pre></div>
-                    <div class="box-medium"><pre>{{ education_box.medium | safe }}</pre></div>
-                    <div class="box-large"><pre>{{ education_box.large | safe }}</pre></div>
-                </div>
-
-                <div class="ascii-box">
                     <div class="box-tiny"><pre>{{ links_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ links_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ links_box.medium | safe }}</pre></div>
