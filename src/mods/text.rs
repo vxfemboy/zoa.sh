@@ -43,6 +43,18 @@ fn css_color_to_ansi(color: &str) -> String {
     }
 }
 
+/// Extract the `color:` value (not `background-color`) from an inline style
+/// string and return its ANSI escape. Used to carry syntect's per-token code
+/// highlighting into the terminal view.
+fn style_fg_color(style: &str) -> Option<String> {
+    style
+        .split(';')
+        .map(str::trim)
+        .find(|decl| decl.starts_with("color:"))
+        .and_then(|decl| decl.split(':').nth(1))
+        .map(|c| css_color_to_ansi(c.trim()))
+}
+
 /// Extract `color:` rules from CSS into a selector → ANSI map.
 fn parse_css(css_content: &str) -> HashMap<String, String> {
     let mut styles = HashMap::new();
@@ -88,6 +100,7 @@ fn class_ansi(class: &str) -> Option<&'static str> {
         "exp-date" | "asm-reg" => "\x1b[38;2;86;182;194m",  // cyan
         "exp-co" | "asm-str" => "\x1b[38;2;152;195;121m",   // green
         "exp-conn" | "exp-root" | "asm-comment" => "\x1b[38;2;92;99;112m", // dim
+        "md-comment" => "\x1b[38;2;107;116;130m",           // comment grey
         "exp-role" => "\x1b[38;2;171;178;191m",             // light gray
         "exp-toggle" => "\x1b[38;2;198;120;221m",
         _ => return None,
@@ -201,8 +214,37 @@ fn format_element(
         // Lead with a blank line so stacked boxes are visually separated (runs of
         // newlines collapse to one blank line in render_html_to_ansi).
         "pre" => {
-            let text = element.text().collect::<String>();
-            let trimmed = text.trim_matches('\n');
+            // Preserve exact text (borders, padding, newlines) but color inline
+            // class-spans (asm-*, md-comment) by returning to the box's base color
+            // after each — span text adds no characters, so alignment is intact.
+            let mut buf = String::new();
+            for node in element.children() {
+                if let Some(child) = ElementRef::wrap(node) {
+                    let val = child.value();
+                    // Class-based color (asm-*, md-comment, or a CSS .class)...
+                    let class_color: Option<String> = val.attr("class").and_then(|cls| {
+                        cls.split_whitespace().find_map(|c| {
+                            class_ansi(c)
+                                .map(|s| s.to_string())
+                                .or_else(|| css_styles.get(&format!(".{}", c)).cloned())
+                        })
+                    });
+                    // ...or an inline `style="color:#rrggbb"` (syntect code tokens).
+                    let color = class_color.or_else(|| val.attr("style").and_then(style_fg_color));
+                    let text: String = child.text().collect();
+                    match color {
+                        Some(c) => {
+                            buf.push_str(&c);
+                            buf.push_str(&text);
+                            buf.push_str(style); // back to the box's base color
+                        }
+                        None => buf.push_str(&text),
+                    }
+                } else if let Some(t) = node.value().as_text() {
+                    buf.push_str(t);
+                }
+            }
+            let trimmed = buf.trim_matches('\n');
             if !trimmed.trim().is_empty() {
                 output.push_str(&format!("\n{}{}\n", style, trimmed));
                 output.push_str(RESET);

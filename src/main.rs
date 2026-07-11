@@ -580,6 +580,10 @@ async fn main() -> Result<(), AppError> {
             .route("/api/cache/stats", web::get().to(api_cache_stats))
             .route("/api/cache/clear", web::post().to(api_clear_cache))
             .service(Files::new("/static", "static"))
+            // Per-post image assets: a post at /post/<slug> can reference
+            // `assets/<slug>/1.png`, which the browser resolves to
+            // /post/assets/<slug>/1.png. Served from posts/assets/.
+            .service(Files::new("/post/assets", "posts/assets"))
     })
     .bind(format!("{}:{}", config.server.host, config.server.port))?
     .run()

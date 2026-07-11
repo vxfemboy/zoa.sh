@@ -40,7 +40,7 @@ pub fn experience() -> Vec<Job> {
              customer ops. yes the name is real. yes the ASN is live. yes the routing\n\
              tables are beautiful and i am very normal about them.\n\
              \n\
-             ( ･`ω･´) building the internet of tomorrow ヽ(⌐■_■)ノ",
+             // building the internet of tomorrow",
         ),
         (
             "2026",
@@ -216,30 +216,19 @@ fn esc(s: &str) -> String {
         .replace('>', "&gt;")
 }
 
-/// Word-wrap each newline-separated paragraph; blank lines become empty rows.
-fn wrap_bio_paragraphs(text: &str, max_width: usize) -> Vec<String> {
-    let mut lines = Vec::new();
-    for chunk in text.split('\n') {
-        let trimmed = chunk.trim();
-        if trimmed.is_empty() {
-            lines.push(String::new());
-        } else {
-            lines.extend(wrap_text(trimmed, max_width));
-        }
-    }
-    lines
-}
-
+/// Emit a bio paragraph as `║ … ║` rows: split on newlines, word-wrap each
+/// chunk, and render `//` asides in the dimmed comment color.
 fn push_bio_rows(
     s: &mut String,
     branch: &str,
     text: usize,
-    lines: &[String],
-    pclass: Option<&str>,
+    ptext: &str,
+    default_class: Option<&str>,
 ) {
     let width = text - 3;
-    for line in lines {
-        if line.is_empty() {
+    for chunk in ptext.split('\n') {
+        let trimmed = chunk.trim();
+        if trimmed.is_empty() {
             s.push_str(&format!(
                 "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{} ║</div>",
                 branch,
@@ -247,17 +236,26 @@ fn push_bio_rows(
             ));
             continue;
         }
-        let visible = 3 + line.width();
-        let body = match pclass {
-            Some(cls) => format!("<span class=\"{}\">{}</span>", cls, esc(line)),
-            None => esc(line),
+        // `//` asides render as dimmed code comments (all wrapped lines of the
+        // aside, not just the first); other lines keep the paragraph default.
+        let cls = if trimmed.starts_with("//") {
+            Some("md-comment")
+        } else {
+            default_class
         };
-        s.push_str(&format!(
-            "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
-            branch,
-            body,
-            " ".repeat(text.saturating_sub(visible))
-        ));
+        for line in wrap_text(trimmed, width) {
+            let visible = 3 + line.width();
+            let body = match cls {
+                Some(c) => format!("<span class=\"{}\">{}</span>", c, esc(&line)),
+                None => esc(&line),
+            };
+            s.push_str(&format!(
+                "<div class=\"exp-row\">║ <span class=\"exp-conn\">{}</span>{}{} ║</div>",
+                branch,
+                body,
+                " ".repeat(text.saturating_sub(visible))
+            ));
+        }
     }
 }
 
@@ -352,7 +350,7 @@ pub fn experience_box(inner: usize, compact: bool) -> String {
             vec![(job.bio.as_str(), None)]
         };
         s.push_str("<div class=\"exp-bio\">");
-        for (pi, (ptext, pclass)) in paragraphs.iter().enumerate() {
+        for (pi, (ptext, default_class)) in paragraphs.iter().enumerate() {
             if pi > 0 {
                 // Blank branch row between paragraphs.
                 s.push_str(&format!(
@@ -361,13 +359,7 @@ pub fn experience_box(inner: usize, compact: bool) -> String {
                     " ".repeat(text - 3)
                 ));
             }
-            push_bio_rows(
-                &mut s,
-                branch,
-                text,
-                &wrap_bio_paragraphs(ptext, text - 3),
-                *pclass,
-            );
+            push_bio_rows(&mut s, branch, text, ptext, *default_class);
         }
         s.push_str("</div></div>");
     }
@@ -406,6 +398,14 @@ fn render_section(title: &str, body: &str, box_width: usize, wrap_width: usize) 
                 out.push_str(if i == 0 { "• " } else { "  " });
                 out.push_str(wrapped);
                 out.push('\n');
+            }
+        } else if line.trim_start().starts_with("//") {
+            // `//` asides render as dimmed code comments (every wrapped line).
+            // create_header_box counts width excluding the span, so borders align.
+            for wrapped in wrap_text(line, wrap_width) {
+                out.push_str("<span class=\"md-comment\">");
+                out.push_str(&wrapped);
+                out.push_str("</span>\n");
             }
         } else {
             for wrapped in wrap_text(line, wrap_width) {
@@ -462,20 +462,13 @@ fn section_narrow(title: &str, body: &str) -> BoxSizes {
 
 pub fn build_about_boxes() -> AboutBoxes {
     let summary = "\
-low level network software engineer
-chaos computing enthusiast
-professional button pusher
-packet bender
-
-San Francisco, California
-
 <span class=\"asm-kw\">mov</span> <span class=\"asm-reg\">rax</span>, <span class=\"asm-str\">\"about me\"</span> <span class=\"asm-comment\">; ret</span>
 
 self-taught since before i could legally drive. i live at the intersection of kernels, networking, firmware, and whatever rabbit hole i fell into this week. built an ISP, sold a company once. write Rust that would make most people uncomfortable.
 
 daily-drive mainline kernels by choice, not accident. every device i own has run linux for the last 18 years. run BGP in production and think about it in the shower.
 
-i never said i was stable. the code usually is though.";
+// i never said i was stable. the code usually is though.";
 
     let skills = "\
 top skills

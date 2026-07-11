@@ -150,7 +150,34 @@ fn markdown_to_html(markdown: &str) -> String {
         }
     }
 
-    html_output
+    colorize_comments(&html_output)
+}
+
+/// Tag paragraphs that begin with `//` as code-style comments so they render in
+/// the dimmed comment color (the author-voice `// ...` asides). Only whole
+/// paragraphs are matched, so `//` inside code blocks or URLs is untouched.
+fn colorize_comments(html: &str) -> String {
+    let mut out = String::with_capacity(html.len());
+    let mut rest = html;
+
+    while let Some(idx) = rest.find("<p>//") {
+        out.push_str(&rest[..idx]);
+        let after = &rest[idx + 3..]; // skip past "<p>"
+        if let Some(end) = after.find("</p>") {
+            out.push_str("<p class=\"md-comment\">");
+            out.push_str(&after[..end]);
+            out.push_str("</p>");
+            rest = &after[end + 4..];
+        } else {
+            // Unterminated paragraph; emit the rest unchanged.
+            out.push_str(&rest[idx..]);
+            rest = "";
+            break;
+        }
+    }
+
+    out.push_str(rest);
+    out
 }
 
 /// Push a single pulldown-cmark event to HTML output

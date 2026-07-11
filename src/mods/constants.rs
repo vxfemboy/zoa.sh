@@ -23,7 +23,7 @@ pub const WRAP_WIDTH_MEDIUM: usize = 52;
 pub const WRAP_WIDTH_LARGE: usize = 72;
 
 // Star generation
-pub const DEFAULT_STAR_COUNT: usize = 150; // Consider sourcing from Config::content.star_count
+pub const DEFAULT_STAR_COUNT: usize = 90; // Consider sourcing from Config::content.star_count
 
 // Navigation box widths
 pub const NAV_WIDTH_TINY: usize = 35;

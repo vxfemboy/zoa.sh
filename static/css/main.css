@@ -59,12 +59,15 @@ body {
 .star {
     position: absolute;
     color: #fff;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
-                 0 0 12px rgba(255, 255, 255, 0.6),
-                 0 0 16px rgba(255, 255, 255, 0.4);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
     animation: twinkle 3s ease-in-out infinite;
     font-size: 20px;
     line-height: 1;
+    will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .star { animation: none; opacity: 0.6; }
 }
 
 @keyframes twinkle {
@@ -89,7 +92,6 @@ body {
     position: relative;
     z-index: 1;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(2px);
 }
 
 pre {
@@ -223,6 +225,10 @@ pre::after {
     .profile-art { font-size: 11px; }
 }
 
+/* Author-voice `// ...` asides, rendered like dimmed code comments site-wide
+   (blog prose, the experience-tree bios, anywhere the class is applied). */
+.md-comment { color: #6b7482; }
+
 /* ── asm syntax highlight (the `mov rax, "about me" ; ret` flourish) ── */
 .asm-kw      { color: #c678dd; }  /* mnemonic */
 .asm-reg     { color: #56b6c2; }  /* register */
@@ -288,6 +294,13 @@ pre::after {
     flex-direction: column;
     gap: 10px;
     align-items: center;
+}
+
+/* Post pages only: cap the column so long code/tables scroll instead of
+   stretching the page (home keeps its natural, wider width). */
+.main-content-centered .post-content {
+    width: 100%;
+    max-width: 820px;
 }
 
 .main-content-centered .ascii-box {
@@ -375,11 +388,66 @@ pre::after {
 }
 
 .post-body {
+    position: relative;
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid #333;
-    border-radius: 4px;
+    border: none;
+    width: 100%;
     max-width: 100%;
     overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* ASCII double-line frame drawn with real box-drawing glyphs, overlaid on the
+   flowing HTML body so it matches the site's other ╔═╗ boxes. */
+.ascii-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    color: #c3ccd6;
+    font-family: "Departure Mono", "Courier New", monospace;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.ascii-frame-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    height: 1em;
+    white-space: pre;
+    overflow: hidden;
+}
+
+.ascii-frame-top { top: 0; }
+.ascii-frame-bottom { bottom: 0; }
+
+.ascii-frame-fill {
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ascii-frame-fill::before {
+    content: "════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════";
+}
+
+.ascii-frame-v {
+    position: absolute;
+    top: 0.6em;
+    bottom: 0.6em;
+    width: 1ch;
+    overflow: hidden;
+    word-break: break-all;
+    white-space: normal;
+}
+
+.ascii-frame-left { left: 0; }
+.ascii-frame-right { right: 0; }
+
+.ascii-frame-v::before {
+    content: "║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║║";
 }
 
 .post-html-content {
@@ -389,6 +457,10 @@ pre::after {
     max-width: 100%;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    /* Reading content stays left-aligned even where a parent (the mobile
+       .ascii-container) sets text-align: center. Explicit <center> blocks
+       (xkcd, embeds) still center themselves. */
+    text-align: left;
 }
 
 .post-html-content h1,
@@ -422,7 +494,7 @@ pre::after {
     font-family: "Departure Mono", "Courier New", monospace;
 }
 
-.post-html-content pre {
+.post-html-content pre:not(.ascii-scrollbar) {
     background: #2b303b;
     border: 1px solid #4f5b66;
     padding: 15px;
@@ -440,7 +512,7 @@ pre::after {
 }
 
 /* Syntax highlighting overrides for syntect output */
-.post-html-content pre[style] {
+.post-html-content pre[style]:not(.ascii-scrollbar) {
     background: #2b303b !important;
     border: 1px solid #4f5b66;
     padding: 15px;
@@ -464,15 +536,23 @@ pre::after {
 
 .post-html-content blockquote {
     border-left: 3px solid #33aaff;
+    background: rgba(51, 170, 255, 0.06);
     margin: 1em 0;
-    padding-left: 1em;
-    color: #aaa;
+    padding: 0.5em 1em;
+    border-radius: 0 4px 4px 0;
+    color: #bbb;
+    font-style: italic;
 }
+
+.post-html-content blockquote p { margin: 0.3em 0; }
 
 .post-html-content table {
     border-collapse: collapse;
     margin: 1em 0;
     width: 100%;
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 .post-html-content th, .post-html-content td {
@@ -483,6 +563,173 @@ pre::after {
 
 .post-html-content th {
     background: rgba(51, 170, 255, 0.1);
+}
+
+/* Horizontal image filmstrip for posts: `<div class="scroll-container">` with a
+   row of `<img>`s. Auto-scrolls (scroll-container.js), pauses on hover. A WASM
+   ASCII scrollbar (◄──███──►) attaches below it (src/mods/wasm.rs). */
+.post-html-content .scroll-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    margin: 1em 0;
+    max-width: 100%;
+    /* Fallback native scrollbar (hover-only) until the WASM bar attaches. */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.post-html-content .scroll-container:hover {
+    scrollbar-color: #33aaff transparent;
+}
+
+.post-html-content .scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.post-html-content .scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.post-html-content .scroll-container::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 0;
+}
+
+.post-html-content .scroll-container:hover::-webkit-scrollbar-thumb {
+    background: #33aaff;
+}
+
+/* Once the WASM ASCII scrollbar attaches, hide the native one entirely. */
+.post-html-content .scroll-container.has-ascii-scrollbar {
+    scrollbar-width: none;
+}
+
+.post-html-content .scroll-container.has-ascii-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* WASM ASCII lightbox: click a filmstrip image to open it in a draggable
+   ╔═ name ═ ✕ ╗ window (see src/mods/wasm.rs, AsciiLightbox). */
+.lb-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.ascii-lightbox {
+    position: fixed;
+    left: 50%;
+    top: 7%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    padding: 18px;
+    max-width: 92vw;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.ascii-lightbox .lb-img {
+    display: block;
+    max-width: 88vw;
+    max-height: 78vh;
+    width: auto;
+    height: auto;
+    border-radius: 2px;
+}
+
+.ascii-lightbox .lb-titlebar {
+    position: absolute;
+    top: -0.5em;
+    left: 14px;
+    right: 14px;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Departure Mono", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1;
+    color: #c3ccd6;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ascii-lightbox .lb-name,
+.ascii-lightbox .lb-close {
+    background: #000;
+    padding: 0 6px;
+}
+
+.ascii-lightbox .lb-close {
+    cursor: pointer;
+    color: #ff6b6b;
+}
+
+.ascii-lightbox .lb-close:hover {
+    color: #fff;
+    background: #ff6b6b;
+}
+
+@media (max-width: 600px) {
+    .ascii-lightbox { padding: 12px; }
+    .ascii-lightbox .lb-img { max-width: 84vw; max-height: 70vh; }
+}
+
+/* WASM-rendered ASCII scrollbar: box glyphs, hover-only, draggable. */
+.ascii-scrollbar {
+    margin: 4px 0 0.5em;
+    font-family: "Departure Mono", "Courier New", monospace;
+    font-size: 15px;
+    line-height: 1;
+    text-align: center;
+    white-space: pre;
+    color: #4f5b66;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.post-html-content .scroll-container:hover + .ascii-scrollbar,
+.ascii-scrollbar:hover {
+    opacity: 1;
+}
+
+.ascii-scrollbar:hover {
+    color: #33aaff;
+}
+
+/* Regular content images (e.g. the xkcd comic) fit the column and never
+   overflow the page. Filmstrip images opt out below so they stay full-size. */
+.post-html-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.post-html-content .scroll-container img {
+    padding: 10px;
+    max-width: none;
+    max-height: 420px;
+    width: auto;
+    vertical-align: middle;
+    border-radius: 3px;
+}
+
+/* Mobile: shrink the filmstrip images and the ASCII scrollbar so they fit a
+   narrow column, and keep the frame/images from overflowing the post box. */
+@media (max-width: 600px) {
+    .post-html-content .scroll-container img {
+        max-height: 200px;
+        padding: 6px;
+    }
+    .ascii-scrollbar {
+        font-size: 12px;
+    }
+    .post-html-content {
+        padding: 16px 14px;
+    }
 }
 
 .post-html-content strong {

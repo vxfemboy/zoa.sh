@@ -11,20 +11,20 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Watched extensions: Rust, templates, css, js, config.
-EXTS=(rs tera html css js toml)
+# Watched extensions: Rust, templates, css, js, config, and markdown posts.
+EXTS=(rs tera html css js toml md)
 RUN_CMD="cargo run"
 
 if command -v watchexec >/dev/null 2>&1; then
     # Ignore the generated portrait: the server rewrites it on startup (pfp
     # auto-update), and watching it would cause a restart loop.
-    exec watchexec --restart --watch src --watch templates --watch static --watch config.toml \
+    exec watchexec --restart --watch src --watch templates --watch static --watch config.toml --watch posts \
         --exts "$(IFS=,; echo "${EXTS[*]}")" \
         --ignore 'static/wasm/**' --ignore 'target/**' --ignore 'templates/ascii/avatar.*' \
         -- $RUN_CMD
 elif command -v cargo-watch >/dev/null 2>&1; then
     exec cargo watch \
-        -w src -w templates -w static -w config.toml \
+        -w src -w templates -w static -w config.toml -w posts \
         --ignore 'static/wasm/*' --ignore 'templates/ascii/avatar.*' \
         -x run
 else

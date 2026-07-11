@@ -68,7 +68,8 @@ web-sys = { version = "0.3.100", features = [
     "Headers",
     "EventTarget",
     "Event",
-    "DomRect"
+    "DomRect",
+    "NodeList"
 ] }
 js-sys = "0.3.100"
 

@@ -54,6 +54,12 @@
                 </div>
 
                 <div class="post-body">
+                    <div class="ascii-frame" aria-hidden="true">
+                        <span class="ascii-frame-h ascii-frame-top">╔<span class="ascii-frame-fill"></span>╗</span>
+                        <span class="ascii-frame-v ascii-frame-left"></span>
+                        <span class="ascii-frame-v ascii-frame-right"></span>
+                        <span class="ascii-frame-h ascii-frame-bottom">╚<span class="ascii-frame-fill"></span>╝</span>
+                    </div>
                     <div class="post-html-content">
                         {{ content_html | safe }}
                     </div>
@@ -71,5 +77,6 @@
 
     <script type="module" src="/static/js/cat.js"></script>
     <script type="module" src="/static/js/responsive-pre.js"></script>
+    <script type="module" src="/static/js/scroll-container.js"></script>
 </body>
 </html>
