@@ -167,7 +167,9 @@ async fn blog_index(
 }
 
 /// RSS feed for blog posts
-async fn rss_feed() -> Result<HttpResponse, AppError> {
+async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let posts = load_all_posts("posts");
 
     let items: String = posts
@@ -177,14 +179,16 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
             format!(
                 r#"    <item>
       <title>{}</title>
-      <link>https://zoa.sh/post/{}</link>
-      <guid>https://zoa.sh/post/{}</guid>
+      <link>{}/post/{}</link>
+      <guid>{}/post/{}</guid>
       <pubDate>{}</pubDate>
       <description><![CDATA[{}]]></description>
       <content:encoded><![CDATA[{}]]></content:encoded>
     </item>"#,
                 xml_escape(&post.title),
+                site.base_url,
                 post.slug,
+                site.base_url,
                 post.slug,
                 post.date,
                 description,
@@ -199,14 +203,14 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>vxfemboy blog</title>
-    <link>https://zoa.sh/blog</link>
+    <link>{}/blog</link>
     <description>Blog posts from vxfemboy</description>
     <language>en-us</language>
-    <atom:link href="https://zoa.sh/rss.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="{}/rss.xml" rel="self" type="application/rss+xml"/>
 {}
   </channel>
 </rss>"#,
-        items
+        site.base_url, site.base_url, items
     );
 
     Ok(HttpResponse::Ok()
@@ -215,19 +219,26 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
 }
 
 /// Robots.txt for SEO
-async fn robots_txt() -> HttpResponse {
-    let robots = r#"User-agent: *
+async fn robots_txt(req: HttpRequest) -> HttpResponse {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
+    let robots = format!(
+        r#"User-agent: *
 Allow: /
 
-Sitemap: https://zoa.sh/sitemap.xml
-"#;
+Sitemap: {}/sitemap.xml
+"#,
+        site.base_url
+    );
     HttpResponse::Ok()
         .content_type("text/plain; charset=utf-8")
         .body(robots)
 }
 
 /// Sitemap for SEO
-async fn sitemap() -> Result<HttpResponse, AppError> {
+async fn sitemap(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let posts = load_all_posts("posts");
 
     let post_urls: String = posts
@@ -235,12 +246,12 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
         .map(|post| {
             format!(
                 r#"  <url>
-    <loc>https://zoa.sh/post/{}</loc>
+    <loc>{}/post/{}</loc>
     <lastmod>{}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>"#,
-                post.slug, post.date
+                site.base_url, post.slug, post.date
             )
         })
         .collect::<Vec<_>>()
@@ -250,38 +261,39 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://zoa.sh/</loc>
+    <loc>{base}/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/about</loc>
+    <loc>{base}/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/projects</loc>
+    <loc>{base}/projects</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/uses</loc>
+    <loc>{base}/uses</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/now</loc>
+    <loc>{base}/now</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/blog</loc>
+    <loc>{base}/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-{}
+{post_urls}
 </urlset>"#,
-        post_urls
+        base = site.base_url,
+        post_urls = post_urls
     );
 
     Ok(HttpResponse::Ok()
