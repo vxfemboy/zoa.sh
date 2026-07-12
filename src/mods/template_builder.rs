@@ -32,6 +32,13 @@ impl TemplateContextBuilder {
         self
     }
 
+    pub fn with_site(mut self, base_url: &str, canonical: &str, og_image: &str) -> Self {
+        self.context.insert("base_url", base_url);
+        self.context.insert("canonical", canonical);
+        self.context.insert("og_image", og_image);
+        self
+    }
+
     #[allow(dead_code)]
     pub fn with_title_art(mut self, art: &str) -> Self {
         self.context.insert("title_art", art);

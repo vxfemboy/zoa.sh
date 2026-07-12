@@ -8,16 +8,16 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://zoa.sh/uses">
+    <meta property="og:url" content="{{ canonical }}">
     <meta property="og:title" content="Uses - vxfemboy">
     <meta property="og:description" content="neovim · void linux · zsh · the setup">
-    <meta property="og:image" content="https://zoa.sh/static/og-image.png">
+    <meta property="og:image" content="{{ og_image }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Uses - vxfemboy">
     <meta name="twitter:description" content="neovim · void linux · zsh · the setup">
-    <meta name="twitter:image" content="https://zoa.sh/static/og-image.png">
+    <meta name="twitter:image" content="{{ og_image }}">
 
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">

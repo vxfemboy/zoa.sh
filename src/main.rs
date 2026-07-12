@@ -158,6 +158,9 @@ async fn blog_index(
     );
     ctx.insert("current_tag", &valid_tag);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/blog"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("blog.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
@@ -334,6 +337,12 @@ async fn post_view(
     ctx.insert("slug", &post.slug);
     ctx.insert("content_html", &post.content_html);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert(
+        "canonical",
+        &format!("{}/post/{}", site.base_url, post.slug),
+    );
+    ctx.insert("og_image", &site.og_image(post.social.as_deref()));
 
     // Post header box (combined with back link)
     ctx.insert(
@@ -389,6 +398,9 @@ async fn about(
     ctx.insert("skills_box", &about.skills_box);
     ctx.insert("links_box", &about.links_box);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/about"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("about.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
@@ -408,6 +420,7 @@ async fn index(
     let template_context = TemplateContextBuilder::new()
         .with_page_context(&context)
         .with_debug(config.debug)
+        .with_site(&site.base_url, &site.base_url, &site.og_image(None))
         .build();
 
     let rendered = tera.render("index.html.tera", &template_context)?;
@@ -442,6 +455,9 @@ async fn projects(
     ctx.insert("stars", &context.stars);
     ctx.insert("projects", &mods::projects::project_boxes(&site));
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/projects"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("projects.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
@@ -455,9 +471,10 @@ async fn card_page(
     template: &str,
     key: &str,
     boxes: Vec<BoxSizes>,
-    base_url: &str,
+    site: &Site,
+    path: &str,
 ) -> Result<HttpResponse, AppError> {
-    let context = ContentManager::new().create_page_context(base_url)?;
+    let context = ContentManager::new().create_page_context(&site.base_url)?;
     let mut ctx = tera::Context::new();
     ctx.insert("title_art", &context.title_art);
     ctx.insert("navigation_box", &context.navigation_box);
@@ -465,6 +482,9 @@ async fn card_page(
     ctx.insert("stars", &context.stars);
     ctx.insert(key, &boxes);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, path));
+    ctx.insert("og_image", &site.og_image(None));
     let rendered = tera.render(template, &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
@@ -483,7 +503,8 @@ async fn uses(
         "uses.html.tera",
         "uses",
         mods::uses::uses_boxes(),
-        &site.base_url,
+        &site,
+        "/uses",
     )
     .await
 }
@@ -502,7 +523,8 @@ async fn now(
         "now.html.tera",
         "now",
         mods::now::now_boxes(&site),
-        &site.base_url,
+        &site,
+        "/now",
     )
     .await
 }

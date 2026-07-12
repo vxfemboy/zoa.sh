@@ -8,16 +8,16 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="profile">
-    <meta property="og:url" content="https://zoa.sh/about">
+    <meta property="og:url" content="{{ canonical }}">
     <meta property="og:title" content="About - vxfemboy">
     <meta property="og:description" content="low level network software engineer | chaos computing enthusiast | packet bender">
-    <meta property="og:image" content="https://zoa.sh/static/og-image.png">
+    <meta property="og:image" content="{{ og_image }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="About - vxfemboy">
     <meta name="twitter:description" content="low level network software engineer | chaos computing enthusiast | packet bender">
-    <meta name="twitter:image" content="https://zoa.sh/static/og-image.png">
+    <meta name="twitter:image" content="{{ og_image }}">
 
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">
