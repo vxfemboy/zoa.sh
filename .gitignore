@@ -5,3 +5,4 @@ Cargo.lock
 /static/wasm
 CLAUDE.md
 /research
+.superpowers/sdd/
