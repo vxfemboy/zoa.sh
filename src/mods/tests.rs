@@ -178,15 +178,19 @@ mod unit_tests {
         let dir = std::env::temp_dir().join("zoa-md-test");
         std::fs::create_dir_all(&dir).unwrap();
         let p = dir.join("x.md");
+        // Cover quoted and bare/unquoted src forms (posts use both).
         std::fs::write(
             &p,
-            "---\ntitle: X\nslug: x\nsocial: foo/social.png\n---\n\n<img src=\"assets/foo/1.png\">",
+            "---\ntitle: X\nslug: x\nsocial: foo/social.png\n---\n\n<img src=\"assets/foo/1.png\">\n<img src=assets/foo/bare.png>",
         )
         .unwrap();
         let post = markdown::load_markdown_file(&p).unwrap();
         assert_eq!(post.social.as_deref(), Some("foo/social.png"));
         assert!(post.content_html.contains("src=\"/post/assets/foo/1.png\""));
         assert!(!post.content_html.contains("src=\"assets/foo/1.png\""));
+        // bare/unquoted src is rewritten too
+        assert!(post.content_html.contains("src=/post/assets/foo/bare.png"));
+        assert!(!post.content_html.contains("src=assets/foo/bare.png"));
         std::fs::remove_file(&p).ok();
     }
 }

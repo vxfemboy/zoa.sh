@@ -157,9 +157,11 @@ fn markdown_to_html(markdown: &str) -> String {
     let html = colorize_comments(&html_output);
     // Post images are authored `src="assets/…"` (relative). Make them
     // root-absolute so they load whether the post is at /post/<slug> or served
-    // at a vanity domain's root (namecheap.wtf).
+    // at a vanity domain's root (namecheap.wtf). Handle double-quoted,
+    // single-quoted, and bare/unquoted `src=assets/…` forms.
     html.replace("src=\"assets/", "src=\"/post/assets/")
         .replace("src='assets/", "src='/post/assets/")
+        .replace("src=assets/", "src=/post/assets/")
 }
 
 /// Tag paragraphs that begin with `//` as code-style comments so they render in
