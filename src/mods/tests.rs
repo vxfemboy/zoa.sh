@@ -161,4 +161,22 @@ mod unit_tests {
             "https://zoa.sh/post/assets/namecheap/social.png"
         );
     }
+
+    #[test]
+    fn test_markdown_rewrites_relative_asset_images() {
+        // markdown_to_html is private; test via the public loader against a temp file.
+        let dir = std::env::temp_dir().join("zoa-md-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("x.md");
+        std::fs::write(
+            &p,
+            "---\ntitle: X\nslug: x\nsocial: foo/social.png\n---\n\n<img src=\"assets/foo/1.png\">",
+        )
+        .unwrap();
+        let post = markdown::load_markdown_file(&p).unwrap();
+        assert_eq!(post.social.as_deref(), Some("foo/social.png"));
+        assert!(post.content_html.contains("src=\"/post/assets/foo/1.png\""));
+        assert!(!post.content_html.contains("src=\"assets/foo/1.png\""));
+        std::fs::remove_file(&p).ok();
+    }
 }
