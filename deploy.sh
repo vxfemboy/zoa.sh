@@ -88,22 +88,29 @@ incus exec "$CONTAINER" -- sh -euc "
 
 # ── 5. restart + health check ───────────────────────────────────────────────
 log "restarting service…"
-# runsvdir needs a moment to notice a freshly-linked service the first time.
-incus exec "$CONTAINER" -- sh -c "sv start '$SERVICE' >/dev/null 2>&1 || true; sleep 2; sv restart '$SERVICE' || sv up '$SERVICE'"
+# `sv` waits (up to ~7s) for runsvdir to pick up a freshly-linked service, then
+# restarts (or starts it if it wasn't running yet).
+incus exec "$CONTAINER" -- sh -c "sv restart '$SERVICE' 2>/dev/null || sv up '$SERVICE'"
 
 port="$(grep -E '^[[:space:]]*port[[:space:]]*=' config.toml | head -1 | grep -oE '[0-9]+' || echo 8084)"
-log "checking http://localhost:$port inside the container…"
-health="incus exec $CONTAINER -- sh -c '
-    if command -v curl >/dev/null; then curl -fsS -o /dev/null \"http://localhost:$port/\"
-    elif command -v wget >/dev/null; then wget -qO /dev/null \"http://localhost:$port/\"
-    else exit 3; fi'"
-if eval "$health"; then
+log "checking http://localhost:$port inside the container (the startup pfp fetch can add a few seconds)…"
+# Poll for up to ~20s — the server does a GitHub pfp fetch before binding.
+check="if command -v curl >/dev/null; then curl -fsS -o /dev/null \"http://localhost:$port/\"; \
+       elif command -v wget >/dev/null; then wget -qO /dev/null \"http://localhost:$port/\"; \
+       else exit 3; fi"
+ok=1
+for _ in $(seq 1 20); do
+    if incus exec "$CONTAINER" -- sh -c "$check"; then ok=0; break; fi
+    rc=$?; [ "$rc" -eq 3 ] && { ok=3; break; }
+    sleep 1
+done
+if [ "$ok" -eq 0 ]; then
     printf '\033[1;32m:: up ✓\033[0m  %s:%s  (service '\''%s'\'', port %s)\n' "$CONTAINER" "$APP_DIR" "$SERVICE" "$port"
-elif [ $? -eq 3 ]; then
+elif [ "$ok" -eq 3 ]; then
     printf '\033[1;33m?? no curl/wget in container — skipping HTTP check. Service status:\033[0m\n'
     incus exec "$CONTAINER" -- sv status "$SERVICE" || true
 else
-    printf '\033[1;31m!! health check FAILED. Recent logs:\033[0m\n'
+    printf '\033[1;31m!! health check FAILED after 20s. Recent logs:\033[0m\n'
     incus exec "$CONTAINER" -- sh -c "tail -n 20 /var/log/$SERVICE/current 2>/dev/null; sv status $SERVICE" || true
 fi
 
