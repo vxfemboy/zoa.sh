@@ -163,6 +163,16 @@ mod unit_tests {
     }
 
     #[test]
+    fn test_about_boxes_email_swaps_by_site() {
+        let v = site::resolve("vx.gay");
+        let boxes = about::build_about_boxes(&v);
+        assert!(boxes.links_box.large.contains("z@vx.gay"));
+        assert!(!boxes.links_box.large.contains("zoa@zoa.sh"));
+        // repo link literal untouched
+        assert!(boxes.links_box.large.contains("github.com/vxfemboy"));
+    }
+
+    #[test]
     fn test_markdown_rewrites_relative_asset_images() {
         // markdown_to_html is private; test via the public loader against a temp file.
         let dir = std::env::temp_dir().join("zoa-md-test");

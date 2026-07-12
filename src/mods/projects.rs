@@ -2,10 +2,10 @@
 //! ASCII boxes (reusing the `/about` section builder). Full voice retained.
 
 use crate::mods::about::section;
-use crate::mods::BoxSizes;
+use crate::mods::{BoxSizes, Site};
 
 /// One bordered card per project, newest/most-notable first.
-pub fn project_boxes() -> Vec<BoxSizes> {
+pub fn project_boxes(site: &Site) -> Vec<BoxSizes> {
     let projects: &[(&str, &str)] = &[
         (
             "FEMBOY CYBER NETWORKS",
@@ -17,10 +17,10 @@ pub fn project_boxes() -> Vec<BoxSizes> {
         (
             "ZOA.SH",
             "the site you're looking at right now. · rust + wasm\n\n\
-             actix-web rendering responsive ascii boxes, a wasm cat that chases your cursor, a markdown blog with syntax highlighting, and a curl/ansi mode -- run `curl zoa.sh` and the whole site renders in your terminal. the pfp is my github avatar converted to truecolor half-block ansi, from source.\n\n\
+             actix-web rendering responsive ascii boxes, a wasm cat that chases your cursor, a markdown blog with syntax highlighting, and a curl/ansi mode -- run `curl {domain}` and the whole site renders in your terminal. the pfp is my github avatar converted to truecolor half-block ansi, from source.\n\n\
              stack: rust · actix-web · wasm · syntect\n\
              → <a href=\"https://github.com/vxfemboy/zoa.sh\" target=\"_blank\" rel=\"noopener\">github.com/vxfemboy/zoa.sh</a>\n\
-             → or just: curl zoa.sh",
+             → or just: curl {domain}",
         ),
         (
             "AI AUTOMATION CO.",
@@ -38,6 +38,6 @@ pub fn project_boxes() -> Vec<BoxSizes> {
     ];
     projects
         .iter()
-        .map(|(title, body)| section(title, body))
+        .map(|(title, body)| section(title, &site.apply(body)))
         .collect()
 }

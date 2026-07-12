@@ -368,7 +368,7 @@ async fn about(
     let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
     let context = content_manager.create_page_context(&site.base_url)?;
-    let about = mods::about::build_about_boxes();
+    let about = mods::about::build_about_boxes(&site);
 
     let mut ctx = tera::Context::new();
     // Shared chrome reused from the main page context.
@@ -440,7 +440,7 @@ async fn projects(
     ctx.insert("navigation_box", &context.navigation_box);
     ctx.insert("footer_box", &context.footer_box);
     ctx.insert("stars", &context.stars);
-    ctx.insert("projects", &mods::projects::project_boxes());
+    ctx.insert("projects", &mods::projects::project_boxes(&site));
     ctx.insert("debug", &config.debug);
 
     let rendered = tera.render("projects.html.tera", &ctx)?;
@@ -501,7 +501,7 @@ async fn now(
         &config,
         "now.html.tera",
         "now",
-        mods::now::now_boxes(),
+        mods::now::now_boxes(&site),
         &site.base_url,
     )
     .await

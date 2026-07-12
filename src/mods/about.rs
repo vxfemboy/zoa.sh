@@ -6,7 +6,7 @@
 //! `\n` but does not wrap on its own). Bullet/link lines are left intact.
 
 use crate::mods::constants::*;
-use crate::mods::{create_header_box, wrap_text, BoxSizes};
+use crate::mods::{create_header_box, wrap_text, BoxSizes, Site};
 use serde::Serialize;
 use unicode_width::UnicodeWidthStr;
 
@@ -460,7 +460,7 @@ fn section_narrow(title: &str, body: &str) -> BoxSizes {
     }
 }
 
-pub fn build_about_boxes() -> AboutBoxes {
+pub fn build_about_boxes(site: &Site) -> AboutBoxes {
     let summary = "\
 <span class=\"asm-kw\">mov</span> <span class=\"asm-reg\">rax</span>, <span class=\"asm-str\">\"about me\"</span> <span class=\"asm-comment\">; ret</span>
 
@@ -487,14 +487,18 @@ certifications
 • github: <a href=\"https://github.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">vxfemboy</a>
 • x: <a href=\"https://x.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">vxfemboy</a>
 • linkedin: <a href=\"https://www.linkedin.com/in/vxfemboy\" target=\"_blank\" rel=\"noopener\">in/vxfemboy</a>
-• email: <a href=\"mailto:zoa@zoa.sh\">zoa@zoa.sh</a>
+• email: <a href=\"mailto:{email}\">{email}</a>
 
 • uses: <a href=\"/uses\">/uses</a>
 • now: <a href=\"/now\">/now</a>";
 
+    let summary = site.apply(summary);
+    let skills = site.apply(skills);
+    let links = site.apply(links);
+
     AboutBoxes {
-        summary_box: section("SUMMARY", summary),
-        skills_box: section_narrow("SKILLS", skills),
-        links_box: section_narrow("LINKS", links),
+        summary_box: section("SUMMARY", &summary),
+        skills_box: section_narrow("SKILLS", &skills),
+        links_box: section_narrow("LINKS", &links),
     }
 }
