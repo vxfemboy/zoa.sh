@@ -91,13 +91,20 @@ log "restarting service…"
 # runsvdir needs a moment to notice a freshly-linked service the first time.
 incus exec "$CONTAINER" -- sh -c "sv start '$SERVICE' >/dev/null 2>&1 || true; sleep 2; sv restart '$SERVICE' || sv up '$SERVICE'"
 
-port="$(grep -E '^\s*port\s*=' config.toml | head -1 | grep -oE '[0-9]+' || echo 8084)"
+port="$(grep -E '^[[:space:]]*port[[:space:]]*=' config.toml | head -1 | grep -oE '[0-9]+' || echo 8084)"
 log "checking http://localhost:$port inside the container…"
-if incus exec "$CONTAINER" -- sh -c "command -v curl >/dev/null && curl -fsS -o /dev/null http://localhost:$port/ || command -v wget >/dev/null && wget -qO /dev/null http://localhost:$port/"; then
-    log "\033[1;32mup ✓\033[0m  $CONTAINER:$APP_DIR  (service '$SERVICE', port $port)"
-else
-    printf '\033[1;33m??\033[0m health check inconclusive (curl/wget may be absent). Service status:\n'
+health="incus exec $CONTAINER -- sh -c '
+    if command -v curl >/dev/null; then curl -fsS -o /dev/null \"http://localhost:$port/\"
+    elif command -v wget >/dev/null; then wget -qO /dev/null \"http://localhost:$port/\"
+    else exit 3; fi'"
+if eval "$health"; then
+    printf '\033[1;32m:: up ✓\033[0m  %s:%s  (service '\''%s'\'', port %s)\n' "$CONTAINER" "$APP_DIR" "$SERVICE" "$port"
+elif [ $? -eq 3 ]; then
+    printf '\033[1;33m?? no curl/wget in container — skipping HTTP check. Service status:\033[0m\n'
     incus exec "$CONTAINER" -- sv status "$SERVICE" || true
+else
+    printf '\033[1;31m!! health check FAILED. Recent logs:\033[0m\n'
+    incus exec "$CONTAINER" -- sh -c "tail -n 20 /var/log/$SERVICE/current 2>/dev/null; sv status $SERVICE" || true
 fi
 
 echo
