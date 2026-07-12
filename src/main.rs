@@ -579,6 +579,15 @@ async fn main() -> Result<(), AppError> {
             .route("/api/health", web::get().to(api_health))
             .route("/api/cache/stats", web::get().to(api_cache_stats))
             .route("/api/cache/clear", web::post().to(api_clear_cache))
+            // Serve the WASM with no-cache so a browser never mixes a stale
+            // zoa_sh.js with a freshly rebuilt zoa_sh_bg.wasm (or vice versa) —
+            // that hash mismatch throws "index out of bounds" at load. Must be
+            // registered before the general /static handler so it matches first.
+            .service(
+                web::scope("/static/wasm")
+                    .wrap(middleware::DefaultHeaders::new().add(("Cache-Control", "no-cache")))
+                    .service(Files::new("", "static/wasm")),
+            )
             .service(Files::new("/static", "static"))
             // Per-post image assets: a post at /post/<slug> can reference
             // `assets/<slug>/1.png`, which the browser resolves to
