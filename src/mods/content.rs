@@ -35,7 +35,10 @@ impl ContentManager {
         }
     }
 
-    pub fn create_page_context(&self) -> Result<PageContext, Box<dyn std::error::Error>> {
+    pub fn create_page_context(
+        &self,
+        base_url: &str,
+    ) -> Result<PageContext, Box<dyn std::error::Error>> {
         // Load the ASCII title art from file
         let title_art = fs::read_to_string("templates/ascii/title.txt")
             .unwrap_or_else(|_| "vxfemboy".to_string());
@@ -57,7 +60,7 @@ impl ContentManager {
             .collect();
 
         // Create responsive boxes
-        let navigation_box = ResponsiveBoxes::new_navigation(&self.data.nav_items);
+        let navigation_box = ResponsiveBoxes::new_navigation(&self.data.nav_items, base_url);
         let welcome_box = ResponsiveBoxes::new_header("WELCOME", &self.data.welcome_content);
         let about_box = ResponsiveBoxes::new_about_with_ascii(
             &self.data.about_content,
@@ -69,7 +72,7 @@ impl ContentManager {
         let footer_box = ResponsiveBoxes::new_footer(&footer_text);
 
         // Create posts content for different screen sizes
-        let latest_post_box = self.create_posts_content(&processed_posts);
+        let latest_post_box = self.create_posts_content(&processed_posts, base_url);
 
         // Generate stars
         let stars = generate_stars(DEFAULT_STAR_COUNT);
@@ -91,7 +94,7 @@ impl ContentManager {
         })
     }
 
-    fn create_posts_content(&self, posts: &[Post]) -> ResponsiveBoxes {
+    fn create_posts_content(&self, posts: &[Post], base_url: &str) -> ResponsiveBoxes {
         // Create dividers (match box content widths)
         let divider_tiny = "░".repeat(BOX_WIDTH_SMALL.saturating_sub(4));
         let divider_small = "░".repeat(BOX_WIDTH_MEDIUM.saturating_sub(4));
@@ -103,6 +106,7 @@ impl ContentManager {
 
         // Truncate content to 280 chars max before wrapping
         let truncated_content = truncate_content(&latest_post.content, 280);
+        let latest_post_href = format!("{}{}", base_url, latest_post.href);
 
         let mobile_content_tiny = format!(
             "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼    │\n└──────────────────────────┘",
@@ -110,7 +114,7 @@ impl ContentManager {
             latest_post.title,
             latest_post.date,
             wrap_text(&truncated_content, BOX_WIDTH_SMALL.saturating_sub(6)).join("\n"),
-            latest_post.href,
+            latest_post_href,
             latest_post.title,
             divider_tiny
         );
@@ -121,7 +125,7 @@ impl ContentManager {
             latest_post.title,
             latest_post.date,
             wrap_text(&truncated_content, BOX_WIDTH_MEDIUM.saturating_sub(6)).join("\n"),
-            latest_post.href,
+            latest_post_href,
             latest_post.title,
             divider_small
         );
@@ -137,12 +141,13 @@ impl ContentManager {
                 .iter()
                 .map(|post| {
                     let truncated = truncate_content(&post.content, 280);
+                    let href = format!("{}{}", base_url, post.href);
                     format!(
                         "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
                         post.title,
                         post.date,
                         wrap_text(&truncated, WRAP_WIDTH_MEDIUM).join("\n"),
-                        post.href,
+                        href,
                         post.title
                     )
                 })
@@ -166,12 +171,13 @@ impl ContentManager {
                 .iter()
                 .map(|post| {
                     let truncated = truncate_content(&post.content, 280);
+                    let href = format!("{}{}", base_url, post.href);
                     format!(
                         "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
                         post.title,
                         post.date,
                         wrap_text(&truncated, WRAP_WIDTH_LARGE).join("\n"),
-                        post.href,
+                        href,
                         post.title
                     )
                 })

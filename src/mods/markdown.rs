@@ -21,6 +21,10 @@ pub struct MarkdownPost {
     pub tags: Vec<String>,
     pub content_html: String,
     pub content_plain: String,
+    /// Optional per-post OG/social image, a path under `posts/assets/`
+    /// (frontmatter `social:`). None → the default site image.
+    #[allow(dead_code)]
+    pub social: Option<String>,
 }
 
 /// Syntax highlighter using syntect
@@ -150,7 +154,12 @@ fn markdown_to_html(markdown: &str) -> String {
         }
     }
 
-    colorize_comments(&html_output)
+    let html = colorize_comments(&html_output);
+    // Post images are authored `src="assets/…"` (relative). Make them
+    // root-absolute so they load whether the post is at /post/<slug> or served
+    // at a vanity domain's root (namecheap.wtf).
+    html.replace("src=\"assets/", "src=\"/post/assets/")
+        .replace("src='assets/", "src='/post/assets/")
 }
 
 /// Tag paragraphs that begin with `//` as code-style comments so they render in
@@ -275,6 +284,11 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
         })
         .unwrap_or_default();
 
+    let social = frontmatter
+        .get("social")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
     let content_html = markdown_to_html(markdown_content);
     let content_plain = html_to_plain_text(&content_html);
 
@@ -285,6 +299,7 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
         tags,
         content_html,
         content_plain,
+        social,
     })
 }
 

@@ -64,12 +64,12 @@ impl ResponsiveBoxes {
         }
     }
 
-    pub fn new_navigation(items: &[NavItem]) -> Self {
+    pub fn new_navigation(items: &[NavItem], base_url: &str) -> Self {
         Self {
-            tiny: create_nav_box(items, NAV_WIDTH_TINY),
-            small: create_nav_box(items, NAV_WIDTH_SMALL),
-            medium: create_nav_box(items, NAV_WIDTH_MEDIUM),
-            large: create_nav_box(items, NAV_WIDTH_LARGE),
+            tiny: create_nav_box(items, NAV_WIDTH_TINY, base_url),
+            small: create_nav_box(items, NAV_WIDTH_SMALL, base_url),
+            medium: create_nav_box(items, NAV_WIDTH_MEDIUM, base_url),
+            large: create_nav_box(items, NAV_WIDTH_LARGE, base_url),
         }
     }
 

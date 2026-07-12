@@ -2,6 +2,7 @@
 title: WTF Namecheap!?
 date: 2026-05-09
 slug: namecheap-wtf
+social: namecheap/social.png
 tags: dns, sysadmin, rant
 ---
 

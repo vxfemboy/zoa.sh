@@ -76,7 +76,7 @@ mod unit_tests {
     fn test_content_manager() {
         let manager = ContentManager::new();
         let context = manager
-            .create_page_context()
+            .create_page_context("https://vx.gay")
             .expect("Failed to create context");
 
         assert!(!context.title_art.is_empty());
@@ -112,5 +112,81 @@ mod unit_tests {
 
         assert!(context.get("title_art").is_some());
         assert!(context.get("stars").is_some());
+    }
+
+    #[test]
+    fn test_site_resolve_known_and_default() {
+        let z = site::resolve("zoa.sh");
+        assert_eq!(z.domain, "zoa.sh");
+        assert_eq!(z.base_url, "https://zoa.sh");
+        assert_eq!(z.email, "zoa@zoa.sh");
+
+        let v = site::resolve("vx.gay");
+        assert_eq!(v.domain, "vx.gay");
+        assert_eq!(v.email, "z@vx.gay");
+
+        // namecheap.wtf defers to vx.gay
+        let n = site::resolve("namecheap.wtf");
+        assert_eq!(n.domain, "vx.gay");
+        assert_eq!(n.base_url, "https://vx.gay");
+
+        // unknown / direct-IP → default vx.gay
+        assert_eq!(site::resolve("10.75.87.110").domain, "vx.gay");
+    }
+
+    #[test]
+    fn test_site_resolve_normalizes_host() {
+        assert_eq!(site::resolve("ZOA.SH:8084").domain, "zoa.sh");
+        assert_eq!(site::resolve("www.vx.gay").domain, "vx.gay");
+    }
+
+    #[test]
+    fn test_site_apply_tokens_opt_in() {
+        let v = site::resolve("vx.gay");
+        assert_eq!(v.apply("curl {domain}"), "curl vx.gay");
+        assert_eq!(v.apply("mail: {email}"), "mail: z@vx.gay");
+        // literals never swap
+        assert_eq!(
+            v.apply("github.com/vxfemboy/zoa.sh"),
+            "github.com/vxfemboy/zoa.sh"
+        );
+    }
+
+    #[test]
+    fn test_site_og_image() {
+        let z = site::resolve("zoa.sh");
+        assert_eq!(z.og_image(None), "https://zoa.sh/static/og-image.gif");
+        assert_eq!(
+            z.og_image(Some("namecheap/social.png")),
+            "https://zoa.sh/post/assets/namecheap/social.png"
+        );
+    }
+
+    #[test]
+    fn test_about_boxes_email_swaps_by_site() {
+        let v = site::resolve("vx.gay");
+        let boxes = about::build_about_boxes(&v);
+        assert!(boxes.links_box.large.contains("z@vx.gay"));
+        assert!(!boxes.links_box.large.contains("zoa@zoa.sh"));
+        // repo link literal untouched
+        assert!(boxes.links_box.large.contains("github.com/vxfemboy"));
+    }
+
+    #[test]
+    fn test_markdown_rewrites_relative_asset_images() {
+        // markdown_to_html is private; test via the public loader against a temp file.
+        let dir = std::env::temp_dir().join("zoa-md-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("x.md");
+        std::fs::write(
+            &p,
+            "---\ntitle: X\nslug: x\nsocial: foo/social.png\n---\n\n<img src=\"assets/foo/1.png\">",
+        )
+        .unwrap();
+        let post = markdown::load_markdown_file(&p).unwrap();
+        assert_eq!(post.social.as_deref(), Some("foo/social.png"));
+        assert!(post.content_html.contains("src=\"/post/assets/foo/1.png\""));
+        assert!(!post.content_html.contains("src=\"assets/foo/1.png\""));
+        std::fs::remove_file(&p).ok();
     }
 }

@@ -1,6 +1,6 @@
 use actix_files::Files;
 use actix_web::middleware::from_fn;
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
@@ -32,12 +32,15 @@ pub struct BlogQuery {
 
 /// Blog listing page - shows all posts, optionally filtered by tag
 async fn blog_index(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
     query: web::Query<BlogQuery>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
 
     // Extract all unique tags from posts
     let all_tags: Vec<String> = {
@@ -155,13 +158,18 @@ async fn blog_index(
     );
     ctx.insert("current_tag", &valid_tag);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/blog"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("blog.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
 /// RSS feed for blog posts
-async fn rss_feed() -> Result<HttpResponse, AppError> {
+async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let posts = load_all_posts("posts");
 
     let items: String = posts
@@ -171,14 +179,16 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
             format!(
                 r#"    <item>
       <title>{}</title>
-      <link>https://zoa.sh/post/{}</link>
-      <guid>https://zoa.sh/post/{}</guid>
+      <link>{}/post/{}</link>
+      <guid>{}/post/{}</guid>
       <pubDate>{}</pubDate>
       <description><![CDATA[{}]]></description>
       <content:encoded><![CDATA[{}]]></content:encoded>
     </item>"#,
                 xml_escape(&post.title),
+                site.base_url,
                 post.slug,
+                site.base_url,
                 post.slug,
                 post.date,
                 description,
@@ -193,14 +203,14 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>vxfemboy blog</title>
-    <link>https://zoa.sh/blog</link>
+    <link>{}/blog</link>
     <description>Blog posts from vxfemboy</description>
     <language>en-us</language>
-    <atom:link href="https://zoa.sh/rss.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="{}/rss.xml" rel="self" type="application/rss+xml"/>
 {}
   </channel>
 </rss>"#,
-        items
+        site.base_url, site.base_url, items
     );
 
     Ok(HttpResponse::Ok()
@@ -209,19 +219,26 @@ async fn rss_feed() -> Result<HttpResponse, AppError> {
 }
 
 /// Robots.txt for SEO
-async fn robots_txt() -> HttpResponse {
-    let robots = r#"User-agent: *
+async fn robots_txt(req: HttpRequest) -> HttpResponse {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
+    let robots = format!(
+        r#"User-agent: *
 Allow: /
 
-Sitemap: https://zoa.sh/sitemap.xml
-"#;
+Sitemap: {}/sitemap.xml
+"#,
+        site.base_url
+    );
     HttpResponse::Ok()
         .content_type("text/plain; charset=utf-8")
         .body(robots)
 }
 
 /// Sitemap for SEO
-async fn sitemap() -> Result<HttpResponse, AppError> {
+async fn sitemap(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let posts = load_all_posts("posts");
 
     let post_urls: String = posts
@@ -229,12 +246,12 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
         .map(|post| {
             format!(
                 r#"  <url>
-    <loc>https://zoa.sh/post/{}</loc>
+    <loc>{}/post/{}</loc>
     <lastmod>{}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>"#,
-                post.slug, post.date
+                site.base_url, post.slug, post.date
             )
         })
         .collect::<Vec<_>>()
@@ -244,38 +261,39 @@ async fn sitemap() -> Result<HttpResponse, AppError> {
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://zoa.sh/</loc>
+    <loc>{base}/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/about</loc>
+    <loc>{base}/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/projects</loc>
+    <loc>{base}/projects</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/uses</loc>
+    <loc>{base}/uses</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/now</loc>
+    <loc>{base}/now</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://zoa.sh/blog</loc>
+    <loc>{base}/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-{}
+{post_urls}
 </urlset>"#,
-        post_urls
+        base = site.base_url,
+        post_urls = post_urls
     );
 
     Ok(HttpResponse::Ok()
@@ -307,10 +325,13 @@ fn truncate_text(text: &str, max_len: usize) -> String {
 
 /// Individual post page
 async fn post_view(
+    req: HttpRequest,
     path: web::Path<String>,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let slug = path.into_inner();
     let posts = load_all_posts("posts");
 
@@ -328,6 +349,12 @@ async fn post_view(
     ctx.insert("slug", &post.slug);
     ctx.insert("content_html", &post.content_html);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert(
+        "canonical",
+        &format!("{}/post/{}", site.base_url, post.slug),
+    );
+    ctx.insert("og_image", &site.og_image(post.social.as_deref()));
 
     // Post header box (combined with back link)
     ctx.insert(
@@ -342,7 +369,7 @@ async fn post_view(
 
     // Load shared layout elements
     let content_manager = ContentManager::new();
-    let page_context = content_manager.create_page_context()?;
+    let page_context = content_manager.create_page_context(&site.base_url)?;
     ctx.insert("title_art", &page_context.title_art);
     ctx.insert("navigation_box", &page_context.navigation_box);
     ctx.insert("footer_box", &page_context.footer_box);
@@ -353,10 +380,16 @@ async fn post_view(
 }
 
 /// About page - Zoa's bio, experience, skills, education, and links.
-async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn about(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
-    let about = mods::about::build_about_boxes();
+    let context = content_manager.create_page_context(&site.base_url)?;
+    let about = mods::about::build_about_boxes(&site);
 
     let mut ctx = tera::Context::new();
     // Shared chrome reused from the main page context.
@@ -377,22 +410,29 @@ async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpR
     ctx.insert("skills_box", &about.skills_box);
     ctx.insert("links_box", &about.links_box);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/about"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("about.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
 async fn index(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     cache: web::Data<BoxCache>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
 
     let template_context = TemplateContextBuilder::new()
         .with_page_context(&context)
         .with_debug(config.debug)
+        .with_site(&site.base_url, &site.base_url, &site.og_image(None))
         .build();
 
     let rendered = tera.render("index.html.tera", &template_context)?;
@@ -412,18 +452,24 @@ async fn index(
 
 /// Projects page — portfolio cards.
 async fn projects(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
-    let context = ContentManager::new().create_page_context()?;
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
+    let context = ContentManager::new().create_page_context(&site.base_url)?;
 
     let mut ctx = tera::Context::new();
     ctx.insert("title_art", &context.title_art);
     ctx.insert("navigation_box", &context.navigation_box);
     ctx.insert("footer_box", &context.footer_box);
     ctx.insert("stars", &context.stars);
-    ctx.insert("projects", &mods::projects::project_boxes());
+    ctx.insert("projects", &mods::projects::project_boxes(&site));
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, "/projects"));
+    ctx.insert("og_image", &site.og_image(None));
 
     let rendered = tera.render("projects.html.tera", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
@@ -437,8 +483,10 @@ async fn card_page(
     template: &str,
     key: &str,
     boxes: Vec<BoxSizes>,
+    site: &Site,
+    path: &str,
 ) -> Result<HttpResponse, AppError> {
-    let context = ContentManager::new().create_page_context()?;
+    let context = ContentManager::new().create_page_context(&site.base_url)?;
     let mut ctx = tera::Context::new();
     ctx.insert("title_art", &context.title_art);
     ctx.insert("navigation_box", &context.navigation_box);
@@ -446,30 +494,49 @@ async fn card_page(
     ctx.insert("stars", &context.stars);
     ctx.insert(key, &boxes);
     ctx.insert("debug", &config.debug);
+    ctx.insert("base_url", &site.base_url);
+    ctx.insert("canonical", &format!("{}{}", site.base_url, path));
+    ctx.insert("og_image", &site.og_image(None));
     let rendered = tera.render(template, &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
 /// Uses page — tools & setup (uses.tech style).
-async fn uses(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn uses(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     card_page(
         &tera,
         &config,
         "uses.html.tera",
         "uses",
         mods::uses::uses_boxes(),
+        &site,
+        "/uses",
     )
     .await
 }
 
 /// Now page — current focus (nownownow.com style).
-async fn now(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn now(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     card_page(
         &tera,
         &config,
         "now.html.tera",
         "now",
-        mods::now::now_boxes(),
+        mods::now::now_boxes(&site),
+        &site,
+        "/now",
     )
     .await
 }
@@ -579,6 +646,15 @@ async fn main() -> Result<(), AppError> {
             .route("/api/health", web::get().to(api_health))
             .route("/api/cache/stats", web::get().to(api_cache_stats))
             .route("/api/cache/clear", web::post().to(api_clear_cache))
+            // Serve the WASM with no-cache so a browser never mixes a stale
+            // zoa_sh.js with a freshly rebuilt zoa_sh_bg.wasm (or vice versa) —
+            // that hash mismatch throws "index out of bounds" at load. Must be
+            // registered before the general /static handler so it matches first.
+            .service(
+                web::scope("/static/wasm")
+                    .wrap(middleware::DefaultHeaders::new().add(("Cache-Control", "no-cache")))
+                    .service(Files::new("", "static/wasm")),
+            )
             .service(Files::new("/static", "static"))
             // Per-post image assets: a post at /post/<slug> can reference
             // `assets/<slug>/1.png`, which the browser resolves to

@@ -640,7 +640,7 @@ pub fn create_about_box_with_ascii(
     )
 }
 
-pub fn create_nav_box(items: &[NavItem], width: usize) -> String {
+pub fn create_nav_box(items: &[NavItem], width: usize, base_url: &str) -> String {
     let actual_width = width.max(10); // Minimum width of 10 characters
     let content_width = actual_width.saturating_sub(2);
 
@@ -662,7 +662,14 @@ pub fn create_nav_box(items: &[NavItem], width: usize) -> String {
 
     let nav_items = items
         .iter()
-        .map(|item| format!("<a href=\"{}\">{}</a>", item.href, item.text))
+        .map(|item| {
+            let href = if item.href.starts_with('/') {
+                format!("{}{}", base_url, item.href)
+            } else {
+                item.href.clone()
+            };
+            format!("<a href=\"{}\">{}</a>", href, item.text)
+        })
         .collect::<Vec<_>>();
 
     let nav_content = nav_items.join(" | ");
