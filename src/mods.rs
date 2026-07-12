@@ -34,6 +34,7 @@ pub use content::*;
 pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
+#[allow(unused_imports)]
 pub use site::Site;
 pub use stars::*;
 pub use template_builder::*;

@@ -3,6 +3,8 @@
 //! tag, email, and `{domain}`/`{email}` token is rendered for the domain the
 //! visitor arrived on. namecheap.wtf and any unknown host default to vx.gay.
 
+#![allow(dead_code)]
+
 /// The resolved identity for one request.
 pub struct Site {
     pub domain: String,
