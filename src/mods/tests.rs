@@ -113,4 +113,52 @@ mod unit_tests {
         assert!(context.get("title_art").is_some());
         assert!(context.get("stars").is_some());
     }
+
+    #[test]
+    fn test_site_resolve_known_and_default() {
+        let z = site::resolve("zoa.sh");
+        assert_eq!(z.domain, "zoa.sh");
+        assert_eq!(z.base_url, "https://zoa.sh");
+        assert_eq!(z.email, "zoa@zoa.sh");
+
+        let v = site::resolve("vx.gay");
+        assert_eq!(v.domain, "vx.gay");
+        assert_eq!(v.email, "z@vx.gay");
+
+        // namecheap.wtf defers to vx.gay
+        let n = site::resolve("namecheap.wtf");
+        assert_eq!(n.domain, "vx.gay");
+        assert_eq!(n.base_url, "https://vx.gay");
+
+        // unknown / direct-IP → default vx.gay
+        assert_eq!(site::resolve("10.75.87.110").domain, "vx.gay");
+    }
+
+    #[test]
+    fn test_site_resolve_normalizes_host() {
+        assert_eq!(site::resolve("ZOA.SH:8084").domain, "zoa.sh");
+        assert_eq!(site::resolve("www.vx.gay").domain, "vx.gay");
+    }
+
+    #[test]
+    fn test_site_apply_tokens_opt_in() {
+        let v = site::resolve("vx.gay");
+        assert_eq!(v.apply("curl {domain}"), "curl vx.gay");
+        assert_eq!(v.apply("mail: {email}"), "mail: z@vx.gay");
+        // literals never swap
+        assert_eq!(
+            v.apply("github.com/vxfemboy/zoa.sh"),
+            "github.com/vxfemboy/zoa.sh"
+        );
+    }
+
+    #[test]
+    fn test_site_og_image() {
+        let z = site::resolve("zoa.sh");
+        assert_eq!(z.og_image(None), "https://zoa.sh/static/og-image.gif");
+        assert_eq!(
+            z.og_image(Some("namecheap/social.png")),
+            "https://zoa.sh/post/assets/namecheap/social.png"
+        );
+    }
 }

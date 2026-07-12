@@ -15,6 +15,7 @@ pub mod markdown;
 pub mod now;
 pub mod projects;
 pub mod responsive;
+pub mod site;
 pub mod stars;
 pub mod template_builder;
 pub mod text;
@@ -33,6 +34,7 @@ pub use content::*;
 pub use data::{Post, SiteData};
 pub use errors::*;
 pub use responsive::*;
+pub use site::Site;
 pub use stars::*;
 pub use template_builder::*;
 
