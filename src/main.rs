@@ -1,6 +1,6 @@
 use actix_files::Files;
 use actix_web::middleware::from_fn;
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
@@ -32,12 +32,15 @@ pub struct BlogQuery {
 
 /// Blog listing page - shows all posts, optionally filtered by tag
 async fn blog_index(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
     query: web::Query<BlogQuery>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
 
     // Extract all unique tags from posts
     let all_tags: Vec<String> = {
@@ -307,10 +310,13 @@ fn truncate_text(text: &str, max_len: usize) -> String {
 
 /// Individual post page
 async fn post_view(
+    req: HttpRequest,
     path: web::Path<String>,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let slug = path.into_inner();
     let posts = load_all_posts("posts");
 
@@ -342,7 +348,7 @@ async fn post_view(
 
     // Load shared layout elements
     let content_manager = ContentManager::new();
-    let page_context = content_manager.create_page_context()?;
+    let page_context = content_manager.create_page_context(&site.base_url)?;
     ctx.insert("title_art", &page_context.title_art);
     ctx.insert("navigation_box", &page_context.navigation_box);
     ctx.insert("footer_box", &page_context.footer_box);
@@ -353,9 +359,15 @@ async fn post_view(
 }
 
 /// About page - Zoa's bio, experience, skills, education, and links.
-async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn about(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
     let about = mods::about::build_about_boxes();
 
     let mut ctx = tera::Context::new();
@@ -383,12 +395,15 @@ async fn about(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpR
 }
 
 async fn index(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     cache: web::Data<BoxCache>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
 
     let template_context = TemplateContextBuilder::new()
         .with_page_context(&context)
@@ -412,10 +427,13 @@ async fn index(
 
 /// Projects page — portfolio cards.
 async fn projects(
+    req: HttpRequest,
     tera: web::Data<Tera>,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, AppError> {
-    let context = ContentManager::new().create_page_context()?;
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
+    let context = ContentManager::new().create_page_context(&site.base_url)?;
 
     let mut ctx = tera::Context::new();
     ctx.insert("title_art", &context.title_art);
@@ -437,8 +455,9 @@ async fn card_page(
     template: &str,
     key: &str,
     boxes: Vec<BoxSizes>,
+    base_url: &str,
 ) -> Result<HttpResponse, AppError> {
-    let context = ContentManager::new().create_page_context()?;
+    let context = ContentManager::new().create_page_context(base_url)?;
     let mut ctx = tera::Context::new();
     ctx.insert("title_art", &context.title_art);
     ctx.insert("navigation_box", &context.navigation_box);
@@ -451,25 +470,39 @@ async fn card_page(
 }
 
 /// Uses page — tools & setup (uses.tech style).
-async fn uses(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn uses(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     card_page(
         &tera,
         &config,
         "uses.html.tera",
         "uses",
         mods::uses::uses_boxes(),
+        &site.base_url,
     )
     .await
 }
 
 /// Now page — current focus (nownownow.com style).
-async fn now(tera: web::Data<Tera>, config: web::Data<Config>) -> Result<HttpResponse, AppError> {
+async fn now(
+    req: HttpRequest,
+    tera: web::Data<Tera>,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     card_page(
         &tera,
         &config,
         "now.html.tera",
         "now",
         mods::now::now_boxes(),
+        &site.base_url,
     )
     .await
 }

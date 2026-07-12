@@ -76,7 +76,7 @@ mod unit_tests {
     fn test_content_manager() {
         let manager = ContentManager::new();
         let context = manager
-            .create_page_context()
+            .create_page_context("https://vx.gay")
             .expect("Failed to create context");
 
         assert!(!context.title_art.is_empty());

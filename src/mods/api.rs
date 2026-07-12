@@ -1,16 +1,20 @@
-use crate::mods::{AppError, BoxCache, ContentManager};
-use actix_web::{web, HttpResponse, Result};
+use crate::mods::{self, AppError, BoxCache, ContentManager};
+use actix_web::{web, HttpRequest, HttpResponse, Result};
 
-pub async fn api_posts() -> Result<HttpResponse, AppError> {
+pub async fn api_posts(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let content_manager = ContentManager::new();
-    let context = content_manager.create_page_context()?;
+    let context = content_manager.create_page_context(&site.base_url)?;
 
     Ok(HttpResponse::Ok().json(context.posts))
 }
 
-pub async fn api_categories() -> Result<HttpResponse, AppError> {
+pub async fn api_categories(req: HttpRequest) -> Result<HttpResponse, AppError> {
+    let host = req.connection_info().host().to_string();
+    let site = mods::site::resolve(&host);
     let _content_manager = ContentManager::new();
-    let _context = _content_manager.create_page_context()?;
+    let _context = _content_manager.create_page_context(&site.base_url)?;
 
     // Extract categories from the context
     let categories = vec![
