@@ -7,7 +7,8 @@
 use std::fs;
 use std::path::Path;
 
-use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use std::collections::HashSet;
 use syntect::highlighting::ThemeSet;
 use syntect::html::highlighted_html_for_string;
 use syntect::parsing::SyntaxSet;
@@ -99,6 +100,37 @@ fn parse_frontmatter(content: &str) -> (std::collections::HashMap<String, String
     (map, content)
 }
 
+fn heading_num(level: HeadingLevel) -> u32 {
+    match level {
+        HeadingLevel::H1 => 1,
+        HeadingLevel::H2 => 2,
+        HeadingLevel::H3 => 3,
+        HeadingLevel::H4 => 4,
+        HeadingLevel::H5 => 5,
+        HeadingLevel::H6 => 6,
+    }
+}
+
+/// Ensure a slug is unique within one document (append -2, -3, … on collision).
+fn unique_slug(base: &str, used: &mut HashSet<String>) -> String {
+    let base = if base.is_empty() {
+        "section".to_string()
+    } else {
+        base.to_string()
+    };
+    if used.insert(base.clone()) {
+        return base;
+    }
+    let mut n = 2;
+    loop {
+        let cand = format!("{base}-{n}");
+        if used.insert(cand.clone()) {
+            return cand;
+        }
+        n += 1;
+    }
+}
+
 /// Convert markdown to HTML with syntax highlighting for code blocks
 fn markdown_to_html(markdown: &str) -> String {
     let mut options = Options::empty();
@@ -112,6 +144,10 @@ fn markdown_to_html(markdown: &str) -> String {
     let mut html_output = String::new();
     let mut code_block_lang: Option<String> = None;
     let mut code_block_content = String::new();
+    let mut heading: Option<HeadingLevel> = None;
+    let mut heading_html = String::new();
+    let mut heading_text = String::new();
+    let mut used_slugs: HashSet<String> = HashSet::new();
 
     for event in parser {
         match event {
@@ -141,6 +177,30 @@ fn markdown_to_html(markdown: &str) -> String {
             Event::Text(text) if code_block_lang.is_some() || !code_block_content.is_empty() => {
                 // Inside a code block - accumulate content
                 code_block_content.push_str(&text);
+            }
+            Event::Start(Tag::Heading { level, .. }) => {
+                heading = Some(level);
+                heading_html.clear();
+                heading_text.clear();
+            }
+            Event::End(TagEnd::Heading(_)) => {
+                let lvl = heading.take().map(heading_num).unwrap_or(1);
+                if lvl >= 2 {
+                    let slug = unique_slug(&slugify(&heading_text), &mut used_slugs);
+                    html_output.push_str(&format!(
+                        "<h{lvl} id=\"{slug}\">{heading_html}<a class=\"heading-anchor\" href=\"#{slug}\" aria-label=\"link to this section\">#</a></h{lvl}>"
+                    ));
+                } else {
+                    html_output.push_str(&format!("<h{lvl}>{heading_html}</h{lvl}>"));
+                }
+            }
+            ev if heading.is_some() => {
+                if let Event::Text(ref t) = ev {
+                    heading_text.push_str(t);
+                } else if let Event::Code(ref c) = ev {
+                    heading_text.push_str(c);
+                }
+                push_html_event(&mut heading_html, ev);
             }
             Event::Text(text) if code_block_lang.is_none() && code_block_content.is_empty() => {
                 // Normal text outside code blocks

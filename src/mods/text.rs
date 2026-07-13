@@ -200,7 +200,28 @@ fn format_element(
         "script" | "style" | "head" | "noscript" => {}
 
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
-            let text = element.text().collect::<String>().trim().to_string();
+            let text = element
+                .children()
+                .filter_map(|n| {
+                    if let Some(el) = ElementRef::wrap(n) {
+                        let is_anchor = el
+                            .value()
+                            .attr("class")
+                            .unwrap_or("")
+                            .split_whitespace()
+                            .any(|c| c == "heading-anchor");
+                        if is_anchor {
+                            None
+                        } else {
+                            Some(el.text().collect::<String>())
+                        }
+                    } else {
+                        n.value().as_text().map(|t| t.to_string())
+                    }
+                })
+                .collect::<String>()
+                .trim()
+                .to_string();
             if !text.is_empty() {
                 let header_color = "\x1b[38;2;139;92;246m"; // purple
                 output.push_str(&format!(

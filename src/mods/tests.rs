@@ -205,4 +205,29 @@ mod unit_tests {
         assert_eq!(markdown::slugify("C++ & Rust"), "c-rust");
         assert_eq!(markdown::slugify(""), "");
     }
+
+    #[test]
+    fn test_markdown_heading_anchors() {
+        let dir = std::env::temp_dir().join("zoa-md-head");
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("h.md");
+        std::fs::write(
+            &p,
+            "---\ntitle: T\nslug: t\n---\n\n# Title\n\n## Foo Bar\n\ntext\n\n## Foo Bar\n\n### Baz",
+        )
+        .unwrap();
+        let post = markdown::load_markdown_file(&p).unwrap();
+        let h = &post.content_html;
+        // h2 gets an id + anchor
+        assert!(h.contains("<h2 id=\"foo-bar\">"));
+        assert!(h.contains("class=\"heading-anchor\" href=\"#foo-bar\""));
+        // duplicate heading text is deduped
+        assert!(h.contains("<h2 id=\"foo-bar-2\">"));
+        // h3 anchored too
+        assert!(h.contains("<h3 id=\"baz\">"));
+        // h1 (post title) is NOT given an anchor
+        assert!(h.contains("<h1"));
+        assert!(!h.contains("id=\"title\""));
+        std::fs::remove_file(&p).ok();
+    }
 }
