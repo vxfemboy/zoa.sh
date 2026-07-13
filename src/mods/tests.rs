@@ -230,4 +230,19 @@ mod unit_tests {
         assert!(!h.contains("id=\"title\""));
         std::fs::remove_file(&p).ok();
     }
+
+    #[test]
+    fn test_company_bit_map_is_stable_and_alphabetical() {
+        let m = about::company_bit_map();
+        // every bit is unique and contiguous 0..N
+        let mut bits: Vec<u32> = m.values().copied().collect();
+        bits.sort_unstable();
+        for (i, b) in bits.iter().enumerate() {
+            assert_eq!(*b, i as u32, "bits must be contiguous 0..N");
+        }
+        // alphabetical: an earlier slug has a lower bit than a later one
+        assert!(m["canyons-school-district"] < m["nickelcade"]);
+        // rendered jobs carry data-bit
+        assert!(about::experience_box(78, false).contains("data-bit="));
+    }
 }
