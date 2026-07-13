@@ -218,14 +218,17 @@ mod unit_tests {
         .unwrap();
         let post = markdown::load_markdown_file(&p).unwrap();
         let h = &post.content_html;
-        // h2 gets an id + anchor
-        assert!(h.contains("<h2 id=\"foo-bar\">"));
-        assert!(h.contains("class=\"heading-anchor\" href=\"#foo-bar\""));
+        // h2 gets an id, and renders as a plain heading (no injected anchor / `#`)
+        assert!(h.contains("<h2 id=\"foo-bar\">Foo Bar</h2>"));
+        // no clickable anchor or stray `#` is injected into headings
+        assert!(!h.contains("heading-anchor"));
+        assert!(!h.contains("heading-link"));
+        assert!(!h.contains(">#</a>"));
         // duplicate heading text is deduped
         assert!(h.contains("<h2 id=\"foo-bar-2\">"));
-        // h3 anchored too
-        assert!(h.contains("<h3 id=\"baz\">"));
-        // h1 (post title) is NOT given an anchor
+        // h3 gets an id too
+        assert!(h.contains("<h3 id=\"baz\">Baz</h3>"));
+        // h1 (post title) is NOT given an id
         assert!(h.contains("<h1"));
         assert!(!h.contains("id=\"title\""));
         std::fs::remove_file(&p).ok();

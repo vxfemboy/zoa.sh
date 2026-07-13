@@ -187,9 +187,7 @@ fn markdown_to_html(markdown: &str) -> String {
                 let lvl = heading.take().map(heading_num).unwrap_or(1);
                 if lvl >= 2 {
                     let slug = unique_slug(&slugify(&heading_text), &mut used_slugs);
-                    html_output.push_str(&format!(
-                        "<h{lvl} id=\"{slug}\">{heading_html}<a class=\"heading-anchor\" href=\"#{slug}\" aria-label=\"link to this section\">#</a></h{lvl}>"
-                    ));
+                    html_output.push_str(&format!("<h{lvl} id=\"{slug}\">{heading_html}</h{lvl}>"));
                 } else {
                     html_output.push_str(&format!("<h{lvl}>{heading_html}</h{lvl}>"));
                 }

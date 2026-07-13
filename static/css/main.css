@@ -740,20 +740,10 @@ pre::after {
     color: #ccc;
 }
 
-/* Blog heading anchors: hover-reveal `#` link + smooth in-page jumps. */
+/* Blog headings: the title itself is the in-page deep-link (no visible `#`).
+   Colour/underline come from the shared `.post-html-content a` rule, so at rest it
+   looks exactly like the old plain heading; hovering underlines it as a link hint. */
 html { scroll-behavior: smooth; }
 .post-html-content h2,
 .post-html-content h3,
 .post-html-content h4 { scroll-margin-top: 1.2em; }
-.post-html-content .heading-anchor {
-    margin-left: 0.4em;
-    color: #4f5b66;
-    text-decoration: none;
-    opacity: 0;
-    transition: opacity 0.15s ease, color 0.15s ease;
-}
-.post-html-content h2:hover .heading-anchor,
-.post-html-content h3:hover .heading-anchor,
-.post-html-content h4:hover .heading-anchor,
-.post-html-content .heading-anchor:focus { opacity: 1; }
-.post-html-content .heading-anchor:hover { color: #33aaff; }
