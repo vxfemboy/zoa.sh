@@ -747,3 +747,11 @@ html { scroll-behavior: smooth; }
 .post-html-content h2,
 .post-html-content h3,
 .post-html-content h4 { scroll-margin-top: 1.2em; }
+/* Headings with an id are clickable section links (JS-driven, no visible `#`);
+   a pointer cursor + hover underline is the only affordance. */
+.post-html-content h2[id],
+.post-html-content h3[id],
+.post-html-content h4[id] { cursor: pointer; }
+.post-html-content h2[id]:hover,
+.post-html-content h3[id]:hover,
+.post-html-content h4[id]:hover { text-decoration: underline; }
