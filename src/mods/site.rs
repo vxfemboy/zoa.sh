@@ -21,6 +21,17 @@ impl Site {
         }
     }
 
+    /// Local development: mirror the exact host+port the visitor used over plain
+    /// `http`, so self-referential links stay on localhost instead of bouncing to
+    /// the production `https://vx.gay`. `host` is the full `Host` header (with port).
+    fn dev(host: &str) -> Self {
+        Self {
+            domain: host.to_string(),
+            base_url: format!("http://{host}"),
+            email: "zoa@zoa.sh".to_string(),
+        }
+    }
+
     /// Substitute the opt-in tokens. Only `{domain}` and `{email}` swap; every
     /// other character (including literal domain names) is left untouched.
     pub fn apply(&self, s: &str) -> String {
@@ -44,11 +55,14 @@ impl Site {
 
 /// Resolve the effective site from a request `Host` header value.
 pub fn resolve(host: &str) -> Site {
-    let host = host.split(':').next().unwrap_or(host).trim().to_lowercase();
-    let host = host.strip_prefix("www.").unwrap_or(&host);
-    match host {
+    let full = host.trim();
+    let bare = full.split(':').next().unwrap_or(full).trim().to_lowercase();
+    let bare = bare.strip_prefix("www.").unwrap_or(&bare);
+    match bare {
         "zoa.sh" => Site::new("zoa.sh", "zoa@zoa.sh"),
-        // vx.gay, namecheap.wtf (defers), and anything unknown → vx.gay.
+        // Local dev: keep the visitor on the host+port they actually used.
+        "localhost" | "127.0.0.1" => Site::dev(full),
+        // vx.gay, namecheap.wtf (defers), and anything else unknown → vx.gay.
         _ => Site::new("vx.gay", "z@vx.gay"),
     }
 }

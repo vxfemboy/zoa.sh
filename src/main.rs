@@ -310,12 +310,16 @@ fn xml_escape(s: &str) -> String {
         .replace('\'', "&apos;")
 }
 
-/// Truncate text to max length at word boundary
+/// Truncate text to `max_len` characters at a word boundary. Counts by chars
+/// (not bytes) so multi-byte content — emoji, arrows, box-drawing glyphs — never
+/// slices across a UTF-8 boundary and panics.
 fn truncate_text(text: &str, max_len: usize) -> String {
-    if text.len() <= max_len {
+    if text.chars().count() <= max_len {
         return text.to_string();
     }
-    let truncated = &text[..max_len];
+    let truncated: String = text.chars().take(max_len).collect();
+    // `rfind(' ')` returns a byte index at a char boundary (the space), so
+    // slicing `truncated` there is always safe.
     if let Some(last_space) = truncated.rfind(' ') {
         format!("{}...", &truncated[..last_space])
     } else {

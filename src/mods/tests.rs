@@ -135,6 +135,18 @@ mod unit_tests {
     }
 
     #[test]
+    fn test_site_resolve_local_dev_stays_on_host() {
+        // localhost keeps the exact host+port over http (no bounce to vx.gay).
+        let d = site::resolve("localhost:8084");
+        assert_eq!(d.base_url, "http://localhost:8084");
+        assert_eq!(d.domain, "localhost:8084");
+        assert_eq!(
+            site::resolve("127.0.0.1:8080").base_url,
+            "http://127.0.0.1:8080"
+        );
+    }
+
+    #[test]
     fn test_site_resolve_normalizes_host() {
         assert_eq!(site::resolve("ZOA.SH:8084").domain, "zoa.sh");
         assert_eq!(site::resolve("www.vx.gay").domain, "vx.gay");
