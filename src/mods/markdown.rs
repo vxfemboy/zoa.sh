@@ -233,6 +233,19 @@ fn html_to_plain_text(html: &str) -> String {
         .join("\n")
 }
 
+/// URL-safe slug: lowercase, `[a-z0-9]` kept, everything else collapsed to `-`,
+/// with leading/trailing dashes trimmed.
+pub fn slugify(s: &str) -> String {
+    s.to_lowercase()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect::<String>()
+        .split('-')
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
 /// Generate a slug from the filename or title
 fn generate_slug(filename: &str, title: &str) -> String {
     // Prefer filename-based slug (without .md extension)
@@ -242,15 +255,7 @@ fn generate_slug(filename: &str, title: &str) -> String {
     }
 
     // Fall back to title-based slug
-    title
-        .to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '-' })
-        .collect::<String>()
-        .split('-')
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join("-")
+    slugify(title)
 }
 
 /// Load a single markdown file

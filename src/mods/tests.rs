@@ -193,4 +193,16 @@ mod unit_tests {
         assert!(!post.content_html.contains("src=assets/foo/bare.png"));
         std::fs::remove_file(&p).ok();
     }
+
+    #[test]
+    fn test_slugify() {
+        assert_eq!(
+            markdown::slugify("registry vs registrar, and what EPP is"),
+            "registry-vs-registrar-and-what-epp-is"
+        );
+        assert_eq!(markdown::slugify("Filmtek Cloud"), "filmtek-cloud");
+        assert_eq!(markdown::slugify("  --Hello,  World!!  "), "hello-world");
+        assert_eq!(markdown::slugify("C++ & Rust"), "c-rust");
+        assert_eq!(markdown::slugify(""), "");
+    }
 }
