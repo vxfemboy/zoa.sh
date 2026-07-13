@@ -210,6 +210,24 @@ pub fn experience() -> Vec<Job> {
         .collect()
 }
 
+/// Stable per-company bit index for the `#exp;<base36 bitmask>` deep-links.
+/// Unique company slugs sorted alphabetically → bit 0..N. Reordering the
+/// timeline never changes a company's bit; only renaming a company does.
+pub(crate) fn company_bit_map() -> std::collections::HashMap<String, u32> {
+    let mut slugs: Vec<String> = experience()
+        .iter()
+        .map(|j| crate::mods::markdown::slugify(&j.company))
+        .collect::<std::collections::HashSet<_>>()
+        .into_iter()
+        .collect();
+    slugs.sort();
+    slugs
+        .into_iter()
+        .enumerate()
+        .map(|(i, s)| (s, i as u32))
+        .collect()
+}
+
 fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -300,6 +318,7 @@ pub fn experience_box(inner: usize, compact: bool) -> String {
     ));
 
     let jobs = experience();
+    let bits = company_bit_map();
     let last = jobs.len().saturating_sub(1);
     for (i, job) in jobs.iter().enumerate() {
         let conn = if i == last { "└─" } else { "├─" };
@@ -331,7 +350,8 @@ pub fn experience_box(inner: usize, compact: bool) -> String {
                 ),
             )
         };
-        s.push_str("<div class=\"exp-job\">");
+        let bit = bits[&crate::mods::markdown::slugify(&job.company)];
+        s.push_str(&format!("<div class=\"exp-job\" data-bit=\"{bit}\">"));
         s.push_str(&format!(
             "<button type=\"button\" class=\"exp-row exp-head\">║ {}{} ║</button>",
             head_html,

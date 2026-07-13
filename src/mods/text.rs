@@ -200,6 +200,9 @@ fn format_element(
         "script" | "style" | "head" | "noscript" => {}
 
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
+            // The heading's title is wrapped in an `<a class="heading-link">` for
+            // in-page deep-linking; `.text()` flattens it to the plain title (no
+            // stray `#`), so the terminal view stays clean.
             let text = element.text().collect::<String>().trim().to_string();
             if !text.is_empty() {
                 let header_color = "\x1b[38;2;139;92;246m"; // purple

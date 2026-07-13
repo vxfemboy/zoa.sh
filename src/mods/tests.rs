@@ -135,6 +135,18 @@ mod unit_tests {
     }
 
     #[test]
+    fn test_site_resolve_local_dev_stays_on_host() {
+        // localhost keeps the exact host+port over http (no bounce to vx.gay).
+        let d = site::resolve("localhost:8084");
+        assert_eq!(d.base_url, "http://localhost:8084");
+        assert_eq!(d.domain, "localhost:8084");
+        assert_eq!(
+            site::resolve("127.0.0.1:8080").base_url,
+            "http://127.0.0.1:8080"
+        );
+    }
+
+    #[test]
     fn test_site_resolve_normalizes_host() {
         assert_eq!(site::resolve("ZOA.SH:8084").domain, "zoa.sh");
         assert_eq!(site::resolve("www.vx.gay").domain, "vx.gay");
@@ -192,5 +204,60 @@ mod unit_tests {
         assert!(post.content_html.contains("src=/post/assets/foo/bare.png"));
         assert!(!post.content_html.contains("src=assets/foo/bare.png"));
         std::fs::remove_file(&p).ok();
+    }
+
+    #[test]
+    fn test_slugify() {
+        assert_eq!(
+            markdown::slugify("registry vs registrar, and what EPP is"),
+            "registry-vs-registrar-and-what-epp-is"
+        );
+        assert_eq!(markdown::slugify("Filmtek Cloud"), "filmtek-cloud");
+        assert_eq!(markdown::slugify("  --Hello,  World!!  "), "hello-world");
+        assert_eq!(markdown::slugify("C++ & Rust"), "c-rust");
+        assert_eq!(markdown::slugify(""), "");
+    }
+
+    #[test]
+    fn test_markdown_heading_anchors() {
+        let dir = std::env::temp_dir().join("zoa-md-head");
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("h.md");
+        std::fs::write(
+            &p,
+            "---\ntitle: T\nslug: t\n---\n\n# Title\n\n## Foo Bar\n\ntext\n\n## Foo Bar\n\n### Baz",
+        )
+        .unwrap();
+        let post = markdown::load_markdown_file(&p).unwrap();
+        let h = &post.content_html;
+        // h2 gets an id, and renders as a plain heading (no injected anchor / `#`)
+        assert!(h.contains("<h2 id=\"foo-bar\">Foo Bar</h2>"));
+        // no clickable anchor or stray `#` is injected into headings
+        assert!(!h.contains("heading-anchor"));
+        assert!(!h.contains("heading-link"));
+        assert!(!h.contains(">#</a>"));
+        // duplicate heading text is deduped
+        assert!(h.contains("<h2 id=\"foo-bar-2\">"));
+        // h3 gets an id too
+        assert!(h.contains("<h3 id=\"baz\">Baz</h3>"));
+        // h1 (post title) is NOT given an id
+        assert!(h.contains("<h1"));
+        assert!(!h.contains("id=\"title\""));
+        std::fs::remove_file(&p).ok();
+    }
+
+    #[test]
+    fn test_company_bit_map_is_stable_and_alphabetical() {
+        let m = about::company_bit_map();
+        // every bit is unique and contiguous 0..N
+        let mut bits: Vec<u32> = m.values().copied().collect();
+        bits.sort_unstable();
+        for (i, b) in bits.iter().enumerate() {
+            assert_eq!(*b, i as u32, "bits must be contiguous 0..N");
+        }
+        // alphabetical: an earlier slug has a lower bit than a later one
+        assert!(m["canyons-school-district"] < m["nickelcade"]);
+        // rendered jobs carry data-bit
+        assert!(about::experience_box(78, false).contains("data-bit="));
     }
 }
