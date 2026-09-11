@@ -55,68 +55,59 @@ async fn blog_index(
         tags
     };
 
-    // Validate and filter by tag - only allow known tags (prevents XSS)
+    // Validate against known tags (prevents XSS) - used only to preselect a tag
+    // pill client-side on load; filtering itself now happens live in JS.
     let valid_tag = query.tag.as_ref().filter(|t| all_tags.contains(t));
 
-    // Filter posts by tag if specified and valid
-    let filtered_posts: Vec<_> = if let Some(tag) = valid_tag {
-        context
-            .posts
-            .iter()
-            .filter(|p| p.tags.contains(tag))
-            .collect()
-    } else {
-        context.posts.iter().collect()
-    };
+    let blog_header = ResponsiveBoxes::new_header("BLOG POSTS", "All posts from the blog");
 
-    // Generate blog header box (tag is guaranteed safe since it came from our posts)
-    let header_text = if let Some(ref tag) = valid_tag {
-        format!("Posts tagged: {}", tag)
-    } else {
-        "All posts from the blog".to_string()
-    };
-    let blog_header = ResponsiveBoxes::new_header("BLOG POSTS", &header_text);
-
-    // Generate categories box from tags (bullet point style like original)
-    let categories_box = ResponsiveBoxes::new_tag_categories(&all_tags, valid_tag);
-
-    // Generate boxes for each post - truncate and wrap content to fit within boxes
-    let posts_with_boxes: Vec<serde_json::Value> = filtered_posts
+    // Search index consumed by static/js/blog-search.js for live title+body
+    // search and tag filtering - one entry per post, same order as `posts`
+    // below so the front end can pair them up by index.
+    let search_index: Vec<serde_json::Value> = context
+        .posts
         .iter()
         .map(|post| {
-            // Truncate then wrap for each box size
-            let content_tiny = format!(
-                "{}\n\n{}\n\n<a href=\"{}\">[ Read >> ]</a>",
-                post.date,
-                wrap_text(&truncate_text(&post.content, 60), WRAP_WIDTH_TINY).join("\n"),
-                post.href
-            );
-            let content_small = format!(
-                "{}\n\n{}\n\n<a href=\"{}\">[ Read more >> ]</a>",
-                post.date,
-                wrap_text(&truncate_text(&post.content, 80), WRAP_WIDTH_SMALL).join("\n"),
-                post.href
-            );
-            let content_medium = format!(
-                "{}\n\n{}\n\n<a href=\"{}\">[ Read more >> ]</a>",
-                post.date,
-                wrap_text(&truncate_text(&post.content, 120), WRAP_WIDTH_MEDIUM).join("\n"),
-                post.href
-            );
-            let content_large = format!(
-                "{}\n\n{}\n\n<a href=\"{}\">[ Read more >> ]</a>",
-                post.date,
-                wrap_text(&truncate_text(&post.content, 200), WRAP_WIDTH_LARGE).join("\n"),
-                post.href
-            );
+            serde_json::json!({
+                "title": post.title,
+                "tags": post.tags,
+                "text": truncate_text(&post.content, 4000),
+            })
+        })
+        .collect();
+
+    // Generate boxes for each post - truncate and wrap content to fit within boxes
+    let posts_with_boxes: Vec<serde_json::Value> = context
+        .posts
+        .iter()
+        .map(|post| {
+            let make_content = |width: usize, max_len: usize| {
+                let excerpt = wrap_text(&truncate_text(&post.content, max_len), width).join("\n");
+                if let Some(ref sub) = post.subtitle {
+                    let wrapped_sub = wrap_text(&format!("» {}", sub), width).join("\n");
+                    format!(
+                        "{}\n{}\n\n{}\n\n<a href=\"{}\">[ View Post >> ]</a>",
+                        wrapped_sub, post.date, excerpt, post.href
+                    )
+                } else {
+                    format!(
+                        "{}\n\n{}\n\n<a href=\"{}\">[ View Post >> ]</a>",
+                        post.date, excerpt, post.href
+                    )
+                }
+            };
+            let content_tiny = make_content(WRAP_WIDTH_TINY, 60);
+            let content_small = make_content(WRAP_WIDTH_SMALL, 80);
+            let content_medium = make_content(WRAP_WIDTH_MEDIUM, 120);
+            let content_large = make_content(WRAP_WIDTH_LARGE, 200);
             serde_json::json!({
                 "title": post.title,
                 "date": post.date,
                 "href": post.href,
-                "box_tiny": create_header_box(&post.title, &content_tiny, BOX_WIDTH_TINY),
-                "box_small": create_header_box(&post.title, &content_small, BOX_WIDTH_SMALL),
-                "box_medium": create_header_box(&post.title, &content_medium, BOX_WIDTH_MEDIUM),
-                "box_large": create_header_box(&post.title, &content_large, BOX_WIDTH_LARGE),
+                "box_tiny": create_header_box(post.display_title(), &content_tiny, BOX_WIDTH_TINY),
+                "box_small": create_header_box(post.display_title(), &content_small, BOX_WIDTH_SMALL),
+                "box_medium": create_header_box(post.display_title(), &content_medium, BOX_WIDTH_MEDIUM),
+                "box_large": create_header_box(post.display_title(), &content_large, BOX_WIDTH_LARGE),
             })
         })
         .collect();
@@ -135,15 +126,6 @@ async fn blog_index(
             large: rss_box.large,
         },
     );
-    ctx.insert(
-        "categories_box",
-        &BoxSizes {
-            tiny: categories_box.tiny,
-            small: categories_box.small,
-            medium: categories_box.medium,
-            large: categories_box.large,
-        },
-    );
     ctx.insert("footer_box", &context.footer_box);
     ctx.insert("stars", &context.stars);
     ctx.insert("posts", &posts_with_boxes);
@@ -157,6 +139,21 @@ async fn blog_index(
         },
     );
     ctx.insert("current_tag", &valid_tag);
+    // `</script>` guard: neither field can legitimately contain it, but post
+    // bodies are free text, so escape defensively before embedding as JSON
+    // inside a <script> tag.
+    ctx.insert(
+        "all_tags_json",
+        &serde_json::to_string(&all_tags)
+            .unwrap_or_else(|_| "[]".to_string())
+            .replace("</", "<\\/"),
+    );
+    ctx.insert(
+        "search_index_json",
+        &serde_json::to_string(&search_index)
+            .unwrap_or_else(|_| "[]".to_string())
+            .replace("</", "<\\/"),
+    );
     ctx.insert("debug", &config.debug);
     ctx.insert("base_url", &site.base_url);
     ctx.insert("canonical", &format!("{}{}", site.base_url, "/blog"));
@@ -167,7 +164,7 @@ async fn blog_index(
 }
 
 /// RSS feed for blog posts
-async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
+pub(crate) async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
     let host = req.connection_info().host().to_string();
     let site = mods::site::resolve(&host);
     let posts = load_all_posts("posts");
@@ -176,13 +173,25 @@ async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
         .iter()
         .map(|post| {
             let description = truncate_text(&post.content_plain, 300);
+            let categories = if post.tags.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "{}\n",
+                    post.tags
+                        .iter()
+                        .map(|tag| format!("      <category>{}</category>", xml_escape(tag)))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                )
+            };
             format!(
                 r#"    <item>
       <title>{}</title>
       <link>{}/post/{}</link>
       <guid>{}/post/{}</guid>
       <pubDate>{}</pubDate>
-      <description><![CDATA[{}]]></description>
+{}      <description><![CDATA[{}]]></description>
       <content:encoded><![CDATA[{}]]></content:encoded>
     </item>"#,
                 xml_escape(&post.title),
@@ -191,6 +200,7 @@ async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
                 site.base_url,
                 post.slug,
                 post.date,
+                categories,
                 description,
                 post.content_html
             )
@@ -347,10 +357,25 @@ async fn post_view(
     // Generate combined post header box with title, date, divider, and back link
     let post_header = ResponsiveBoxes::new_post_header(&post.title, &post.date);
 
+    // Body text with the leading `# Title` heading (repeated from frontmatter)
+    // stripped off, truncated to meta-description length — a real summary
+    // instead of "{title} - A blog post by vxfemboy" boilerplate.
+    let plain = post.content_plain.trim_start();
+    let title_trimmed = post.title.trim().trim_matches('"');
+    let description_source = plain
+        .strip_prefix(post.title.trim())
+        .or_else(|| plain.strip_prefix(title_trimmed))
+        .unwrap_or(plain)
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let meta_description = truncate_text(&description_source, 155);
+
     let mut ctx = tera::Context::new();
-    ctx.insert("title", &post.title);
+    ctx.insert("title", &post.display_title());
     ctx.insert("date", &post.date);
     ctx.insert("slug", &post.slug);
+    ctx.insert("meta_description", &meta_description);
     ctx.insert("content_html", &post.content_html);
     ctx.insert("debug", &config.debug);
     ctx.insert("base_url", &site.base_url);
@@ -359,6 +384,32 @@ async fn post_view(
         &format!("{}/post/{}", site.base_url, post.slug),
     );
     ctx.insert("og_image", &site.og_image(post.social.as_deref()));
+    ctx.insert("series", &post.series);
+    ctx.insert("series_order", &post.series_order);
+
+    // If this post is part of a series, collect sibling posts
+    if let Some(ref series_name) = post.series {
+        #[derive(serde::Serialize)]
+        struct SeriesItem {
+            title: String,
+            slug: String,
+            order: u32,
+            is_current: bool,
+        }
+        let all_posts = load_all_posts("posts");
+        let mut siblings: Vec<SeriesItem> = all_posts
+            .into_iter()
+            .filter(|p| p.series.as_deref() == Some(series_name.as_str()))
+            .map(|p| SeriesItem {
+                title: p.title,
+                slug: p.slug.clone(),
+                order: p.series_order.unwrap_or(999),
+                is_current: p.slug == post.slug,
+            })
+            .collect();
+        siblings.sort_by_key(|s| s.order);
+        ctx.insert("series_posts", &siblings);
+    }
 
     // Post header box (combined with back link)
     ctx.insert(

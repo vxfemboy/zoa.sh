@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod unit_tests {
 
+    use crate::mods::constants::*;
     use crate::mods::*;
 
     #[test]
@@ -30,6 +31,65 @@ mod unit_tests {
         assert!(
             box_content.contains("╔") || box_content.contains("┌") || box_content.contains("+")
         );
+    }
+
+    #[test]
+    fn test_header_box_long_title_wrapping() {
+        let long_title = "This is a very long post title that exceeds the maximum width of the box by far!";
+        assert!(long_title.chars().count() >= 80);
+        let box_content = create_header_box(long_title, "Some content", 40);
+
+        let lines: Vec<&str> = box_content.lines().collect();
+        assert!(!lines.is_empty());
+
+        for line in &lines {
+            assert_eq!(
+                count_visual_width_excluding_html(line),
+                40,
+                "Line visual length was {} instead of 40: '{}'",
+                count_visual_width_excluding_html(line),
+                line
+            );
+        }
+    }
+
+    #[test]
+    fn test_post_header_box_long_title_wrapping() {
+        let long_title = "This is a very long post title that exceeds the maximum width of the box by far!";
+        let box_content = create_post_header_box(long_title, "2026-09-11", 40);
+
+        let lines: Vec<&str> = box_content.lines().collect();
+        assert!(!lines.is_empty());
+
+        for line in &lines {
+            assert_eq!(
+                count_visual_width_excluding_html(line),
+                40,
+                "Line visual length was {} instead of 40: '{}'",
+                count_visual_width_excluding_html(line),
+                line
+            );
+        }
+    }
+
+    #[test]
+    fn test_about_box_long_title_wrapping() {
+        let long_title = "This is a very long post title that exceeds the maximum width of the box by far!";
+        let ascii_art = "                                      ";
+        let box_content = create_about_box_with_ascii(long_title, "About content", ascii_art, 40);
+
+        let lines: Vec<&str> = box_content.lines().collect();
+        assert!(!lines.is_empty());
+
+        for line in &lines {
+            assert_eq!(
+                count_visual_width_excluding_html(line),
+                40,
+                "Line visual length was {} instead of 40: '{}'",
+                count_visual_width_excluding_html(line),
+                line
+            );
+        }
     }
 
     #[test]
@@ -260,4 +320,293 @@ mod unit_tests {
         // rendered jobs carry data-bit
         assert!(about::experience_box(78, false).contains("data-bit="));
     }
+
+    #[test]
+    fn test_create_posts_content_display_title_subtitle_and_standard_link() {
+        let post_with_sub = Post {
+            title: "Autonomous System: Part 1 - WAN Clustering Fallacy".to_string(),
+            short_title: Some("Autonomous System: Part 1".to_string()),
+            subtitle: Some("WAN Clustering Fallacy".to_string()),
+            date: "2026-08-14".to_string(),
+            slug: "2026-08-14-autonomous-system-part-1-wan-clustering-fallacy".to_string(),
+            tags: vec!["network".to_string()],
+            content: "First sentence of the post narrative.".to_string(),
+            content_html: "<p>First sentence</p>".to_string(),
+            href: "/post/2026-08-14-autonomous-system-part-1-wan-clustering-fallacy".to_string(),
+            series: Some("Autonomous System".to_string()),
+            series_order: Some(1),
+        };
+        let post_simple = Post {
+            title: "Simple Post Without Subtitle".to_string(),
+            short_title: None,
+            subtitle: None,
+            date: "2026-08-15".to_string(),
+            slug: "simple-post".to_string(),
+            tags: vec![],
+            content: "Content of simple post.".to_string(),
+            content_html: "<p>Content</p>".to_string(),
+            href: "/post/simple-post".to_string(),
+            series: None,
+            series_order: None,
+        };
+
+        let posts = vec![post_with_sub, post_simple];
+        let manager = ContentManager::new();
+        let boxes = manager.create_posts_content(&posts, "https://vx.gay");
+
+        // Check mobile tiny: uses display_title and subtitle
+        assert!(boxes.tiny.contains("Autonomous System: Part 1"));
+        assert!(boxes.tiny.contains("» WAN Clustering Fallacy"));
+        assert!(boxes.tiny.contains("[ View Post >> ]"));
+        assert!(!boxes.tiny.contains(">Autonomous System: Part 1 - WAN Clustering Fallacy</a>"));
+
+        // Check mobile small: uses display_title and subtitle
+        assert!(boxes.small.contains("Autonomous System: Part 1"));
+        assert!(boxes.small.contains("» WAN Clustering Fallacy"));
+        assert!(boxes.small.contains("[ View Post >> ]"));
+
+        // Check medium (first 3 posts): uses display_title and subtitle
+        assert!(boxes.medium.contains("Autonomous System: Part 1"));
+        assert!(boxes.medium.contains("» WAN Clustering Fallacy"));
+        assert!(boxes.medium.contains("[ View Post >> ]"));
+        assert!(boxes.medium.contains("Simple Post Without Subtitle"));
+        // Second post has no subtitle, so no second "» "
+        let count_arrows = boxes.medium.matches('»').count();
+        assert_eq!(count_arrows, 1, "Only posts with subtitle should have '» '");
+
+        // Check large
+        assert!(boxes.large.contains("Autonomous System: Part 1"));
+        assert!(boxes.large.contains("» WAN Clustering Fallacy"));
+        assert!(boxes.large.contains("[ View Post >> ]"));
+    }
+
+    #[test]
+    fn test_create_posts_content_title_wrapping() {
+        let long_sub_post = Post {
+            title: "Long Title That Definitely Requires Wrapping Because It Is More Than Sixty Characters Long".to_string(),
+            short_title: Some("Short Title That Also Exceeds Normal Wrap Width On Narrow Containers".to_string()),
+            subtitle: Some("Subtitle That Is Extraordinarily Long And Needs To Wrap Nicely Across Multiple Lines".to_string()),
+            date: "2026-08-14".to_string(),
+            slug: "long-post".to_string(),
+            tags: vec![],
+            content: "Some content here.".to_string(),
+            content_html: "<p>Some content</p>".to_string(),
+            href: "/post/long-post".to_string(),
+            series: None,
+            series_order: None,
+        };
+
+        let posts = vec![long_sub_post];
+        let manager = ContentManager::new();
+        let boxes = manager.create_posts_content(&posts, "https://vx.gay");
+
+        // All boxes should render successfully without panicking and contain wrapped elements
+        assert!(boxes.tiny.contains("Short Title"));
+        assert!(boxes.tiny.contains("» Subtitle"));
+        assert!(boxes.medium.contains("Short Title"));
+        assert!(boxes.large.contains("Short Title"));
+    }
+
+    #[test]
+    fn test_blog_card_content_and_header_display_title() {
+        let post_with_sub = Post {
+            title: "Full Title of Post".to_string(),
+            short_title: Some("Short Header Title".to_string()),
+            subtitle: Some("Fascinating Subtitle".to_string()),
+            date: "2026-09-01".to_string(),
+            slug: "full-title".to_string(),
+            tags: vec![],
+            content: "Excerpt of post content.".to_string(),
+            content_html: "<p>Excerpt</p>".to_string(),
+            href: "/post/full-title".to_string(),
+            series: None,
+            series_order: None,
+        };
+        let post_no_sub = Post {
+            title: "Standalone Post".to_string(),
+            short_title: None,
+            subtitle: None,
+            date: "2026-09-02".to_string(),
+            slug: "standalone".to_string(),
+            tags: vec![],
+            content: "Excerpt of standalone post.".to_string(),
+            content_html: "<p>Excerpt</p>".to_string(),
+            href: "/post/standalone".to_string(),
+            series: None,
+            series_order: None,
+        };
+
+        let make_content = |post: &Post, width: usize, max_len: usize| {
+            let excerpt = wrap_text(&post.content[..post.content.len().min(max_len)], width).join("\n");
+            if let Some(ref sub) = post.subtitle {
+                let wrapped_sub = wrap_text(&format!("» {}", sub), width).join("\n");
+                format!(
+                    "{}\n{}\n\n{}\n\n<a href=\"{}\">[ View Post >> ]</a>",
+                    wrapped_sub, post.date, excerpt, post.href
+                )
+            } else {
+                format!(
+                    "{}\n\n{}\n\n<a href=\"{}\">[ View Post >> ]</a>",
+                    post.date, excerpt, post.href
+                )
+            }
+        };
+
+        // Post with subtitle
+        let content_sub = make_content(&post_with_sub, WRAP_WIDTH_MEDIUM, 120);
+        assert!(content_sub.starts_with("» Fascinating Subtitle\n2026-09-01"));
+        assert!(content_sub.contains("<a href=\"/post/full-title\">[ View Post >> ]</a>"));
+        let box_header = create_header_box(post_with_sub.display_title(), &content_sub, BOX_WIDTH_MEDIUM);
+        assert!(box_header.contains("Short Header Title"));
+
+        // Post without subtitle
+        let content_no_sub = make_content(&post_no_sub, WRAP_WIDTH_MEDIUM, 120);
+        assert!(content_no_sub.starts_with("2026-09-02"));
+        assert!(!content_no_sub.contains('»'));
+        assert!(content_no_sub.contains("<a href=\"/post/standalone\">[ View Post >> ]</a>"));
+        let box_header_no_sub = create_header_box(post_no_sub.display_title(), &content_no_sub, BOX_WIDTH_MEDIUM);
+        assert!(box_header_no_sub.contains("Standalone Post"));
+    }
+
+    #[test]
+    fn test_index_template_additional_posts() {
+        let tera = tera::Tera::new("templates/**/*").expect("Failed to compile Tera templates");
+        let mut ctx = tera::Context::new();
+
+        // Create minimal context for index.html.tera
+        let post = Post {
+            title: "Test Additional Post".to_string(),
+            short_title: None,
+            subtitle: Some("Test Additional Subtitle".to_string()),
+            date: "2026-09-01".to_string(),
+            slug: "test-additional".to_string(),
+            tags: vec![],
+            content: "Test additional content.".to_string(),
+            content_html: "<p>Content</p>".to_string(),
+            href: "/post/test-additional".to_string(),
+            series: None,
+            series_order: None,
+        };
+
+        let post_with_short = Post {
+            title: "Long Verbose Post Title".to_string(),
+            short_title: Some("Short Title".to_string()),
+            subtitle: None,
+            date: "2026-09-02".to_string(),
+            slug: "test-short".to_string(),
+            tags: vec![],
+            content: "Test short content.".to_string(),
+            content_html: "<p>Content</p>".to_string(),
+            href: "/post/test-short".to_string(),
+            series: None,
+            series_order: None,
+        };
+
+        ctx.insert("additional_posts", &vec![post, post_with_short]);
+        ctx.insert("stars", &Vec::<crate::mods::Star>::new());
+        ctx.insert("welcome_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("latest_post_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("footer_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("navigation_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("about_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("categories_box", &crate::mods::BoxSizes {
+            tiny: String::new(), small: String::new(), medium: String::new(), large: String::new()
+        });
+        ctx.insert("title_art", "ART");
+        ctx.insert("debug", &false);
+        ctx.insert("canonical", "https://zoa.sh");
+        ctx.insert("og_image", "https://zoa.sh/static/og-image.gif");
+
+        let rendered = tera.render("index.html.tera", &ctx).expect("Failed to render index.html.tera");
+        assert!(rendered.contains("Test Additional Post\n» Test Additional Subtitle\n2026-09-01"));
+        assert!(rendered.contains("<a href=\"/post/test-additional\">[ View Post >> ]</a>"));
+        assert!(rendered.contains("Short Title\n2026-09-02"));
+        assert!(!rendered.contains("Long Verbose Post Title"));
+    }
+
+    #[test]
+    fn test_posts_frontmatters_contain_short_title_and_subtitle() {
+        let posts = crate::mods::markdown::load_all_posts("posts");
+        assert!(!posts.is_empty(), "posts directory should not be empty");
+
+        let blackwall = posts
+            .iter()
+            .find(|p| p.slug == "blackwall-active-defense-anycast-firewall")
+            .expect("blackwall post should exist");
+        assert_eq!(blackwall.short_title.as_deref(), Some("Blackwall Edge Firewall"));
+        assert_eq!(
+            blackwall.subtitle.as_deref(),
+            Some("Building an Automated Active-Defense Firewall on Anycast Edge Nodes")
+        );
+
+        let wan = posts
+            .iter()
+            .find(|p| p.slug == "autonomous-system-part-1-wan-clustering-fallacy")
+            .expect("wan clustering post should exist");
+        assert_eq!(wan.short_title.as_deref(), Some("The WAN Clustering Fallacy"));
+        assert_eq!(
+            wan.subtitle.as_deref(),
+            Some("The Autonomous System Architecture, Part 1")
+        );
+
+        let dashboard = posts
+            .iter()
+            .find(|p| p.slug == "building-financial-metrics-dashboard-in-async-rust")
+            .expect("dashboard post should exist");
+        assert_eq!(dashboard.short_title.as_deref(), Some("Async Rust Financial Dashboard"));
+        assert_eq!(
+            dashboard.subtitle.as_deref(),
+            Some("Real-Time Ledger State Machines with Tokio & SQLx")
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_rss_feed_contains_categories() {
+        let req = actix_web::test::TestRequest::default()
+            .insert_header((actix_web::http::header::HOST, "zoa.sh"))
+            .to_http_request();
+        let resp = crate::rss_feed(req).await.expect("rss_feed handler failed");
+        assert_eq!(resp.status(), actix_web::http::StatusCode::OK);
+
+        let body_bytes = actix_web::body::to_bytes(resp.into_body()).await.expect("reading body failed");
+        let xml = String::from_utf8(body_bytes.to_vec()).expect("valid utf-8");
+
+        let posts = crate::mods::markdown::load_all_posts("posts");
+        let post_with_tags = posts
+            .iter()
+            .find(|p| !p.tags.is_empty())
+            .expect("should have at least one post with tags");
+
+        for tag in &post_with_tags.tags {
+            let category_tag = format!("<category>{}</category>", tag);
+            assert!(
+                xml.contains(&category_tag),
+                "RSS XML missing category tag '{}'",
+                category_tag
+            );
+        }
+
+        assert!(xml.contains("<category>"), "RSS feed should contain at least one <category> element");
+        let cat_pos = xml.find("<category>").unwrap();
+        let item_start = xml[..cat_pos].rfind("<item>").expect("<item> before <category>");
+        let item_end = xml[item_start..].find("</item>").expect("</item> after item_start") + item_start;
+        let item_xml = &xml[item_start..item_end];
+        let item_cat_pos = item_xml.find("<category>").unwrap();
+        let item_desc_pos = item_xml.find("<description>").expect("item should have <description>");
+        assert!(
+            item_cat_pos < item_desc_pos,
+            "<category> should appear before <description> in <item>"
+        );
+    }
 }
+
