@@ -568,6 +568,56 @@ mod unit_tests {
             dashboard.subtitle.as_deref(),
             Some("Real-Time Ledger State Machines with Tokio & SQLx")
         );
+
+        let knot = posts
+            .iter()
+            .find(|p| p.slug == "knot-dns-breaking-frozen-serial-trap")
+            .expect("knot dns post should exist");
+        assert_eq!(knot.short_title.as_deref(), Some("Knot DNS Serial Trap Recovery"));
+        assert_eq!(
+            knot.subtitle.as_deref(),
+            Some("Automated Primary Recovery and AXFR Replication Bypass")
+        );
+
+        let postgres_split = posts
+            .iter()
+            .find(|p| p.slug == "postgresql-failover-hunting-dual-writer-split-brain")
+            .expect("postgres split brain post should exist");
+        assert_eq!(postgres_split.short_title.as_deref(), Some("Postgres Split-Brain Hunt"));
+        assert_eq!(
+            postgres_split.subtitle.as_deref(),
+            Some("Surviving Container IP Aliasing and Standby Promotion")
+        );
+
+        let incus_wal = posts
+            .iter()
+            .find(|p| p.slug == "streaming-physical-replication-in-incus")
+            .expect("incus wal replication post should exist");
+        assert_eq!(incus_wal.short_title.as_deref(), Some("Incus Postgres WAL Streaming"));
+        assert_eq!(
+            incus_wal.subtitle.as_deref(),
+            Some("WAL Archiving and Standby Rebuilds Without Heavy Orchestrators")
+        );
+
+        let bgp_dead_route = posts
+            .iter()
+            .find(|p| p.slug == "debugging-dead-route-bgp-cutover-port-80-drop")
+            .expect("bgp dead route post should exist");
+        assert_eq!(bgp_dead_route.short_title.as_deref(), Some("Debugging the Dead BGP Route"));
+        assert_eq!(
+            bgp_dead_route.subtitle.as_deref(),
+            Some("Tracing Asymmetric Routing and Dummy Interface Ephemerality")
+        );
+
+        let monero_failover = posts
+            .iter()
+            .find(|p| p.slug == "self-hosting-monero-zero-downtime-daemon-failover")
+            .expect("monero daemon failover post should exist");
+        assert_eq!(monero_failover.short_title.as_deref(), Some("Monero Daemon Failover"));
+        assert_eq!(
+            monero_failover.subtitle.as_deref(),
+            Some("Automating Payment Daemon Health Checks and Failover Routing")
+        );
     }
 
     #[actix_web::test]
