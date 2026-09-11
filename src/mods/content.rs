@@ -28,6 +28,19 @@ impl Default for ContentManager {
     }
 }
 
+fn wrap_title_block(post: &Post, width: usize) -> String {
+    let title_block = if let Some(ref sub) = post.subtitle {
+        format!("{}\n» {}", post.display_title(), sub)
+    } else {
+        post.display_title().to_string()
+    };
+    title_block
+        .lines()
+        .flat_map(|line| wrap_text(line, width))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 impl ContentManager {
     pub fn new() -> Self {
         Self {
@@ -50,17 +63,23 @@ impl ContentManager {
             .iter()
             .map(|post| Post {
                 title: replace_problematic_chars(&post.title),
+                short_title: post.short_title.as_deref().map(replace_problematic_chars),
+                subtitle: post.subtitle.as_deref().map(replace_problematic_chars),
                 href: post.href.clone(),
                 date: post.date.clone(),
                 slug: post.slug.clone(),
                 tags: post.tags.clone(),
                 content: replace_problematic_chars(&post.content),
                 content_html: post.content_html.clone(),
+                series: post.series.clone(),
+                series_order: post.series_order,
             })
             .collect();
 
-        // Create responsive boxes
+        // Create navigation box (using full URL)
         let navigation_box = ResponsiveBoxes::new_navigation(&self.data.nav_items, base_url);
+
+        // Create welcome and about boxes
         let welcome_box = ResponsiveBoxes::new_header("WELCOME", &self.data.welcome_content);
         let about_box = ResponsiveBoxes::new_about_with_ascii(
             &self.data.about_content,
@@ -94,7 +113,16 @@ impl ContentManager {
         })
     }
 
-    fn create_posts_content(&self, posts: &[Post], base_url: &str) -> ResponsiveBoxes {
+    pub fn create_posts_content(&self, posts: &[Post], base_url: &str) -> ResponsiveBoxes {
+        if posts.is_empty() {
+            return ResponsiveBoxes {
+                tiny: crate::mods::create_header_box("POSTS", "\nNo posts yet.\n", BOX_WIDTH_SMALL),
+                small: crate::mods::create_header_box("POSTS", "\nNo posts yet.\n", BOX_WIDTH_MEDIUM),
+                medium: crate::mods::create_header_box("POSTS", "\nNo posts yet.\n", BOX_WIDTH_MEDIUM),
+                large: crate::mods::create_header_box("POSTS", "\nNo posts yet.\n", BOX_WIDTH_LARGE),
+            };
+        }
+
         // Create dividers (match box content widths)
         let divider_tiny = "░".repeat(BOX_WIDTH_SMALL.saturating_sub(4));
         let divider_small = "░".repeat(BOX_WIDTH_MEDIUM.saturating_sub(4));
@@ -108,25 +136,25 @@ impl ContentManager {
         let truncated_content = truncate_content(&latest_post.content, 280);
         let latest_post_href = format!("{}{}", base_url, latest_post.href);
 
+        let title_tiny = wrap_title_block(latest_post, BOX_WIDTH_SMALL.saturating_sub(6));
         let mobile_content_tiny = format!(
-            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼    │\n└──────────────────────────┘",
+            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">[ View Post >> ]</a>\n\n{}\n\n┌──────────────────────────┐\n│ ▼ SHOW MORE POSTS ▼    │\n└──────────────────────────┘",
             divider_tiny,
-            latest_post.title,
+            title_tiny,
             latest_post.date,
             wrap_text(&truncated_content, BOX_WIDTH_SMALL.saturating_sub(6)).join("\n"),
             latest_post_href,
-            latest_post.title,
             divider_tiny
         );
 
+        let title_small = wrap_title_block(latest_post, BOX_WIDTH_MEDIUM.saturating_sub(6));
         let mobile_content_small = format!(
-            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>\n\n{}\n\n┌──────────────────────────────────────┐\n│  ▼ SHOW MORE POSTS ▼                │\n└──────────────────────────────────────┘",
+            "\n{}\n\n{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">[ View Post >> ]</a>\n\n{}\n\n┌──────────────────────────────────────┐\n│  ▼ SHOW MORE POSTS ▼                │\n└──────────────────────────────────────┘",
             divider_small,
-            latest_post.title,
+            title_small,
             latest_post.date,
             wrap_text(&truncated_content, BOX_WIDTH_MEDIUM.saturating_sub(6)).join("\n"),
             latest_post_href,
-            latest_post.title,
             divider_small
         );
 
@@ -140,15 +168,15 @@ impl ContentManager {
             display_posts
                 .iter()
                 .map(|post| {
+                    let title_block = wrap_title_block(post, WRAP_WIDTH_MEDIUM);
                     let truncated = truncate_content(&post.content, 280);
                     let href = format!("{}{}", base_url, post.href);
                     format!(
-                        "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
-                        post.title,
+                        "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">[ View Post >> ]</a>",
+                        title_block,
                         post.date,
                         wrap_text(&truncated, WRAP_WIDTH_MEDIUM).join("\n"),
                         href,
-                        post.title
                     )
                 })
                 .collect::<Vec<_>>()
@@ -170,15 +198,15 @@ impl ContentManager {
             display_posts
                 .iter()
                 .map(|post| {
+                    let title_block = wrap_title_block(post, WRAP_WIDTH_LARGE);
                     let truncated = truncate_content(&post.content, 280);
                     let href = format!("{}{}", base_url, post.href);
                     format!(
-                        "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">{}</a>",
-                        post.title,
+                        "{}\n{}\n\n{}\n\nRead more: <a href=\"{}\">[ View Post >> ]</a>",
+                        title_block,
                         post.date,
                         wrap_text(&truncated, WRAP_WIDTH_LARGE).join("\n"),
                         href,
-                        post.title
                     )
                 })
                 .collect::<Vec<_>>()

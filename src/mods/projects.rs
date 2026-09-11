@@ -12,7 +12,11 @@ pub fn project_boxes(site: &Site) -> Vec<BoxSizes> {
             "an ISP that actually gives a damn. · live\n\n\
              BGP peering, fiber, upstream wrangling, customer ops. yes the name is real. yes the ASN is live. yes the routing tables are beautiful and i am very normal about them.\n\n\
              stack: BGP · fiber · linux · rust\n\
-             → <a href=\"https://github.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">github.com/vxfemboy</a>",
+             → <a href=\"https://github.com/vxfemboy\" target=\"_blank\" rel=\"noopener\">github.com/vxfemboy</a>\n\n\
+             deep dives:\n\
+             • <a href=\"/post/blackwall-active-defense-anycast-firewall\">the anycast active-defense firewall</a>\n\
+             • <a href=\"/post/debugging-dead-route-bgp-cutover-port-80-drop\">a BGP cutover that dropped port 80</a>\n\
+             • <a href=\"/post/anycast-resilience-when-an-edge-pop-vanishes\">what happens when an edge POP vanishes</a>",
         ),
         (
             "ZOA.SH",

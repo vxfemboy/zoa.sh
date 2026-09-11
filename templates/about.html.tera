@@ -19,10 +19,31 @@
     <meta name="twitter:description" content="low level network software engineer | chaos computing enthusiast | packet bender">
     <meta name="twitter:image" content="{{ og_image }}">
 
+    <link rel="canonical" href="{{ canonical }}">
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="alternate" type="application/rss+xml" title="vxfemboy blog RSS" href="/rss.xml">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        "mainEntity": {
+            "@type": "Person",
+            "name": "Zoa Hickenlooper",
+            "alternateName": "vxfemboy",
+            "description": "low level network software engineer, chaos computing enthusiast, packet bender",
+            "sameAs": [
+                "https://github.com/vxfemboy",
+                "https://x.com/vxfemboy",
+                "https://www.linkedin.com/in/vxfemboy"
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
     <script>window.ZOA_DEBUG = {{ debug | json_encode }};</script>
+    <h1 class="sr-only">About vxfemboy</h1>
     <div id="stars-container">
         {% for star in stars %}
             <div class="star" style="left: {{ star.x }}%; top: {{ star.y }}%; animation-delay: {{ star.delay }}s; transform: scale({{ star.size }});">{{ star.char }}</div>
@@ -43,6 +64,7 @@
         <div class="main-content-wrapper">
             <div class="ascii-content">
                 <div class="ascii-box">
+                    <h2 class="sr-only">Summary</h2>
                     <div class="box-tiny"><pre>{{ summary_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ summary_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ summary_box.medium | safe }}</pre></div>
@@ -50,6 +72,7 @@
                 </div>
 
                 <div id="exp">
+                <h2 class="sr-only">Experience</h2>
                 <div class="ascii-box exp-desktop" data-no-responsive>
                     <div class="exp-box">{{ experience_box | safe }}</div>
                 </div>
@@ -60,11 +83,26 @@
             </div>
 
             <div class="ascii-sidebar">
+                <div class="ascii-box resume-widget">
+                    <div class="ascii-frame" aria-hidden="true">
+                        <span class="ascii-frame-h ascii-frame-top">╔<span class="ascii-frame-fill"></span>╗</span>
+                        <span class="ascii-frame-v ascii-frame-left"></span>
+                        <span class="ascii-frame-v ascii-frame-right"></span>
+                        <span class="ascii-frame-h ascii-frame-bottom">╚<span class="ascii-frame-fill"></span>╝</span>
+                    </div>
+                    <div class="resume-widget-inner">
+                        <h2 class="resume-widget-title">RESUME</h2>
+                        <a class="resume-download" href="/resume.pdf">↓ PDF</a>
+                        <a class="resume-download" href="/resume.docx">↓ DOCX</a>
+                    </div>
+                </div>
+
                 <div class="ascii-box profile-box" data-no-responsive>
                     <pre class="profile-art">{{ profile_art | safe }}</pre>
                 </div>
 
                 <div class="ascii-box">
+                    <h2 class="sr-only">Skills</h2>
                     <div class="box-tiny"><pre>{{ skills_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ skills_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ skills_box.medium | safe }}</pre></div>
@@ -72,6 +110,7 @@
                 </div>
 
                 <div class="ascii-box">
+                    <h2 class="sr-only">Links</h2>
                     <div class="box-tiny"><pre>{{ links_box.tiny | safe }}</pre></div>
                     <div class="box-small"><pre>{{ links_box.small | safe }}</pre></div>
                     <div class="box-medium"><pre>{{ links_box.medium | safe }}</pre></div>

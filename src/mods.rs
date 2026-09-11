@@ -15,6 +15,7 @@ pub mod markdown;
 pub mod now;
 pub mod projects;
 pub mod responsive;
+pub mod resume;
 pub mod site;
 pub mod stars;
 pub mod template_builder;

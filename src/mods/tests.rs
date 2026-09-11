@@ -618,6 +618,56 @@ mod unit_tests {
             monero_failover.subtitle.as_deref(),
             Some("Automating Payment Daemon Health Checks and Failover Routing")
         );
+
+        let crypto_grace = posts
+            .iter()
+            .find(|p| p.slug == "bounding-crypto-payment-grace-windows")
+            .expect("crypto grace post should exist");
+        assert_eq!(crypto_grace.short_title.as_deref(), Some("Crypto Payment Grace Windows"));
+        assert_eq!(
+            crypto_grace.subtitle.as_deref(),
+            Some("State Machine Isolation for High-Volatility Settlement")
+        );
+
+        let bulwark_desync = posts
+            .iter()
+            .find(|p| p.slug == "bulwark-webmail-cache-desync-oauth-loops")
+            .expect("bulwark cache desync post should exist");
+        assert_eq!(bulwark_desync.short_title.as_deref(), Some("Bulwark Webmail Cache Desync"));
+        assert_eq!(
+            bulwark_desync.subtitle.as_deref(),
+            Some("Untangling Redis Session Keys and Stalwart Internal Auth")
+        );
+
+        let forgejo_mig = posts
+            .iter()
+            .find(|p| p.slug == "zero-downtime-forgejo-domain-migration")
+            .expect("forgejo migration post should exist");
+        assert_eq!(forgejo_mig.short_title.as_deref(), Some("Zero-Downtime Forgejo Migration"));
+        assert_eq!(
+            forgejo_mig.subtitle.as_deref(),
+            Some("PostgreSQL Schema Rewrites and Git SSH Host Key Continuity")
+        );
+
+        let vaultwarden_split = posts
+            .iter()
+            .find(|p| p.slug == "split-horizon-vaultwarden-public-https-vpn-admin")
+            .expect("split-horizon vaultwarden post should exist");
+        assert_eq!(vaultwarden_split.short_title.as_deref(), Some("Split-Horizon Vaultwarden"));
+        assert_eq!(
+            vaultwarden_split.subtitle.as_deref(),
+            Some("Hardening Password Managers with Caddy Snippets and WireGuard")
+        );
+
+        let anycast_drill = posts
+            .iter()
+            .find(|p| p.slug == "sockpuppet-cutover-drill-chaos-testing-anycast")
+            .expect("sockpuppet anycast drill post should exist");
+        assert_eq!(anycast_drill.short_title.as_deref(), Some("Sockpuppet Anycast Drill"));
+        assert_eq!(
+            anycast_drill.subtitle.as_deref(),
+            Some("What Happens When You Pull the Plug on a Primary Gateway")
+        );
     }
 
     #[actix_web::test]

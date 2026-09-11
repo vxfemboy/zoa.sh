@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - vxfemboy</title>
-    <meta name="description" content="{{ title }} - A blog post by vxfemboy">
+    <meta name="description" content="{{ meta_description }}">
 
     <!-- Open Graph -->
     <meta property="og:type" content="article">
     <meta property="og:url" content="{{ canonical }}">
     <meta property="og:title" content="{{ title }}">
-    <meta property="og:description" content="{{ title }} - A blog post by vxfemboy">
+    <meta property="og:description" content="{{ meta_description }}">
     <meta property="og:image" content="{{ og_image }}">
     <meta property="article:published_time" content="{{ date }}">
     <meta property="article:author" content="vxfemboy">
@@ -18,13 +18,32 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ title }}">
-    <meta name="twitter:description" content="{{ title }} - A blog post by vxfemboy">
+    <meta name="twitter:description" content="{{ meta_description }}">
     <meta name="twitter:image" content="{{ og_image }}">
 
+    <link rel="canonical" href="{{ canonical }}">
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="alternate" type="application/rss+xml" title="vxfemboy blog RSS" href="/rss.xml">
     <script>window.ZOA_DEBUG = {{ debug | json_encode }};</script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": {{ title | json_encode }},
+        "datePublished": "{{ date }}",
+        "url": "{{ canonical }}",
+        "image": "{{ og_image }}",
+        "author": {
+            "@type": "Person",
+            "name": "Zoa Hickenlooper"
+        },
+        "publisher": {
+            "@type": "Person",
+            "name": "vxfemboy"
+        }
+    }
+    </script>
 </head>
 <body>
     <div id="stars-container">
@@ -60,6 +79,24 @@
                         <span class="ascii-frame-v ascii-frame-right"></span>
                         <span class="ascii-frame-h ascii-frame-bottom">╚<span class="ascii-frame-fill"></span>╝</span>
                     </div>
+                    {% if series and series_posts %}
+                    <div class="series-nav" style="border: 1px dashed var(--border-color, #555); padding: 10px 15px; margin-bottom: 25px; font-size: 0.9em; background: rgba(255,255,255,0.02);">
+                        <div style="font-weight: bold; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">
+                            [ Series: {{ series }} ]
+                        </div>
+                        <ol style="margin: 0; padding-left: 20px;">
+                            {% for item in series_posts %}
+                                <li style="margin-bottom: 3px;">
+                                    {% if item.is_current %}
+                                        <strong>Part {{ loop.index }}: {{ item.title }} (Current)</strong>
+                                    {% else %}
+                                        <a href="/post/{{ item.slug }}">Part {{ loop.index }}: {{ item.title }}</a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    {% endif %}
                     <div class="post-html-content">
                         {{ content_html | safe }}
                     </div>

@@ -163,6 +163,30 @@ async fn blog_index(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
+/// Downloadable resume as PDF.
+async fn resume_pdf() -> HttpResponse {
+    let bytes = mods::resume::render_pdf();
+    HttpResponse::Ok()
+        .content_type("application/pdf")
+        .insert_header((
+            "Content-Disposition",
+            "attachment; filename=\"zoa-hickenlooper-resume.pdf\"",
+        ))
+        .body(bytes)
+}
+
+/// Downloadable resume as DOCX.
+async fn resume_docx() -> HttpResponse {
+    let bytes = mods::resume::render_docx();
+    HttpResponse::Ok()
+        .content_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        .insert_header((
+            "Content-Disposition",
+            "attachment; filename=\"zoa-hickenlooper-resume.docx\"",
+        ))
+        .body(bytes)
+}
+
 /// RSS feed for blog posts
 pub(crate) async fn rss_feed(req: HttpRequest) -> Result<HttpResponse, AppError> {
     let host = req.connection_info().host().to_string();
@@ -691,6 +715,8 @@ async fn main() -> Result<(), AppError> {
             .route("/now", web::get().to(now))
             .route("/blog", web::get().to(blog_index))
             .route("/post/{slug}", web::get().to(post_view))
+            .route("/resume.pdf", web::get().to(resume_pdf))
+            .route("/resume.docx", web::get().to(resume_docx))
             .route("/rss.xml", web::get().to(rss_feed))
             .route("/feed", web::get().to(rss_feed))
             .route("/sitemap.xml", web::get().to(sitemap))

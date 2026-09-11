@@ -17,15 +17,29 @@ use syntect::parsing::SyntaxSet;
 #[derive(Debug, Clone)]
 pub struct MarkdownPost {
     pub title: String,
+    pub short_title: Option<String>,
+    pub subtitle: Option<String>,
     pub date: String,
     pub slug: String,
     pub tags: Vec<String>,
     pub content_html: String,
     pub content_plain: String,
+    pub excerpt: String,
     /// Optional per-post OG/social image, a path under `posts/assets/`
     /// (frontmatter `social:`). None → the default site image.
     #[allow(dead_code)]
     pub social: Option<String>,
+    /// Optional multi-part series name (e.g. "Spam House Mail Recovery")
+    pub series: Option<String>,
+    /// Optional order within the series (1, 2, 3...)
+    pub series_order: Option<u32>,
+}
+
+impl MarkdownPost {
+    #[allow(dead_code)]
+    pub fn display_title(&self) -> &str {
+        self.short_title.as_deref().unwrap_or(&self.title)
+    }
 }
 
 /// Syntax highlighter using syntect
@@ -89,8 +103,9 @@ fn parse_frontmatter(content: &str) -> (std::collections::HashMap<String, String
             let line = line.trim();
             if let Some(colon_idx) = line.find(':') {
                 let key = line[..colon_idx].trim().to_lowercase();
-                let value = line[colon_idx + 1..].trim().to_string();
-                map.insert(key, value);
+                let val = line[colon_idx + 1..].trim();
+                let clean_val = val.trim_matches('"').trim_matches('\'').trim().to_string();
+                map.insert(key, clean_val);
             }
         }
 
@@ -263,6 +278,12 @@ fn html_to_plain_text(html: &str) -> String {
     for ch in html.chars() {
         match ch {
             '<' => {
+                // Insert a word boundary at each tag so text from adjacent
+                // block elements (e.g. `</h1><h2>`) doesn't get mashed
+                // together into one run-on word.
+                if !result.ends_with(char::is_whitespace) && !result.is_empty() {
+                    result.push(' ');
+                }
                 in_tag = true;
             }
             '>' => {
@@ -328,6 +349,16 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
         .cloned()
         .unwrap_or_else(|| filename.trim_end_matches(".md").to_string());
 
+    let short_title = frontmatter
+        .get("short_title")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    let subtitle = frontmatter
+        .get("subtitle")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
     let date = frontmatter
         .get("date")
         .cloned()
@@ -354,17 +385,32 @@ pub fn load_markdown_file(path: &Path) -> Option<MarkdownPost> {
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty());
 
+    let series = frontmatter
+        .get("series")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    let series_order = frontmatter
+        .get("series_order")
+        .and_then(|s| s.trim().parse::<u32>().ok());
+
     let content_html = markdown_to_html(markdown_content);
     let content_plain = html_to_plain_text(&content_html);
+    let excerpt = extract_body_excerpt(markdown_content, 280);
 
     Some(MarkdownPost {
         title,
+        short_title,
+        subtitle,
         date,
         slug,
         tags,
         content_html,
         content_plain,
+        excerpt,
         social,
+        series,
+        series_order,
     })
 }
 
@@ -399,9 +445,232 @@ pub fn load_all_posts(posts_dir: &str) -> Vec<MarkdownPost> {
     posts
 }
 
+/// Strip inline markdown formatting (bold, italics, code backticks, links) to plain text
+fn strip_markdown_inline(input: &str) -> String {
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    let parser = Parser::new_ext(input, options);
+    let mut out = String::new();
+    let mut in_image = false;
+
+    for event in parser {
+        match event {
+            Event::Start(Tag::Image { .. }) => in_image = true,
+            Event::End(TagEnd::Image) => in_image = false,
+            Event::Text(t) if !in_image => out.push_str(&t),
+            Event::Code(c) if !in_image => out.push_str(&c),
+            _ => {}
+        }
+    }
+    out
+}
+
+/// Truncate text cleanly at a word boundary with `...`
+fn truncate_at_word_boundary(text: &str, max_chars: usize) -> String {
+    if max_chars == 0 || text.is_empty() {
+        return String::new();
+    }
+    if text.chars().count() <= max_chars {
+        return text.to_string();
+    }
+
+    let truncated: String = text.chars().take(max_chars).collect();
+    let next_char = text.chars().nth(max_chars);
+
+    let base = if next_char == Some(' ') {
+        truncated.as_str()
+    } else if let Some(last_space) = truncated.rfind(' ') {
+        &truncated[..last_space]
+    } else {
+        truncated.as_str()
+    };
+
+    let clean = base.trim_end_matches(|c: char| {
+        c.is_whitespace()
+            || c == ','
+            || c == ';'
+            || c == ':'
+            || c == '-'
+            || c == '.'
+            || c == '!'
+            || c == '?'
+    });
+
+    format!("{}...", clean)
+}
+
+/// Extract clean narrative prose excerpt from markdown body.
+/// Skips title, table of contents, headers, dividers, series callouts, and HTML containers.
+pub fn extract_body_excerpt(markdown_body: &str, max_chars: usize) -> String {
+    let mut in_toc = false;
+    let mut in_code_block = false;
+    let mut prose_parts: Vec<String> = Vec::new();
+    let mut accumulated_chars = 0;
+
+    for line in markdown_body.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+
+        if trimmed.starts_with("```") {
+            in_code_block = !in_code_block;
+            continue;
+        }
+        if in_code_block {
+            continue;
+        }
+
+        let line_lower = trimmed.to_lowercase();
+        if line_lower.contains("table of contents") {
+            in_toc = true;
+            continue;
+        }
+
+        if in_toc {
+            if trimmed.starts_with("## ") || trimmed.starts_with("### ") {
+                in_toc = false;
+                // Exited TOC mode; fall through to outside-TOC handling which skips section headers
+            } else {
+                // Inside TOC (such as numbered items or '---')
+                continue;
+            }
+        }
+
+        // Skip section headers (##, ###, ####) and title (#)
+        if trimmed.starts_with("# ")
+            || trimmed.starts_with("## ")
+            || trimmed.starts_with("### ")
+            || trimmed.starts_with("#### ")
+            || trimmed.starts_with("##### ")
+            || trimmed.starts_with("###### ")
+            || trimmed == "#"
+        {
+            continue;
+        }
+
+        // Skip dividers
+        if trimmed == "---" || trimmed.starts_with("---") {
+            continue;
+        }
+
+        // Skip series callouts / blockquotes starting with *Part , > *Part , [Part
+        if trimmed.starts_with("*Part ")
+            || trimmed.starts_with("> *Part ")
+            || trimmed.starts_with("[Part ")
+            || trimmed.starts_with("> [Part ")
+            || trimmed.starts_with("> Part ")
+        {
+            continue;
+        }
+
+        // Skip image tags / HTML containers (<div, <img, etc.)
+        if trimmed.starts_with("<div")
+            || trimmed.starts_with("</div")
+            || trimmed.starts_with("<img")
+            || trimmed.contains("<img")
+            || trimmed.starts_with("<center")
+            || trimmed.starts_with("</center")
+            || trimmed.starts_with("<figure")
+            || trimmed.starts_with("</figure")
+            || trimmed.starts_with("![")
+        {
+            continue;
+        }
+
+        let stripped = strip_markdown_inline(trimmed);
+        let cleaned = stripped.split_whitespace().collect::<Vec<_>>().join(" ");
+        if !cleaned.is_empty() {
+            accumulated_chars += cleaned.chars().count() + 1;
+            prose_parts.push(cleaned);
+            if accumulated_chars > max_chars {
+                break;
+            }
+        }
+    }
+
+    let combined = prose_parts.join(" ");
+    truncate_at_word_boundary(&combined, max_chars)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_extract_body_excerpt_skips_toc_and_headers() {
+        let md = r#"# The Great Spam House Mail Recovery, Part 2: The Reverse Proxy SPA War
+
+*Part 2 of the Spam House Mail Saga: [← Part 1: The Anycast Black Hole](/blog/spam-house-part-1-the-anycast-black-hole) | **Part 2: The Reverse Proxy SPA War***
+
+## Table of Contents
+1. [The Morning After: Mail Works, But Where Is the Admin Panel?](#the-morning-after-mail-works-but-where-is-the-admin-panel)
+2. [The Mystery of the Redirect to /pro](#the-mystery-of-the-redirect-to-pro)
+3. [Reverse-Engineering Stalwart's Single-Page App](#reverse-engineering-stalwarts-single-page-app)
+
+---
+
+## The Morning After: Mail Works, But Where Is the Admin Panel?
+
+In [Part 1](/blog/spam-house-part-1-the-anycast-black-hole), we solved the missing iBGP host-pin route that was causing external MTAs to drop packets into an anycast black hole. SMTP was healthy. Emails were flowing freely into `admin@femboy.zip` and `admin@spam.house`.
+
+Feeling victorious, I fired up my browser and navigated to Stalwart dashboard.
+"#;
+
+        let excerpt = extract_body_excerpt(md, 280);
+        assert!(!excerpt.contains("Table of Contents"));
+        assert!(!excerpt.contains("The Morning After: Mail Works, But Where Is the Admin Panel?"));
+        assert!(!excerpt.contains("Part 2 of the Spam House Mail Saga"));
+        assert!(!excerpt.contains("1. [The Morning After"));
+        assert!(!excerpt.contains("/blog/spam-house-part-1"));
+        assert!(excerpt.starts_with("In Part 1, we solved the missing iBGP host-pin route"));
+        assert!(excerpt.contains("admin@femboy.zip"));
+        assert!(!excerpt.contains('`'));
+    }
+
+    #[test]
+    fn test_extract_body_excerpt_skips_html_and_images() {
+        let md = r#"# WTF Namecheap!?
+
+<div class="scroll-container">
+  <img src="assets/namecheap/1.png">
+  <img src="assets/namecheap/2.png">
+</div>
+
+i run [AS214806](https://bgp.tools/as/214806) (femboy cyber networks llc). i announce `94.156.238.0/24` and authoritative anycast DNS.
+"#;
+        let excerpt = extract_body_excerpt(md, 280);
+        assert!(!excerpt.contains("<div"));
+        assert!(!excerpt.contains("<img"));
+        assert!(!excerpt.contains("WTF Namecheap"));
+        assert!(excerpt.starts_with("i run AS214806 (femboy cyber networks llc). i announce 94.156.238.0/24"));
+    }
+
+    #[test]
+    fn test_extract_body_excerpt_truncation_word_boundary() {
+        let md = r#"# Simple Post
+
+This is a long sentence that should be cleanly truncated at a word boundary rather than cutting across a word.
+"#;
+        let excerpt = extract_body_excerpt(md, 40);
+        assert!(excerpt.ends_with("..."));
+        assert!(excerpt.chars().count() <= 43); // 40 + "..."
+        assert!(!excerpt.contains("  ")); // no double spaces
+        assert!(excerpt.starts_with("This is a long sentence"));
+    }
+
+    #[test]
+    fn test_extract_body_excerpt_formatting_stripping() {
+        let md = r#"# Formatting Test
+
+Here is **bold text**, *italic text*, and `inline code` with a [link](https://example.com).
+"#;
+        let excerpt = extract_body_excerpt(md, 280);
+        assert_eq!(
+            excerpt,
+            "Here is bold text, italic text, and inline code with a link."
+        );
+    }
 
     #[test]
     fn test_parse_frontmatter() {
@@ -428,5 +697,54 @@ This is content.
         let html = markdown_to_html(md);
         assert!(html.contains("<strong>bold</strong>"));
         assert!(html.contains("<em>italic</em>"));
+    }
+
+    #[test]
+    fn test_parse_frontmatter_quotes_and_subtitles() {
+        let content = r#"---
+title: "My Quoted Title"
+short_title: 'Short Title'
+subtitle: "An interesting subtitle"
+date: '2024-12-28'
+---
+Post content
+"#;
+        let (fm, _) = parse_frontmatter(content);
+        assert_eq!(fm.get("title"), Some(&"My Quoted Title".to_string()));
+        assert_eq!(fm.get("short_title"), Some(&"Short Title".to_string()));
+        assert_eq!(fm.get("subtitle"), Some(&"An interesting subtitle".to_string()));
+        assert_eq!(fm.get("date"), Some(&"2024-12-28".to_string()));
+
+        let post_with_short = MarkdownPost {
+            title: "Long Verbose Post Title".to_string(),
+            short_title: Some("Short Title".to_string()),
+            subtitle: Some("Subtitle".to_string()),
+            date: "2024-12-28".to_string(),
+            slug: "long-verbose-post-title".to_string(),
+            tags: vec![],
+            content_html: "".to_string(),
+            content_plain: "".to_string(),
+            excerpt: "".to_string(),
+            social: None,
+            series: None,
+            series_order: None,
+        };
+        assert_eq!(post_with_short.display_title(), "Short Title");
+
+        let post_without_short = MarkdownPost {
+            title: "Normal Title".to_string(),
+            short_title: None,
+            subtitle: None,
+            date: "2024-12-28".to_string(),
+            slug: "normal-title".to_string(),
+            tags: vec![],
+            content_html: "".to_string(),
+            content_plain: "".to_string(),
+            excerpt: "".to_string(),
+            social: None,
+            series: None,
+            series_order: None,
+        };
+        assert_eq!(post_without_short.display_title(), "Normal Title");
     }
 }

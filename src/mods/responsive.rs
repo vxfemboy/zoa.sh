@@ -141,51 +141,6 @@ impl ResponsiveBoxes {
         }
     }
 
-    /// Create categories box with clickable tag links
-    pub fn new_tag_categories(tags: &[String], active_tag: Option<&String>) -> Self {
-        let content = std::iter::once(if active_tag.is_none() {
-            "• <b>[all]</b>".to_string()
-        } else {
-            "• <a href=\"/blog\">[all]</a>".to_string()
-        })
-        .chain(tags.iter().map(|tag| {
-            if active_tag == Some(tag) {
-                format!("• <b>[{}]</b>", tag)
-            } else {
-                format!("• <a href=\"/blog?tag={}\">{}</a>", tag, tag)
-            }
-        }))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-        Self {
-            tiny: BoxBuilder::new()
-                .with_title("CATEGORIES")
-                .with_content(&content)
-                .with_width(CATEGORIES_WIDTH_TINY)
-                .with_style(BoxStyle::Header)
-                .build(),
-            small: BoxBuilder::new()
-                .with_title("CATEGORIES")
-                .with_content(&content)
-                .with_width(CATEGORIES_WIDTH_SMALL)
-                .with_style(BoxStyle::Header)
-                .build(),
-            medium: BoxBuilder::new()
-                .with_title("CATEGORIES")
-                .with_content(&content)
-                .with_width(CATEGORIES_WIDTH_MEDIUM)
-                .with_style(BoxStyle::Header)
-                .build(),
-            large: BoxBuilder::new()
-                .with_title("CATEGORIES")
-                .with_content(&content)
-                .with_width(CATEGORIES_WIDTH_LARGE)
-                .with_style(BoxStyle::Header)
-                .build(),
-        }
-    }
-
     /// Create a post header box with title, date, divider, and back link
     pub fn new_post_header(title: &str, date: &str) -> Self {
         Self {

@@ -14,6 +14,22 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 pre, .ascii-container {
     font-family: "Departure Mono",
                  "Twemoji Mozilla",
@@ -755,3 +771,195 @@ html { scroll-behavior: smooth; }
 .post-html-content h2[id]:hover,
 .post-html-content h3[id]:hover,
 .post-html-content h4[id]:hover { text-decoration: underline; }
+
+/* Blog search + tag filter widget (real HTML controls, framed with the same
+   ╔═╗ ascii-frame border used on post pages, not a server-rendered ASCII box). */
+.search-widget {
+    position: relative;
+    background: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.search-widget-inner {
+    position: relative;
+    z-index: 1;
+    padding: 1.1em 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+}
+
+.search-widget-title {
+    color: #33aaff;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    margin: 0;
+    font-size: 1em;
+}
+
+.search-row {
+    display: flex;
+    gap: 0.5em;
+}
+
+.search-input,
+.tag-search-input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #444;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95em;
+    padding: 0.45em 0.6em;
+    box-sizing: border-box;
+}
+
+.search-input:focus,
+.tag-search-input:focus {
+    outline: none;
+    border-color: #33aaff;
+}
+
+.filter-toggle {
+    position: relative;
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #444;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.45em 0.6em;
+    font-family: inherit;
+    font-size: 1em;
+}
+
+.filter-toggle:hover,
+.filter-toggle[aria-expanded="true"] {
+    border-color: #33aaff;
+    color: #33aaff;
+}
+
+.filter-count {
+    position: absolute;
+    top: -0.5em;
+    right: -0.5em;
+    background: #33aaff;
+    color: #000;
+    font-size: 0.65em;
+    font-weight: bold;
+    line-height: 1;
+    border-radius: 999px;
+    padding: 0.25em 0.5em;
+}
+
+.tag-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    padding-top: 0.4em;
+    border-top: 1px dashed #444;
+}
+
+.tag-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+}
+
+.tag-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #444;
+    color: #ccc;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85em;
+    padding: 0.3em 0.6em;
+    border-radius: 999px;
+}
+
+.tag-pill:hover {
+    border-color: #33aaff;
+    color: #fff;
+}
+
+.tag-pill.active {
+    background: #33aaff;
+    border-color: #33aaff;
+    color: #000;
+    font-weight: bold;
+}
+
+.tag-panel-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.tag-expand,
+.tag-clear {
+    background: none;
+    border: none;
+    color: #33aaff;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85em;
+    padding: 0;
+}
+
+.tag-expand:hover,
+.tag-clear:hover { text-decoration: underline; }
+
+.results-count {
+    color: #888;
+    font-size: 0.85em;
+}
+
+.blog-empty-state {
+    color: #888;
+    font-style: italic;
+    padding: 1em 0;
+}
+
+/* /about resume download widget — same ascii-frame pattern as the blog search
+   widget, not a server-rendered ASCII box. */
+.resume-widget {
+    position: relative;
+    background: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.resume-widget-inner {
+    position: relative;
+    z-index: 1;
+    padding: 1.1em 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+}
+
+.resume-widget-title {
+    color: #33aaff;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    margin: 0;
+    font-size: 1em;
+}
+
+.resume-download {
+    display: block;
+    color: #e0e0e0;
+    text-decoration: none;
+    border: 1px solid #33aaff;
+    padding: 0.4em 0.8em;
+    text-align: center;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.resume-download:hover {
+    background: #33aaff;
+    color: #000;
+}

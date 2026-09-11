@@ -11,12 +11,23 @@ pub struct NavItem {
 #[derive(Serialize, Clone)]
 pub struct Post {
     pub title: String,
+    pub short_title: Option<String>,
+    pub subtitle: Option<String>,
     pub date: String,
     pub slug: String,
     pub tags: Vec<String>,
     pub content: String,
     pub content_html: String,
     pub href: String,
+    pub series: Option<String>,
+    pub series_order: Option<u32>,
+}
+
+impl Post {
+    #[allow(dead_code)]
+    pub fn display_title(&self) -> &str {
+        self.short_title.as_deref().unwrap_or(&self.title)
+    }
 }
 
 pub struct SiteData {
@@ -49,12 +60,16 @@ impl SiteData {
             .into_iter()
             .map(|mp| Post {
                 title: mp.title,
+                short_title: mp.short_title,
+                subtitle: mp.subtitle,
                 date: mp.date,
                 slug: mp.slug.clone(),
                 tags: mp.tags,
-                content: mp.content_plain,
+                content: mp.excerpt,
                 content_html: mp.content_html,
                 href: format!("/post/{}", mp.slug),
+                series: mp.series,
+                series_order: mp.series_order,
             })
             .collect();
 

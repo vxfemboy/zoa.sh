@@ -217,7 +217,7 @@ fn get_actual_char_width(c: char) -> f32 {
     }
 }
 
-fn count_visual_width_excluding_html(text: &str) -> usize {
+pub fn count_visual_width_excluding_html(text: &str) -> usize {
     let mut visual_width: f32 = 0.0;
     let chars: Vec<char> = text.chars().collect();
     let mut i = 0;
@@ -320,6 +320,47 @@ fn create_content_line(
         };
 
         format!("{}{}{}\n", left_border, line_content, right_border)
+    }
+}
+
+fn create_title_lines(
+    title: &str,
+    left_border: &str,
+    right_border: &str,
+    horizontal_visual_width: usize,
+) -> String {
+    if count_visual_width_excluding_html(title) > horizontal_visual_width {
+        let wrapped = wrap_text(title, horizontal_visual_width);
+        if wrapped.is_empty() {
+            create_content_line(
+                left_border,
+                title,
+                right_border,
+                horizontal_visual_width,
+                true,
+            )
+        } else {
+            wrapped
+                .iter()
+                .map(|line| {
+                    create_content_line(
+                        left_border,
+                        line,
+                        right_border,
+                        horizontal_visual_width,
+                        true,
+                    )
+                })
+                .collect::<String>()
+        }
+    } else {
+        create_content_line(
+            left_border,
+            title,
+            right_border,
+            horizontal_visual_width,
+            true,
+        )
     }
 }
 
@@ -433,12 +474,11 @@ pub fn create_header_box(title: &str, content: &str, width: usize) -> String {
     let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
 
     // Center the title
-    let title_line = create_content_line(
-        left_border,
+    let title_lines = create_title_lines(
         title,
+        left_border,
         right_border,
         horizontal_visual_width,
-        true,
     );
 
     // Split content into lines and pad each line with 1 space margin on each side
@@ -458,7 +498,7 @@ pub fn create_header_box(title: &str, content: &str, width: usize) -> String {
 
     format!(
         "{}{}{}{}{}",
-        top, title_line, header_sep, content_lines, bottom
+        top, title_lines, header_sep, content_lines, bottom
     )
 }
 
@@ -504,13 +544,12 @@ pub fn create_post_header_box(title: &str, date: &str, width: usize) -> String {
     let sep = format!("{}{}{}\n", sep_left, horizontal_line, sep_right);
     let bottom = format!("{}{}{}\n", bottom_left, horizontal_line, bottom_right);
 
-    // Title line (centered)
-    let title_line = create_content_line(
-        left_border,
+    // Title line (centered, wrapped if too long)
+    let title_lines = create_title_lines(
         title,
+        left_border,
         right_border,
         horizontal_visual_width,
-        true,
     );
 
     // Date line
@@ -544,7 +583,7 @@ pub fn create_post_header_box(title: &str, date: &str, width: usize) -> String {
 
     format!(
         "{}{}{}{}{}{}{}",
-        top, title_line, date_line, empty_line, sep, back_line, bottom
+        top, title_lines, date_line, empty_line, sep, back_line, bottom
     )
 }
 
@@ -599,12 +638,11 @@ pub fn create_about_box_with_ascii(
     let horizontal_visual_width = count_visual_width_excluding_html(&horizontal_line);
 
     // Center the title
-    let title_line = create_content_line(
-        left_border,
+    let title_lines = create_title_lines(
         title,
+        left_border,
         right_border,
         horizontal_visual_width,
-        true,
     );
 
     // Create ASCII art content with proper box borders
@@ -636,7 +674,7 @@ pub fn create_about_box_with_ascii(
 
     format!(
         "{}{}{}{}{}{}",
-        top, title_line, header_sep, ascii_art_content, text_content_lines, bottom
+        top, title_lines, header_sep, ascii_art_content, text_content_lines, bottom
     )
 }
 
