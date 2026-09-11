@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Deploy zoa.sh to the `zoa` Incus container (Void Linux, runit).
 #
+# Host: the `kc` Incus host (migrated off the old `sockpuppet` box). Reachable
+# via `ssh root@kc`; its Incus API is exposed and trusted for the `kc` remote
+# on deploy machines (`incus remote add kc <token>` — a one-time setup; see
+# `incus remote list`). This script always targets `$REMOTE:$CONTAINER`
+# explicitly rather than relying on whatever the local default remote is.
+#
 # The container has no Rust toolchain, so we build the release binary + WASM
 # here on the host, push the binary and all runtime assets in, install/refresh
 # a runit service, and restart it. The app is reached via the `caddy` container,
@@ -14,7 +20,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+REMOTE="${ZOA_REMOTE:-kc}"
 CONTAINER="${ZOA_CONTAINER:-zoa}"
+TARGET="$REMOTE:$CONTAINER"
 APP_DIR="${ZOA_APP_DIR:-/srv/zoa}"
 SERVICE="${ZOA_SERVICE:-zoa}"
 RUN_USER="${ZOA_RUN_USER:-zoa}"   # dedicated unprivileged user inside the container
@@ -25,8 +33,10 @@ die()  { printf '\033[1;31m!!\033[0m %s\n' "$*" >&2; exit 1; }
 
 # ── 0. sanity ───────────────────────────────────────────────────────────────
 command -v incus >/dev/null || die "incus not found on this host"
-incus info "$CONTAINER" >/dev/null 2>&1 || die "container '$CONTAINER' not found"
-incus start "$CONTAINER" >/dev/null 2>&1 || true
+incus remote list --format csv 2>/dev/null | cut -d, -f1 | sed 's/ (current)$//' | grep -qx "$REMOTE" \
+    || die "incus remote '$REMOTE' not configured — run: incus remote add $REMOTE <token-from-kc>"
+incus info "$TARGET" >/dev/null 2>&1 || die "container '$TARGET' not found"
+incus start "$TARGET" >/dev/null 2>&1 || true
 
 # ── 1. build release binary + WASM on the host ──────────────────────────────
 if [ "${1:-}" != "--no-build" ]; then
@@ -38,7 +48,7 @@ fi
 
 # ── 2. prepare the container (dirs, user, service skeleton) ─────────────────
 log "preparing $CONTAINER (dirs, user '$RUN_USER', runit service)…"
-incus exec "$CONTAINER" -- sh -euc "
+incus exec "$TARGET" -- sh -euc "
     mkdir -p '$APP_DIR' '/etc/sv/$SERVICE/log' '/var/log/$SERVICE'
     if [ '$RUN_USER' != root ] && ! id '$RUN_USER' >/dev/null 2>&1; then
         useradd -r -d '$APP_DIR' -s /usr/bin/nologin '$RUN_USER' 2>/dev/null \
@@ -50,14 +60,14 @@ incus exec "$CONTAINER" -- sh -euc "
 # Binary is swapped via a temp name so a running server keeps its old inode
 # until the restart below.
 log "pushing binary…"
-incus file push "target/release/$BIN" "$CONTAINER$APP_DIR/$BIN.new"
-incus exec "$CONTAINER" -- sh -c "chmod +x '$APP_DIR/$BIN.new' && mv '$APP_DIR/$BIN.new' '$APP_DIR/$BIN'"
+incus file push "target/release/$BIN" "$TARGET$APP_DIR/$BIN.new"
+incus exec "$TARGET" -- sh -c "chmod +x '$APP_DIR/$BIN.new' && mv '$APP_DIR/$BIN.new' '$APP_DIR/$BIN'"
 
 # Runtime assets the server reads relative to its CWD.
 for path in static templates posts config.toml; do
     [ -e "$path" ] || continue
     log "pushing $path …"
-    incus file push --recursive --create-dirs --quiet "$path" "$CONTAINER$APP_DIR/"
+    incus file push --recursive --create-dirs --quiet "$path" "$TARGET$APP_DIR/"
 done
 
 # ── 4. install / refresh the runit service ──────────────────────────────────
@@ -78,9 +88,9 @@ cat > "$log_script" <<EOF
 exec svlogd -tt /var/log/$SERVICE
 EOF
 
-incus file push "$run_script" "$CONTAINER/etc/sv/$SERVICE/run"
-incus file push "$log_script" "$CONTAINER/etc/sv/$SERVICE/log/run"
-incus exec "$CONTAINER" -- sh -euc "
+incus file push "$run_script" "$TARGET/etc/sv/$SERVICE/run"
+incus file push "$log_script" "$TARGET/etc/sv/$SERVICE/log/run"
+incus exec "$TARGET" -- sh -euc "
     chmod +x '/etc/sv/$SERVICE/run' '/etc/sv/$SERVICE/log/run'
     chown -R '$RUN_USER' '$APP_DIR' 2>/dev/null || true
     ln -sfn '/etc/sv/$SERVICE' '/var/service/$SERVICE'
@@ -90,7 +100,7 @@ incus exec "$CONTAINER" -- sh -euc "
 log "restarting service…"
 # `sv` waits (up to ~7s) for runsvdir to pick up a freshly-linked service, then
 # restarts (or starts it if it wasn't running yet).
-incus exec "$CONTAINER" -- sh -c "sv restart '$SERVICE' 2>/dev/null || sv up '$SERVICE'"
+incus exec "$TARGET" -- sh -c "sv restart '$SERVICE' 2>/dev/null || sv up '$SERVICE'"
 
 port="$(grep -E '^[[:space:]]*port[[:space:]]*=' config.toml | head -1 | grep -oE '[0-9]+' || echo 8084)"
 log "checking http://localhost:$port inside the container (the startup pfp fetch can add a few seconds)…"
@@ -100,7 +110,7 @@ check="if command -v curl >/dev/null; then curl -fsS -o /dev/null \"http://local
        else exit 3; fi"
 ok=1
 for _ in $(seq 1 20); do
-    if incus exec "$CONTAINER" -- sh -c "$check"; then ok=0; break; fi
+    if incus exec "$TARGET" -- sh -c "$check"; then ok=0; break; fi
     rc=$?; [ "$rc" -eq 3 ] && { ok=3; break; }
     sleep 1
 done
@@ -108,12 +118,12 @@ if [ "$ok" -eq 0 ]; then
     printf '\033[1;32m:: up ✓\033[0m  %s:%s  (service '\''%s'\'', port %s)\n' "$CONTAINER" "$APP_DIR" "$SERVICE" "$port"
 elif [ "$ok" -eq 3 ]; then
     printf '\033[1;33m?? no curl/wget in container — skipping HTTP check. Service status:\033[0m\n'
-    incus exec "$CONTAINER" -- sv status "$SERVICE" || true
+    incus exec "$TARGET" -- sv status "$SERVICE" || true
 else
     printf '\033[1;31m!! health check FAILED after 20s. Recent logs:\033[0m\n'
-    incus exec "$CONTAINER" -- sh -c "tail -n 20 /var/log/$SERVICE/current 2>/dev/null; sv status $SERVICE" || true
+    incus exec "$TARGET" -- sh -c "tail -n 20 /var/log/$SERVICE/current 2>/dev/null; sv status $SERVICE" || true
 fi
 
 echo
-echo "Caddy should proxy zoa.sh → http://$(incus list "$CONTAINER" -c4 --format csv | grep -oE '10\.[0-9.]+' | head -1):$port"
-echo "Logs:  incus exec $CONTAINER -- tail -f /var/log/$SERVICE/current"
+echo "Caddy should proxy zoa.sh → http://$(incus list "$TARGET" -c4 --format csv | grep -oE '10\.[0-9.]+' | head -1):$port"
+echo "Logs:  incus exec $TARGET -- tail -f /var/log/$SERVICE/current"
