@@ -114,7 +114,7 @@ jobs:
         tar -czf zoa-sh-deployment.tar.gz deployment/
 
     - name: Upload deployment artifact
-      uses: actions/upload-artifact@v4
+      uses: forgejo/upload-artifact@v4
       with:
         name: zoa-sh-deployment
         path: zoa-sh-deployment.tar.gz
